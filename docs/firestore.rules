@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function ok() { return request.resource.data.keys().hasOnly(['j', 't']) && request.resource.data.j is string && request.resource.data.j.size() < 900000; }
+    match /games/{code} {
+      allow read: if true;
+      allow write: if code.size() == 4 && ok();
+      match /in/{pid} { allow read: if true; allow write: if ok(); }
+    }
+    match /live/{code} { allow read: if true; allow write: if code.size() == 4 && ok(); }
+    match /mev/{id} { allow read: if true; allow write: if ok(); }
+  }
+}

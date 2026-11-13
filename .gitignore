@@ -1,0 +1,5 @@
+node_modules/
+__pycache__/
+*.png
+*.mp4
+.DS_Store
