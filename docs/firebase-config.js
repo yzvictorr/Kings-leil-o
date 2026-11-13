@@ -1,10 +1,10 @@
-// Cole aqui a configuração do seu projeto Firebase
-// (Console do Firebase > Configurações do projeto > Seus apps > App da Web > firebaseConfig).
+// Configuração do projeto Firebase do Kings Leilão.
+// (A apiKey do Firebase é pública por natureza; quem protege o banco são as regras do Firestore.)
 window.FIREBASE_CONFIG = {
-  apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI",
-  projectId: "COLE_AQUI",
-  storageBucket: "COLE_AQUI",
-  messagingSenderId: "COLE_AQUI",
-  appId: "COLE_AQUI"
+  apiKey: "AIzaSyCGYnNyDzSFaxsPz1fRcUmzrLxwfMMCZrc",
+  authDomain: "kings-leilao.firebaseapp.com",
+  projectId: "kings-leilao",
+  storageBucket: "kings-leilao.firebasestorage.app",
+  messagingSenderId: "292327302924",
+  appId: "1:292327302924:web:b0c19ebc085b8245adcb29"
 };
