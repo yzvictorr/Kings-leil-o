@@ -819,6 +819,7 @@ function viewAuction() {
     <div class="sec-title"><h2>Últimos lances</h2></div><div class="card log">${S.log.slice(0, 12).map(l => `<div>${esc(l)}</div>`).join("")}</div>`;
   return `<div class="sec-title"><h2>Leilão</h2><span class="muted">${a.sold.length} vendidos · ${S.managers.reduce((s, m) => s + Math.max(0, sq - m.roster.length), 0)} vagas abertas</span></div>
   <div class="card">${stage}</div>
+  ${myBoards()}
   ${host ? `<div class="row" style="margin-top:10px"><span class="muted" style="font-size:13px">Anfitrião:</span>
     <button class="btn sm" data-a="pause">${a.paused ? "Retomar leilão" : "Pausar leilão"}</button>
     <button class="btn sm" data-a="autofill">Completar elencos automaticamente</button></div>` : ""}
@@ -1012,7 +1013,7 @@ function viewLottery() {
   return `<div class="sec-title"><h2>${d.byTable ? "Ordem do draft" : "Sorteio do draft"}</h2><span class="muted">${d.byTable ? "o pior da última temporada escolhe primeiro" : "a ordem das escolhas"}</span></div>
   <div class="card lottery">
     <div class="balls">${d.order.map((mi, k) => k < d.revealed ? `<div class="ball on" style="--c:${S.managers[mi].color}"><span class="num">${k + 1}º</span>${crestSVG(S.managers[mi].crest, 44)}<b>${esc(S.managers[mi].team)}</b></div>` : `<div class="ball ${k === d.revealed ? "spin" : ""}"><span class="num">${k + 1}º</span><b>?</b></div>`).join("")}</div>
-    ${d.byTable ? `<p style="margin:10px 0 0"><b>Regra da Kings:</b> a ordem segue a classificação da última temporada nesta sala, do último colocado para o campeão. Quem ficou fora da última temporada entra no fim da fila.</p>` : ""}
+    ${d.byTable ? `<p style="margin:10px 0 0"><b>Regra da Kings:</b> a ordem segue a classificação final da competição anterior (${S.cupDraft ? "o Split" : "a última temporada nesta sala"}), do último colocado para o campeão.${S.cupDraft ? "" : " Quem ficou fora da última temporada entra no fim da fila."}</p>` : ""}
     <p class="muted" style="margin:10px 0 0">Ordem em cobra: na rodada 1 vai do 1º ao último, na rodada 2 volta do último ao 1º, e assim por diante.</p>
   </div>
   ${isHost() ? `<div class="row" style="margin-top:10px"><button class="btn sm" data-a="autofill">Fazer o draft todo automático</button></div>` : ""}`;
@@ -1040,8 +1041,30 @@ function viewDraft() {
     </div>
   </div>
   ${isHost() ? `<div class="row" style="margin-top:10px"><span class="muted" style="font-size:13px">Anfitrião:</span><button class="btn sm" data-a="autofill">Completar o draft automaticamente</button></div>` : ""}
+  ${myBoards()}
   <div class="sec-title"><h2>Quadro do draft</h2></div>${board}
   <div class="sec-title"><h2>Disponíveis</h2></div>${marketPool(myTurn ? "dsel" : null, UI.dsel, pk)}`;
+}
+// prancheta: como o seu time está ficando durante o leilão/draft
+function myBoards() {
+  const mis = (NET.mode === "local" ? humansIdx() : myMi() >= 0 ? [myMi()] : []).slice(0, 4); if (!mis.length) return "";
+  return `<div class="sec-title"><h2>${mis.length > 1 ? "Os times até agora" : "Seu time até agora"}</h2><span class="muted">titulares na formação do seu técnico; vagas vazias mostram o que ainda falta</span></div><div class="mboards">${mis.map(miniBoard).join("")}</div>`;
+}
+function miniBoard(mi) {
+  const m = S.managers[mi], c = m.coach && STAFF_BY_ID[m.coach], form = (m.tac && m.tac.form) || (!m.cpu && m.lastTac && m.lastTac.form) || (c ? c.form : "2-3-1");
+  const ros = m.roster.map(P).filter(Boolean), cnt = { GOL: 0, DEF: 0, MEI: 0, ATA: 0 }; ros.forEach(p => cnt[p.p]++);
+  // monta a escalação com quem já tem: goleiro + melhores por posição de cada vaga
+  const slots = FORMS[form], xy = FORM_XY[form], used = new Set();
+  const gk = ros.filter(p => p.p === "GOL").sort((a, b) => b.o - a.o)[0]; if (gk) used.add(gk.id);
+  const fill = slots.map(() => null);
+  [2, 5].forEach(lim => slots.forEach((sl, i) => { if (fill[i]) return; const c1 = ros.filter(p => !used.has(p.id) && p.p !== "GOL" && fitPen(p, sl) <= lim).sort((a, b) => b.o - a.o)[0]; if (c1) { used.add(c1.id); fill[i] = c1; } }));
+  const bench = ros.filter(p => !used.has(p.id));
+  const chip = (p, sl) => `<div class="mbchip ${p ? "" : "empty"}"><span class="mbpos">${sl}</span>${p ? `<b class="num">${O(p)}</b><span>${esc(shortName(p.n))}</span>` : "<span>vaga</span>"}</div>`;
+  const need = slots.filter((sl, i) => !fill[i]); if (!gk) need.unshift("GOL");
+  return `<div class="card mboard"><div class="row" style="justify-content:space-between;gap:6px"><span>${mgrName(mi)}</span><span class="muted" style="font-size:12px">${form} · ${m.roster.length}/${S.settings.squad}</span></div>
+    <div class="mbpitch">${slots.map((sl, i) => { const [x, y] = xy[i]; return `<div class="mbslot" style="left:${8 + y * 84}%;top:${(1 - x) * 72 + 8}%">${chip(fill[i], sl)}</div>`; }).join("")}<div class="mbslot" style="left:50%;top:86%">${chip(gk, "GOL")}</div></div>
+    <div class="row" style="gap:6px;font-size:12px">${["GOL", "DEF", "MEI", "ATA"].map(k => `<span class="pill">${k} <b>${cnt[k]}</b></span>`).join("")}${need.length ? `<span class="muted">falta: ${need.join(", ")}</span>` : '<span class="pill you">titulares completos</span>'}</div>
+    ${bench.length ? `<div class="muted" style="font-size:12px">Reservas: ${bench.map(p => `${esc(shortName(p.n))} ${O(p)}`).join(" · ")}</div>` : ""}</div>`;
 }
 function bidControls(bi, lot, pl) {
   const m = S.managers[bi], mx = maxBid(S, m), can = canBidOn(S, m, pl);
@@ -1094,7 +1117,7 @@ function viewSeason() {
 function hallView() {
   const H = S.hall; if (!H || (!H.titles.length && !Object.keys(H.h2h).length && !H.rec)) return "";
   const Rc = H.rec || {}, recs = [["Maior goleada", Rc.win && Rc.win.txt], ["Jogo com mais gols", Rc.goals && `${Rc.goals.txt} (${Rc.goals.t} gols)`], ["Mais gols de um jogador num jogo", Rc.pg && `${Rc.pg.n} gols · ${Rc.pg.txt}`], ["Artilheiro de uma temporada", Rc.top && `${Rc.top.n} gols · ${Rc.top.txt}`], ["Mais títulos seguidos", Rc.streak && Rc.streak.n >= 2 && `${Rc.streak.n} · ${Rc.streak.txt}`]].filter(x => x[1]);
-  const tot = {}; H.titles.forEach(t => { const k = t.pid ? t.name : "Bots"; tot[k] = (tot[k] || 0) + 1; });
+  const tot = {}; H.titles.forEach(t => { const k = t.pid ? t.name : t.team + " (bot)"; tot[k] = (tot[k] || 0) + 1; });
   const rk = Object.entries(tot).sort((a, b) => b[1] - a[1]);
   const h2h = Object.values(H.h2h).sort((a, b) => (b.wa + b.wb) - (a.wa + a.wb));
   return `<div class="card" style="display:grid;gap:8px;margin-top:16px"><h3 style="font-size:22px">Histórico da sala</h3>

@@ -158,7 +158,7 @@ function fillCpus(S) {
   }
   S.managers.forEach(m => {
     if (!S.staffDone) m.budget = st.budget;
-    m.roster = []; m.tac = null; m.wc = [];
+    if (m.tac) m.lastTac = m.tac; m.roster = []; m.tac = null; m.wc = [];
     if (m.cpu) m.strat = { card: pick(["cedo", "tarde", "perdendo"]), pp: pick(["cedo", "tarde", "perdendo"]) };
   });
 }
@@ -409,7 +409,9 @@ function finishAuction(S) {
   S.phase = "season";
   if (S.auction) S.auction.lot = null;
   S.managers.forEach((m, i) => {
-    const c = m.coach && STAFF_BY_ID[m.coach];
+    const c = m.coach && STAFF_BY_ID[m.coach], prev = m.tac || m.lastTac;
+    // humanos mantêm a formação, o estilo e as escolhas da temporada anterior
+    if (!m.cpu && prev) { m.tac = keepTac(S, i, prev); return; }
     const form = c ? c.form : m.cpu ? pick(Object.keys(FORMS)) : "2-3-1";
     const style = c ? c.style : m.cpu ? pick(["equilibrado", "posse", "contra", "longa", "pressao"]) : "equilibrado";
     m.tac = autoTac(S, i, form, style);
@@ -524,10 +526,12 @@ function startLottery(S, now) {
   S.phase = "lottery"; S.auction = null;
   // regra da Kings: quem foi pior na última temporada escolhe primeiro (na primeira vez, sorteio)
   let order = shuffle(S.managers.map((_, i) => i)), byTable = false;
-  if (S.lastOrder) { const rk = mi => { const k = S.lastOrder.indexOf(S.managers[mi].pid); return k < 0 ? -1 : k; };
+  const prevComp = S.cupDraft && S.history && S.history.length ? S.history[S.history.length - 1] : null;
+  if (prevComp && prevComp.final) { byTable = true; const f = prevComp.final; order = S.managers.map((_, i) => i).sort((a, b) => f.indexOf(b) - f.indexOf(a)); }
+  else if (S.lastOrder) { const rk = mi => { const k = S.lastOrder.indexOf(S.managers[mi].pid); return k < 0 ? -1 : k; };
     if (S.managers.some((m, i) => rk(i) >= 0)) { byTable = true; order = order.slice().sort((a, b) => rk(b) - rk(a)); } }
   S.draft = { order, byTable, revealed: 0, nextReveal: now + 2500, round: 0, idx: 0, picks: [], pickStart: 0, deadline: 0, n: 0 };
-  addLog(S, byTable ? "Ordem do draft pela classificação da última temporada: o último escolhe primeiro." : "Sorteio da ordem do draft!");
+  addLog(S, byTable ? (prevComp ? "Ordem do draft da Kings Cup pela classificação final do Split: o último escolhe primeiro." : "Ordem do draft pela classificação da última temporada: o último escolhe primeiro.") : "Sorteio da ordem do draft!");
 }
 function draftSeq(S, r) { const o = S.draft.order; return r % 2 === 0 ? o : o.slice().reverse(); }
 function draftPicker(S) { const d = S.draft; return draftSeq(S, d.round)[d.idx]; }
@@ -568,7 +572,7 @@ function marketTick(S, now) {
   if (S.phase === "keep") { if (S.keep && S.keep.deadline && now > S.keep.deadline) { closeKeep(S, now); return true; } return false; }
   if (S.phase === "trade") {
     if (S.trade.deadline && now > S.trade.deadline) { closeTrade(S); return true; }
-    let ch = botOffers(S, now);
+    let ch = botOffers(S, now) || botBotTrades(S, now);
     S.trade.offers.forEach(o => { if (o.st === "pend" && isBot(S, o.to) && now - o.at > 1800) { if (botAccepts(S, o)) tradeRespond(S, o.to, o.id, true); else o.st = "no"; ch = true; } });
     return ch;
   }
@@ -624,7 +628,7 @@ function applyTrade(S, o) {
   F.roster = F.roster.filter(id => !o.give.includes(id)).concat(o.get);
   T.roster = T.roster.filter(id => !o.get.includes(id)).concat(o.give);
   F.budget += (o.ct | 0) - (o.cf | 0); T.budget += (o.cf | 0) - (o.ct | 0);
-  [o.from, o.to].forEach(mi => { const m = S.managers[mi]; if (m.wc) m.wc = m.wc.filter(id => m.roster.includes(id)); if (!validTac(S, mi, m.tac) || m.tac.slots.some(id => id != null && !m.roster.includes(id))) m.tac = autoTac(S, mi, m.tac ? m.tac.form : "2-3-1", m.tac ? m.tac.style : "equilibrado"); });
+  [o.from, o.to].forEach(mi => { const m = S.managers[mi]; if (m.wc) m.wc = m.wc.filter(id => m.roster.includes(id)); if (!validTac(S, mi, m.tac) || m.tac.slots.some(id => id != null && !m.roster.includes(id))) m.tac = keepTac(S, mi, m.tac); });
   const desc = x => x.length ? x.map(id => P(id).n).join(", ") : "";
   addLog(S, `TROCA: ${F.team} ↔ ${T.team}. ${F.team} recebe ${desc(o.get) || "—"}${o.ct ? ` + ${o.ct} K$` : ""}; ${T.team} recebe ${desc(o.give) || "—"}${o.cf ? ` + ${o.cf} K$` : ""}.`);
 }
@@ -656,6 +660,31 @@ function botOffers(S, now) {
         addLog(S, `${B.team} faz uma proposta ao ${H.team} por ${want.n}.`);
         return true;
       }
+    }
+  }
+  return false;
+}
+// bots também trocam entre si durante o mercado
+function botBotTrades(S, now) {
+  const tr = S.trade, bots = S.managers.map((m, i) => i).filter(i => S.managers[i].cpu);
+  if (bots.length < 2) return false;
+  if (!tr.bbNext) { tr.bbNext = now + 9000 + Math.random() * 6000; return false; }
+  if (now < tr.bbNext || (tr.bbDone || 0) >= 3) return false;
+  tr.bbNext = now + 16000 + Math.random() * 14000;
+  const [from, to] = bots.slice().sort(() => Math.random() - 0.5);
+  const A = S.managers[from], B = S.managers[to], best = (m, pos) => m.roster.map(P).filter(p => p.p === pos).sort((a, b) => b.o - a.o);
+  // A procura em B um jogador que viraria titular nele; oferece alguém de valor parecido (da posição em que está sobrando)
+  const wants = B.roster.map(P).filter(p => p.p !== "GOL").filter(p => { const mine = best(A, p.p); return !mine.length || p.o > mine[Math.min(mine.length - 1, 1)].o; }).sort(() => Math.random() - 0.5);
+  for (const want of wants.slice(0, 4)) {
+    const val = tradeValue(S, to, [want.id]);
+    const gives = A.roster.map(P).filter(p => p.p !== "GOL" && p.p !== want.p).sort((a, b) => Math.abs(tradeValue(S, from, [a.id]) - val) - Math.abs(tradeValue(S, from, [b.id]) - val));
+    for (const g of gives.slice(0, 3)) {
+      const gv = tradeValue(S, from, [g.id]), coins = Math.max(0, Math.min(A.budget - 3, Math.round(val * 1.12 - gv + 1)));
+      const off = { id: "t" + (tr.n + 1), from, to, give: [g.id], get: [want.id], cf: coins, ct: 0, st: "pend", at: now, bot: true, bb: true };
+      if (tradeCheck(S, off) || !botAccepts(S, off)) continue;
+      tr.n++; applyTrade(S, off); off.st = "ok"; tr.bbDone = (tr.bbDone || 0) + 1;
+      tr.offers.unshift(off); if (tr.offers.length > 40) tr.offers.length = 40;
+      return true;
     }
   }
   return false;
@@ -700,7 +729,7 @@ function careerRelease(S, mi, id) {
   const [mn] = sqLimits(S), rest = m.roster.filter(x => x !== id);
   if (rest.length < mn || !rest.some(x => P(x).p === "GOL")) { S.trade.lastErr = { mi, err: `Precisa ficar com pelo menos ${mn} jogadores e um goleiro.`, at: Date.now() }; return true; }
   m.roster = rest; m.budget += Math.floor(p.v / 2); if (m.wc) m.wc = m.wc.filter(x => x !== id);
-  if (m.tac && [m.tac.gk].concat(m.tac.slots).includes(id)) m.tac = autoTac(S, mi, m.tac.form, m.tac.style);
+  if (m.tac && [m.tac.gk].concat(m.tac.slots).includes(id)) m.tac = keepTac(S, mi, m.tac);
   addLog(S, `${m.team} dispensa ${p.n} (recebe ${Math.floor(p.v / 2)} K$).`); return true;
 }
 // fim de temporada: evolução rumo ao potencial, premiação e janela de transferências
@@ -790,7 +819,7 @@ function startCareerSeason(S) {
     if (!m.cpu) return;
     let g = 0; while (m.roster.length < S.settings.squad && g++ < 12) { const fa = freeAgents(S).map(P).filter(p => p.v <= m.budget).sort((a, b) => b.o - a.o)[0]; if (!fa) break; careerSign(S, i, fa.id); }
   });
-  S.managers.forEach((m, i) => { if (!validTac(S, i, m.tac)) m.tac = autoTac(S, i, m.tac ? m.tac.form : "2-3-1", m.tac ? m.tac.style : "equilibrado"); });
+  S.managers.forEach((m, i) => { if (!validTac(S, i, m.tac)) m.tac = keepTac(S, i, m.tac || m.lastTac); });
   S.season = buildSeason(S); S.phase = "season"; setGoals(S);
 }
 
@@ -837,7 +866,7 @@ function finalOrder(S) { // classificação final: campeão, vice, semis... depo
 function resetToLobby(S) {
   const fo = finalOrder(S); if (fo) S.lastOrder = fo.map(i => S.managers[i].cpu ? null : S.managers[i].pid);
   S.managers = S.managers.filter(m => !m.cpu);
-  S.managers.forEach(m => { m.budget = 0; m.roster = []; m.tac = null; m.coach = null; m.pres = null; delete m.wc; });
+  S.managers.forEach(m => { if (m.tac) m.lastTac = m.tac; m.budget = 0; m.roster = []; m.tac = null; m.coach = null; m.pres = null; delete m.wc; });
   ["auction", "season", "draft", "wc", "trade", "keep", "staffA", "history", "yearDone", "cupDraft", "staffDone", "votes", "pov", "career"].forEach(k => delete S[k]);
   setPov(null);
   if (S.base) { S.settings.fmt = S.base.fmt; S.settings.squad = S.base.squad; S.settings.picks = S.base.picks; }
@@ -850,7 +879,7 @@ function resetToLobby(S) {
 function yearAfterComp(S) {
   const se = S.season;
   S.history = S.history || [];
-  S.history.push({ comp: se.fmt === "cup" ? "Kings Cup" : "Split", champion: se.champion, table: standings(S).map(r => ({ i: r.i, pts: r.pts })), scorers: topScorers(S).slice(0, 5) });
+  S.history.push({ comp: se.fmt === "cup" ? "Kings Cup" : "Split", final: finalOrder(S), champion: se.champion, table: standings(S).map(r => ({ i: r.i, pts: r.pts })), scorers: topScorers(S).slice(0, 5) });
   if (S.history.length >= 2) { S.yearDone = true; return; }
   // começa a Kings Cup: escolher wild cards e mantidos
   S.phase = "keep";
@@ -877,7 +906,7 @@ function keepSubmit(S, mi, k) {
   return true;
 }
 function closeKeep(S, now) {
-  S.managers.forEach((m, i) => { if (!S.keep.sub[i]) S.keep.sub[i] = botKeep(S, i); const k = S.keep.sub[i]; m.wc = k.wc.slice(); m.roster = k.wc.concat(k.keep); m.tac = null; });
+  S.managers.forEach((m, i) => { if (!S.keep.sub[i]) S.keep.sub[i] = botKeep(S, i); const k = S.keep.sub[i]; m.wc = k.wc.slice(); m.roster = k.wc.concat(k.keep); if (m.tac) m.lastTac = m.tac; m.tac = null; });
   S.settings.squad = S.settings.wc + S.settings.picks;
   S.cupDraft = true;
   addLog(S, "Elencos da Kings Cup definidos. Bora pro sorteio do draft!");
@@ -918,6 +947,23 @@ function validTac(S, mi, tac) {
   if (new Set(ids).size !== ids.length) return false;
   if (!ids.every(id => ros.has(id))) return false;
   return true;
+}
+// refaz a tática com o elenco atual mantendo formação, estilo, posições, ordem do escalonado, cobrador e opções
+function keepTac(S, mi, prev) {
+  if (!prev || !FORMS[prev.form]) return autoTac(S, mi, "2-3-1", "equilibrado");
+  const m = S.managers[mi], ros = new Set(m.roster), keepGk = prev.gk != null && ros.has(prev.gk) ? prev.gk : undefined;
+  const t = autoTac(S, mi, prev.form, STYLES[prev.style] ? prev.style : "equilibrado", keepGk);
+  (prev.slots || []).forEach((id, s) => {
+    if (id == null || !ros.has(id) || id === t.gk || s >= t.slots.length) return;
+    const j = t.slots.indexOf(id);
+    if (j === s) return;
+    if (j >= 0) { t.slots[j] = t.slots[s]; t.slots[s] = id; } else t.slots[s] = id;
+  });
+  const order = (prev.order || []).filter(id => t.slots.includes(id));
+  t.slots.forEach(id => { if (id != null && !order.includes(id)) order.push(id); });
+  t.order = order;
+  t.autoSub = prev.autoSub !== false; t.gkMode = prev.gkMode || "auto"; t.pk = prev.pk != null && ros.has(prev.pk) ? prev.pk : null;
+  return validTac(S, mi, t) ? t : autoTac(S, mi, prev.form, t.style);
 }
 function benchOf(S, mi, tac) { const used = new Set([tac.gk].concat(tac.slots)); return S.managers[mi].roster.filter(id => !used.has(id)); }
 
@@ -1427,6 +1473,7 @@ function stepMatch(M, now, auto) {
   [0, 1].forEach(ti => botDecide(M, ti, now, auto));
   if (M.pending) return true;
   if (M.phase === "so") return true;
+  if (M.phase === "mb" && M.mbStep === 3) mbSwap(M);
   // chances de gol
   CUR_STA = M.sta;
   const sA = teamStr(M, 0), sB = teamStr(M, 1);
@@ -1445,7 +1492,7 @@ function stepMatch(M, now, auto) {
     const poss = ti ? 1 - possA : possA;
     const edge = 1 + styleEdge(T.tac.style, O.tac.style);
     // escalonado e dado têm campo aberto: é onde mais sai gol na Kings
-    const base = M.phase === "mb" ? 0.11 : 0.065, boost = M.phase === "esc" ? 1.85 : M.phase === "dice" ? 2.15 : 1;
+    const base = M.phase === "mb" ? 0.11 : 0.06, boost = M.phase === "esc" ? 1.85 : M.phase === "dice" ? 2.15 : 1;
     let pr = base * TICK * open * boost * Math.pow(me.att / op.df, 2.3) * edge * Math.pow(poss * 2, 0.5);
     if (T.gkOut) pr *= 1.45;
     if (O.gkOut) pr *= 1.35;
@@ -1551,13 +1598,12 @@ function onMinute(M, m) {
   });
   if (M.phase === "so") { updateField(M); return; }
   if (M.phase === "mb") {
-    // regulamento: 5x5 no 36', depois 4x4, 3x3, 1x1 com goleiro e, por fim, 2x2 (goleiro livre)
-    const k = m - 36, seqN = [4, 3, 2, 1, 1];
+    // 5x5 no 36', depois 4x4, 3x3, 2x2 e 1x1 com goleiro até o fim
+    const k = m - 36, seqN = [4, 3, 2, 1];
     if (k >= 1 && k < seqN.length) {
       M.nOut = seqN[k]; M.mbStep = k;
       if (k < 3) ev(M, "phase", -1, `Match ball: sai um de cada lado. ${MB_LBL[k]}.`, { ph: "mbn", n: M.nOut });
-      else if (k === 3) ev(M, "phase", -1, "Match ball: 1x1 COM GOLEIRO (goleiro não sai do campo de defesa).", { ph: "mbn", n: 1 });
-      else { ev(M, "phase", -1, "Match ball: 2x2! O goleiro pode jogar na linha.", { ph: "mbn", n: 2, gl: true }); M.hold = 1600; }
+      else ev(M, "phase", -1, "Match ball: 1x1 COM GOLEIRO até o fim! Os técnicos trocam o jogador conforme o lance: atacante quando tem a bola, defensor quando defende.", { ph: "mbn", n: 1 });
     }
     gkDecide(M);
     autoSubs(M);
@@ -1617,6 +1663,24 @@ function tickStamina(M) {
     });
   });
 }
+// 1x1 do match ball: entra o melhor para o momento (quem ataca quando tem a bola, quem marca quando defende)
+function mbSwap(M) {
+  if (M.lastSwapAt != null && M.min - M.lastSwapAt < 0.5) return;
+  M.t.forEach((T, ti) => {
+    if (!T.autoSub && !T.cpu) return;
+    const cur = T.field[0]; if (cur == null) return;
+    const attack = M.ball.t === ti;
+    const pool = T.tac.slots.concat(T.bench || []).filter(id => id != null && id !== T.tac.gk && !T.banned.includes(id) && !T.out.some(o => o.id === id && o.until > M.min) && P(id).p !== "GOL");
+    const sc = id => (attack ? P(id).at : P(id).df) - (100 - (M.sta[id] || 100)) * 0.15;
+    const best = pool.sort((a, b) => sc(b) - sc(a))[0];
+    if (best == null || best === cur || sc(best) < sc(cur) + 3) return;
+    if (T.tac.slots.includes(best)) { T.tac.order = [best].concat(T.tac.order.filter(x => x !== best)); }
+    else { const s = T.tac.slots.indexOf(cur); if (s < 0) return; T.tac.slots[s] = best; const oi = T.tac.order.indexOf(cur); if (oi >= 0) T.tac.order[oi] = best; T.tac.order = [best].concat(T.tac.order.filter(x => x !== best)); T.bench = M.rosters[ti].filter(id => id !== T.tac.gk && !T.tac.slots.includes(id) && !T.banned.includes(id)); }
+    T.subs++; M.lastSwapAt = M.min;
+    ev(M, "sub", ti, `1x1: ${T.name} troca ${P(cur).n} por ${P(best).n} para ${attack ? "atacar" : "defender"}.`);
+  });
+  updateField(M);
+}
 function autoSubs(M) {
   if (M.min < 6 && M.phase === "esc") return;
   CUR_STA = M.sta;
@@ -1625,12 +1689,12 @@ function autoSubs(M) {
     let n = 0;
     for (let s = 0; s < 6 && n < 2; s++) {
       const id = T.tac.slots[s]; if (id == null) continue;
-      if ((M.sta[id] || 100) > 70) continue;
+      if ((M.sta[id] || 100) > 76) continue;
       const slotPos = FORMS[T.tac.form][s];
-      const val = x => P(x).o - fitPen(P(x), slotPos) - (100 - (M.sta[x] || 100)) * 0.12;
+      const val = x => P(x).o - fitPen(P(x), slotPos) - (100 - (M.sta[x] || 100)) * 0.16;
       if (T.out.some(o => o.id === id && o.until > M.min)) continue;
-      const cand = T.bench.filter(b => (M.sta[b] || 100) >= 85 && P(b).p !== "GOL" && !T.banned.includes(b)).sort((a, b) => val(b) - val(a))[0];
-      if (cand && val(cand) > val(id) + 1.5) { doSub(M, ti, id, cand, true); n++; }
+      const cand = T.bench.filter(b => (M.sta[b] || 100) >= 80 && P(b).p !== "GOL" && !T.banned.includes(b)).sort((a, b) => val(b) - val(a))[0];
+      if (cand && val(cand) > val(id) + 1) { doSub(M, ti, id, cand, true); n++; }
     }
   });
 }
