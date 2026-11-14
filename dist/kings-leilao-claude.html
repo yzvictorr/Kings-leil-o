@@ -363,6 +363,12 @@ input[type=color]{width:100%;height:40px;padding:2px;border-radius:10px;border:1
 .rrow>b,.rrow>small,.rrow>span:not(.rn){flex-shrink:0}
 .rrow small{max-width:none}
 .ranks{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
+
+.unhbox{border:1px solid rgba(255,90,90,.35);background:rgba(255,90,90,.07);border-radius:10px;padding:8px 10px;font-size:13px}
+.recs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:6px}
+.rec{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:grid;gap:2px;font-size:13px}.rec b{font-size:14px}
+
+.pill.away{color:#ffb4a8;border-color:rgba(255,120,100,.4);background:rgba(255,120,100,.08);font-size:11px}
 </style></head><body>
 <div id="app"></div><div id="live" class="live" role="dialog" aria-label="Partida ao vivo"></div><div id="viewer" class="viewer" role="dialog" aria-label="Lances"></div><div id="toast" class="toast" role="status"></div>
 <script>
@@ -476,9 +482,9 @@ function newGame(code, hostPid, hostName, hostTeam, mode) {
     auction: null, season: null, log: []
   };
 }
-const CREST_SHAPES = ["escudo", "redondo", "hexagono", "diamante", "flamula", "brasao", "oval", "quadrado"];
-const CREST_PATS = ["liso", "listras", "diagonal", "metade", "faixa", "xadrez"];
-const CREST_ICONS = ["coroa", "raio", "estrela", "bola", "chama", "olho", "leao", "foguete", "trofeu", "ancora", "espadas", "coracao", "nenhum"];
+const CREST_SHAPES = ["escudo", "redondo", "hexagono", "diamante", "flamula", "brasao", "oval", "quadrado", "classico", "angular", "coroado", "losango"];
+const CREST_PATS = ["liso", "listras", "diagonal", "metade", "faixa", "xadrez", "horizontais", "cruz", "chevron", "quartos", "aro", "diagonal2", "triangulo"];
+const CREST_ICONS = ["coroa", "raio", "estrela", "bola", "chama", "olho", "leao", "foguete", "trofeu", "ancora", "espadas", "coracao", "lua", "sol", "montanha", "onda", "gema", "asas", "caveira", "touro", "nenhum"];
 const CREST_PRESETS = [
   { n: "Coroa Dourada", shape: "escudo", c1: "#111318", c2: "#f5c542", pat: "faixa", icon: "coroa" },
   { n: "Trovão", shape: "hexagono", c1: "#1d3fbf", c2: "#ffe14d", pat: "diagonal", icon: "raio" },
@@ -496,21 +502,23 @@ function initials(t) { return String(t || "FC").replace(/\b(FC|EC|SC|Clube|Club|
 function validCrest(c) {
   if (!c || typeof c !== "object") return null;
   const hex = v => /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
-  const o = { shape: CREST_SHAPES.includes(c.shape) ? c.shape : "escudo", c1: hex(c.c1) || "#f5c542", c2: hex(c.c2) || "#111111", pat: CREST_PATS.includes(c.pat) ? c.pat : "liso", icon: CREST_ICONS.includes(c.icon) ? c.icon : "coroa", txt: String(c.txt || "").replace(/[^A-Za-z0-9À-ú]/g, "").slice(0, 3).toUpperCase(), c3: hex(c.c3) || "#ffffff", tc: hex(c.tc) || null, stars: Math.max(0, Math.min(5, c.stars | 0)) };
+  const o = { shape: CREST_SHAPES.includes(c.shape) ? c.shape : "escudo", c1: hex(c.c1) || "#f5c542", c2: hex(c.c2) || "#111111", pat: CREST_PATS.includes(c.pat) ? c.pat : "liso", icon: CREST_ICONS.includes(c.icon) ? c.icon : "coroa", txt: String(c.txt || "").replace(/[^A-Za-z0-9À-ú]/g, "").slice(0, 3).toUpperCase(), c3: hex(c.c3) || "#ffffff", tc: hex(c.tc) || null, stars: Math.max(0, Math.min(7, c.stars | 0)), sc: hex(c.sc) || null, spos: c.spos === "dentro" ? "dentro" : "fora", ic: hex(c.ic) || null };
   return o;
 }
 function mkMgr(pid, name, team, i, cpu, pers) {
   const color = COLORS[i % COLORS.length];
   return { pid, name: (name || "Presidente").slice(0, 18), team: (team || "Meu Time FC").slice(0, 24), color, cpu: !!cpu, pers: pers || 1, budget: 0, roster: [], strat: { card: "perdendo", pp: "perdendo" }, tac: null, crest: randCrest(color, team), kit: randKit(color), kit2: null, coach: null, pres: null };
 }
-const KIT_PATS = ["liso", "listras", "horizontais", "faixa", "metade", "xadrez", "gola", "centro", "ombros", "v", "finas"];
+const KIT_PATS = ["liso", "listras", "horizontais", "faixa", "metade", "xadrez", "gola", "centro", "ombros", "v", "finas", "degrade", "laterais", "peito", "bicolor", "chevron", "quadros", "mangas"];
 function randKit(color) { return { c1: color || "#f5c542", c2: pick(["#111111", "#ffffff", "#0b0d12", "#f5c542"]), pat: pick(KIT_PATS), num: "#ffffff" }; }
 function awayKit(k) { const dark = !k || /^#(0|1|2)/.test(k.c1); return { c1: dark ? "#f2f2f2" : "#15171c", c2: (k && k.c1) || "#f5c542", pat: "gola", num: dark ? "#111111" : "#ffffff" }; }
 function validKit(k) {
   if (!k || typeof k !== "object") return null;
   const hex = v => /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
-  return { c1: hex(k.c1) || "#f5c542", c2: hex(k.c2) || "#111111", pat: KIT_PATS.includes(k.pat) ? k.pat : "liso", num: hex(k.num) || "#ffffff" };
+  return { c1: hex(k.c1) || "#f5c542", c2: hex(k.c2) || "#111111", pat: KIT_PATS.includes(k.pat) ? k.pat : "liso", num: hex(k.num) || "#ffffff", c3: hex(k.c3) || null };
 }
+// quem está fora da sala (caiu ou saiu) é controlado por um bot até voltar
+function isBot(S, i) { const m = S.managers[i]; return !!(m && (m.cpu || (S.away && S.away[i]))); }
 function addLog(S, txt) { S.log.unshift(txt); if (S.log.length > 30) S.log.length = 30; }
 
 /* ================= LEILÃO ================= */
@@ -569,12 +577,12 @@ function staffTick(S, now) {
   }
   const lot = a.lot, x = STAFF_BY_ID[lot.sid];
   if (now >= lot.deadline) return staffClose(S, now);
-  const cpus = S.managers.map((m, i) => i).filter(i => S.managers[i].cpu && i !== lot.bidder && staffNeed(S, S.managers[i], x));
+  const cpus = S.managers.map((m, i) => i).filter(i => isBot(S, i) && i !== lot.bidder && staffNeed(S, S.managers[i], x));
   if (now - lot.last > 900 + Math.random() * 1200) for (const i of shuffle(cpus)) {
     const m = S.managers[i], w = Math.min(staffMax(S, m), Math.floor(x.v * m.pers * (0.8 + Math.random() * 0.5)));
     if (w > lot.bid && Math.random() < 0.5) { if (staffBid(S, i, lot.bid + 1, now)) return true; }
   }
-  const allOut = S.managers.every((m, i) => i === lot.bidder || !staffNeed(S, m, x) || staffMax(S, m) <= lot.bid || (m.cpu ? Math.floor(x.v * m.pers * 1.3) <= lot.bid : lot.passed.includes(i)));
+  const allOut = S.managers.every((m, i) => i === lot.bidder || !staffNeed(S, m, x) || staffMax(S, m) <= lot.bid || (isBot(S, i) ? Math.floor(x.v * m.pers * 1.3) <= lot.bid : lot.passed.includes(i)));
   if (allOut && now - lot.last > 1300) return staffClose(S, now);
   return false;
 }
@@ -732,7 +740,7 @@ function auctionTick(S, now) {
   const lot = a.lot, pl = P(lot.pid);
   if (now >= lot.deadline) { closeLot(S, now); return true; }
   // bots
-  const cpus = S.managers.map((m, i) => i).filter(i => S.managers[i].cpu && i !== lot.bidder && (!lot.only || lot.only.includes(i)));
+  const cpus = S.managers.map((m, i) => i).filter(i => isBot(S, i) && i !== lot.bidder && (!lot.only || lot.only.includes(i)));
   shuffle(cpus);
   const thinking = now - lot.last > 900 + Math.random() * 1500;
   if (thinking) for (const i of cpus) {
@@ -747,7 +755,7 @@ function auctionTick(S, now) {
     if (i === lot.bidder) return true;
     if (lot.only && !lot.only.includes(i)) return true;
     if (!canBidOn(S, m, pl) || maxBid(S, m) <= lot.bid) return true;
-    if (m.cpu) return cpuWill(S, i, pl) <= lot.bid;
+    if (isBot(S, i)) return cpuWill(S, i, pl) <= lot.bid;
     return lot.passed.includes(i);
   });
   if (allOut && now - lot.last > 1300) { closeLot(S, now); return true; }
@@ -826,7 +834,7 @@ function submitWC(S, mi, bids, now) {
 function cpuWCBids(S, now) {
   const t = taken(S);
   S.managers.forEach((m, mi) => {
-    if (!m.cpu) return;
+    if (!isBot(S, mi) || (!m.cpu && S.wc.sub.includes(mi))) return;
     const need = wcLeft(S, m); if (need <= 0 || m.budget < 1) { if (!S.wc.sub.includes(mi)) S.wc.sub.push(mi); return; }
     const cands = PLAYERS.filter(p => !t.has(p.id)).sort((a, b) => b.o - a.o).slice(0, 45);
     const chosen = [];
@@ -890,9 +898,12 @@ function wcAfterRound(S, now) {
 }
 function startLottery(S, now) {
   S.phase = "lottery"; S.auction = null;
-  const order = shuffle(S.managers.map((_, i) => i));
-  S.draft = { order, revealed: 0, nextReveal: now + 2500, round: 0, idx: 0, picks: [], pickStart: 0, deadline: 0, n: 0 };
-  addLog(S, "Sorteio da ordem do draft!");
+  // regra da Kings: quem foi pior na última temporada escolhe primeiro (na primeira vez, sorteio)
+  let order = shuffle(S.managers.map((_, i) => i)), byTable = false;
+  if (S.lastOrder) { const rk = mi => { const k = S.lastOrder.indexOf(S.managers[mi].pid); return k < 0 ? -1 : k; };
+    if (S.managers.some((m, i) => rk(i) >= 0)) { byTable = true; order = order.slice().sort((a, b) => rk(b) - rk(a)); } }
+  S.draft = { order, byTable, revealed: 0, nextReveal: now + 2500, round: 0, idx: 0, picks: [], pickStart: 0, deadline: 0, n: 0 };
+  addLog(S, byTable ? "Ordem do draft pela classificação da última temporada: o último escolhe primeiro." : "Sorteio da ordem do draft!");
 }
 function draftSeq(S, r) { const o = S.draft.order; return r % 2 === 0 ? o : o.slice().reverse(); }
 function draftPicker(S) { const d = S.draft; return draftSeq(S, d.round)[d.idx]; }
@@ -933,8 +944,8 @@ function marketTick(S, now) {
   if (S.phase === "keep") { if (S.keep && S.keep.deadline && now > S.keep.deadline) { closeKeep(S, now); return true; } return false; }
   if (S.phase === "trade") {
     if (S.trade.deadline && now > S.trade.deadline) { closeTrade(S); return true; }
-    let ch = false;
-    S.trade.offers.forEach(o => { if (o.st === "pend" && S.managers[o.to].cpu && now - o.at > 1800) { if (botAccepts(S, o)) tradeRespond(S, o.to, o.id, true); else o.st = "no"; ch = true; } });
+    let ch = botOffers(S, now);
+    S.trade.offers.forEach(o => { if (o.st === "pend" && isBot(S, o.to) && now - o.at > 1800) { if (botAccepts(S, o)) tradeRespond(S, o.to, o.id, true); else o.st = "no"; ch = true; } });
     return ch;
   }
   if (S.phase === "auction") return auctionTick(S, now);
@@ -955,7 +966,7 @@ function marketTick(S, now) {
   }
   if (S.phase === "draft") {
     const d = S.draft, mi = draftPicker(S), m = S.managers[mi];
-    if ((m.cpu && now - d.pickStart > 1600) || now > d.deadline) { const pl = cpuDraftPick(S, mi); if (pl) return draftPick(S, mi, pl.id, now); }
+    if ((isBot(S, mi) && now - d.pickStart > 1600) || now > d.deadline) { const pl = cpuDraftPick(S, mi); if (pl) return draftPick(S, mi, pl.id, now); }
   }
   return false;
 }
@@ -992,6 +1003,38 @@ function applyTrade(S, o) {
   [o.from, o.to].forEach(mi => { const m = S.managers[mi]; if (m.wc) m.wc = m.wc.filter(id => m.roster.includes(id)); if (!validTac(S, mi, m.tac) || m.tac.slots.some(id => id != null && !m.roster.includes(id))) m.tac = autoTac(S, mi, m.tac ? m.tac.form : "2-3-1", m.tac ? m.tac.style : "equilibrado"); });
   const desc = x => x.length ? x.map(id => P(id).n).join(", ") : "";
   addLog(S, `TROCA: ${F.team} ↔ ${T.team}. ${F.team} recebe ${desc(o.get) || "—"}${o.ct ? ` + ${o.ct} K$` : ""}; ${T.team} recebe ${desc(o.give) || "—"}${o.cf ? ` + ${o.cf} K$` : ""}.`);
+}
+// bots também fazem propostas: pedem um jogador que melhora o time deles e oferecem algo de valor parecido
+function botOffers(S, now) {
+  const tr = S.trade, bots = S.managers.map((m, i) => i).filter(i => S.managers[i].cpu), hum = S.managers.map((m, i) => i).filter(i => !isBot(S, i));
+  if (!bots.length || !hum.length) return false;
+  if (!tr.botNext) { tr.botNext = now + 6000; return false; }
+  if (now < tr.botNext) return false;
+  tr.botNext = now + 14000 + Math.random() * 10000;
+  tr.asked = tr.asked || [];
+  tr.offers.forEach(o => { if (o.bot && o.st === "pend" && now - o.at > 60000) { o.st = "cancel"; o.err = "A proposta expirou."; } });
+  const to = hum.filter(h => tr.offers.filter(o => o.to === h && o.st === "pend" && o.bot).length < 2).sort(() => Math.random() - 0.5)[0];
+  if (to == null) return false;
+  const H = S.managers[to];
+  for (const from of bots.slice().sort(() => Math.random() - 0.5)) {
+    const B = S.managers[from], bo = pos => B.roster.map(P).filter(p => p.p === pos).sort((a, b) => b.o - a.o);
+    // alvo: jogador do humano que seria titular no bot (melhor que o pior titular dele na mesma posição)
+    const cands = H.roster.map(P).filter(p => p.p !== "GOL" && !tr.asked.includes(p.id)).filter(p => { const mine = bo(p.p); return !mine.length || p.o > mine[Math.min(mine.length - 1, 1)].o; }).sort((a, b) => b.o - a.o);
+    for (const want of cands.slice(0, 4)) {
+      const val = tradeValue(S, to, [want.id]);
+      const giveOpts = B.roster.map(P).filter(p => p.p !== "GOL").sort((a, b) => Math.abs(tradeValue(S, from, [a.id]) - val * 0.85) - Math.abs(tradeValue(S, from, [b.id]) - val * 0.85));
+      for (const g of giveOpts.slice(0, 3)) {
+        const gv = tradeValue(S, from, [g.id]), coins = Math.max(0, Math.min(B.budget - 5, Math.round(val * (1.02 + Math.random() * 0.12) - gv)));
+        const off = { id: "t" + (++tr.n), from, to, give: [g.id], get: [want.id], cf: coins, ct: 0, st: "pend", at: now, bot: true };
+        if (tradeCheck(S, off)) { tr.n--; continue; }
+        if (gv + coins < val * 0.95) { tr.n--; continue; }
+        tr.asked.push(want.id); tr.offers.unshift(off); if (tr.offers.length > 40) tr.offers.length = 40;
+        addLog(S, `${B.team} faz uma proposta ao ${H.team} por ${want.n}.`);
+        return true;
+      }
+    }
+  }
+  return false;
 }
 function tradePropose(S, mi, o, now) {
   if (S.phase !== "trade") return false;
@@ -1091,6 +1134,7 @@ function careerSeasonEnd(S) {
     (r.ast ? r.ast[ti] : []).forEach(([id, n]) => x(id).a += n);
   }); (r.nt || []).forEach(([id, n]) => { if (st[id]) { st[id].ns += n; st[id].nc++; } }); });
   const comp = se.fmt === "cup" ? "Kings Cup" : "Split";
+  if (!S.settings.year || (S.history || []).length >= 2) unhappyCheck(S, st);
   Object.entries(st).forEach(([id, x]) => { if (!x.j) return; const l = C.log[id] = C.log[id] || [];
     l.push({ y: C.year, c: comp, t: S.managers[x.mi] ? S.managers[x.mi].team : "", o: P(+id) ? P(+id).o : 0, j: x.j, g: x.g, a: x.a, n: x.nc ? Math.round(x.ns / x.nc * 10) / 10 : null, ch: se.champion === x.mi });
     if (l.length > 24) l.shift(); });
@@ -1099,6 +1143,22 @@ function careerSeasonEnd(S) {
       res[i] = { lv, got, ok, money: ok ? 20 + 5 * Math.min(3, got - lv) : -10 }; });
     C.goals.res = res;
   }
+}
+// craque que quase não joga fica insatisfeito: rende 3 pontos a menos até voltar a jogar (3 jogos) ou sair do time
+function unhappyMap(S, mi) { const U = S.career && S.career.unhappy; if (!U) return null; const o = {}; Object.entries(U).forEach(([id, u]) => { if (u.mi === mi && u.left > 0) o[id] = 1; }); return o; }
+function unhappyCheck(S, st) {
+  const C = S.career; C.unhappy = C.unhappy || {};
+  S.managers.forEach((m, mi) => {
+    const games = S.season.fixtures.filter(f => f.res && (f.h === mi || f.a === mi)).length; if (!games) return;
+    const top = m.roster.map(P).filter(p => p && p.p !== "GOL").sort((a, b) => b.o - a.o).slice(0, 3).map(p => p.id);
+    m.roster.forEach(id => { const p = P(id); if (!p || p.p === "GOL") return; const star = top.includes(id) || p.o >= 85, j = (st[id] && st[id].mi === mi) ? st[id].j : 0;
+      if (star && j < games * 0.4) C.unhappy[id] = { mi, left: 3, since: C.year }; });
+  });
+}
+function unhappyTick(S, f) {
+  const U = S.career && S.career.unhappy; if (!U || !f.res || !f.res.pl) return;
+  [f.h, f.a].forEach((mi, ti) => f.res.pl[ti].forEach(id => { const u = U[id]; if (u && u.mi === mi && u.left > 0) { u.left--; if (!u.left) { delete U[id]; addLog(S, `${P(id).n} voltou a ser feliz no ${S.managers[mi].team}.`); } } }));
+  Object.keys(U).forEach(id => { const u = U[id]; if (!S.managers[u.mi] || !S.managers[u.mi].roster.includes(+id)) delete U[id]; });
 }
 function startCareerSeason(S) {
   // bots completam o elenco com agentes livres
@@ -1112,8 +1172,22 @@ function startCareerSeason(S) {
 
 /* ================= HISTÓRICO DA SALA (títulos e confronto direto entre amigos) ================= */
 function hall(S) { return S.hall = S.hall || { titles: [], h2h: {}, games: 0 }; }
+function hallRec(S, f) {
+  const H = hall(S), R = H.rec = H.rec || {}, r = f.res, A = S.managers[f.h], B = S.managers[f.a]; if (!A || !B) return;
+  const who = m => m.team + (m.cpu ? " (bot)" : ""), d = Math.abs(r.s[0] - r.s[1]), tot = r.s[0] + r.s[1];
+  const w = r.s[0] >= r.s[1] ? [A, B, r.s[0], r.s[1]] : [B, A, r.s[1], r.s[0]];
+  if (d && (!R.win || d > R.win.d || (d === R.win.d && tot > R.win.t))) R.win = { d, t: tot, txt: `${who(w[0])} ${w[2]} x ${w[3]} ${who(w[1])}` };
+  if (!R.goals || tot > R.goals.t) R.goals = { t: tot, txt: `${who(A)} ${r.s[0]} x ${r.s[1]} ${who(B)}` };
+  (r.sc || []).forEach((l, ti) => l.forEach(([id, n]) => { if (P(id) && (!R.pg || n > R.pg.n)) R.pg = { n, txt: `${P(id).n} (${who(ti ? B : A)})` }; }));
+}
+function hallSeasonRec(S) {
+  const R = hall(S).rec = hall(S).rec || {}, ts = topScorers(S)[0]; if (!ts || !P(ts.id)) return;
+  const ow = S.managers.findIndex(m => m.roster.includes(ts.id)), who = ow >= 0 ? S.managers[ow].team + (S.managers[ow].cpu ? " (bot)" : "") : "";
+  if (!R.top || ts.n > R.top.n) R.top = { n: ts.n, txt: `${P(ts.id).n} (${who}, ${S.season.fmt === "cup" ? "Kings Cup" : "Split"})` };
+}
 function hallMatch(S, f) {
   if (!f.res || f.hall) return; f.hall = true;
+  hallRec(S, f); unhappyTick(S, f);
   const A = S.managers[f.h], B = S.managers[f.a]; if (!A || !B || A.cpu || B.cpu) return;
   const H = hall(S), [x, y] = [A.pid, B.pid].sort(), k = x + "|" + y, w = f.res.w === 0 ? A.pid : B.pid;
   const r = H.h2h[k] = H.h2h[k] || { a: x, b: y, wa: 0, wb: 0, na: A.name, nb: B.name };
@@ -1122,13 +1196,22 @@ function hallMatch(S, f) {
 }
 function hallTitle(S, mi, comp) {
   const m = S.managers[mi]; if (!m) return;
+  const H = hall(S), R = H.rec = H.rec || {}, key = m.cpu ? "bot:" + m.team : m.pid;
+  H.streak = H.streak && H.streak.key === key ? { key, n: H.streak.n + 1 } : { key, n: 1 };
+  if (!R.streak || H.streak.n > R.streak.n) R.streak = { n: H.streak.n, txt: m.cpu ? m.team + " (bot)" : `${m.name} (${m.team})` };
+  hallSeasonRec(S);
   hall(S).titles.push({ comp, team: m.team, name: m.name, pid: m.cpu ? null : m.pid, season: S.settings && S.settings.career ? ((S.career && S.career.year) || 1) : null, at: Date.now() });
   if (hall(S).titles.length > 60) hall(S).titles.shift();
 }
 
 /* ================= REVANCHE: VOLTAR AO LOBBY DA MESMA SALA ================= */
 function gameOver(S) { return S.phase === "done" && (!S.settings.year || !!S.yearDone); }
+function finalOrder(S) { // classificação final: campeão, vice, semis... depois a tabela
+  if (!S.season) return null; const tb = standings(S).map(r => r.i);
+  return S.managers.map((m, i) => i).sort((a, b) => reachLv(S, b) - reachLv(S, a) || tb.indexOf(a) - tb.indexOf(b));
+}
 function resetToLobby(S) {
+  const fo = finalOrder(S); if (fo) S.lastOrder = fo.map(i => S.managers[i].cpu ? null : S.managers[i].pid);
   S.managers = S.managers.filter(m => !m.cpu);
   S.managers.forEach(m => { m.budget = 0; m.roster = []; m.tac = null; m.coach = null; m.pres = null; delete m.wc; });
   ["auction", "season", "draft", "wc", "trade", "keep", "staffA", "history", "yearDone", "cupDraft", "staffDone", "votes", "pov", "career"].forEach(k => delete S[k]);
@@ -1150,7 +1233,7 @@ function yearAfterComp(S) {
   S.keep = { sub: {}, maxWC: S.settings.wc, maxKeep: 3, deadline: Date.now() + 60000 };
   S.settings.fmt = "cup";
   addLog(S, `Fim do Split! Agora a Kings Cup: cada time mantém até ${S.settings.wc} wild cards e até 3 jogadores do draft. O resto volta para o draft.`);
-  S.managers.forEach((m, i) => { if (m.cpu) keepSubmit(S, i, botKeep(S, i)); });
+  S.managers.forEach((m, i) => { if (m.cpu || (S.away && S.away[i])) keepSubmit(S, i, botKeep(S, i)); });
 }
 function botKeep(S, mi) {
   const ros = S.managers[mi].roster.map(P).sort((a, b) => b.o - a.o);
@@ -1202,7 +1285,7 @@ function autoTac(S, mi, form, style, gkId) {
   const filled = assign.filter(x => x != null);
   const entry = filled.slice().sort((a, b) => P(b).at - P(a).at);
   const prev = m.tac || {};
-  return { form, style, gk: gk ? gk.id : null, slots: assign, order: entry, autoSub: prev.autoSub !== false, gkMode: prev.gkMode || "auto" };
+  return { form, style, gk: gk ? gk.id : null, slots: assign, order: entry, autoSub: prev.autoSub !== false, gkMode: prev.gkMode || "auto", pk: prev.pk != null && m.roster.includes(prev.pk) ? prev.pk : null };
 }
 function validTac(S, mi, tac) {
   const m = S.managers[mi], ros = new Set(m.roster);
@@ -1397,9 +1480,9 @@ function newMatch(S, f) {
     const nCards = 1 + (f.stage !== "Liga" && f.stage !== "Desafio" && S.season && S.season.dwin && S.season.dwin[mi] ? 1 : 0);
     const pres = m.pres && STAFF_BY_ID[m.pres] ? STAFF_BY_ID[m.pres] : null;
     const coach = m.coach && STAFF_BY_ID[m.coach] ? STAFF_BY_ID[m.coach] : null;
-    return { mi, side, name: m.team, pres: pres ? pres.n : m.name, presPen: pres ? pres.pen : 60, coach: coach ? { n: coach.n, form: coach.form, style: coach.style, r: coach.r } : null, color: m.color, kit: m.kit || null, kit2: m.kit2 || awayKit(m.kit), crest: m.crest || null, cpu: m.cpu, strat: Object.assign({}, m.strat), tac,
+    return { mi, side, name: m.team, pres: pres ? pres.n : m.name, presPen: pres ? pres.pen : 60, unh: unhappyMap(S, mi), coach: coach ? { n: coach.n, form: coach.form, style: coach.style, r: coach.r } : null, color: m.color, kit: m.kit || null, kit2: m.kit2 || awayKit(m.kit), crest: m.crest || null, cpu: isBot(S, mi), bot: !!m.cpu, strat: Object.assign({}, m.strat), tac,
       cards: Array.from({ length: nCards }, () => ({ k: pick(CARD_DRAW), used: false })), ppUsed: false, dobLeft: 0, star: null, out: [], banned: [], yc: {}, cardsY: 0, cardsR: 0, goals: {}, shots: 0, saves: 0, field: [], gkOut: false,
-      autoSub: m.cpu ? true : tac.autoSub !== false, gkMode: m.cpu ? "auto" : (tac.gkMode || "auto"), subs: 0 };
+      autoSub: isBot(S, mi) ? true : tac.autoSub !== false, gkMode: isBot(S, mi) ? "auto" : (tac.gkMode || "auto"), subs: 0 };
   };
   const M = { fid: f.id, stage: f.stage, round: f.round, t: [mk(f.h, 0), mk(f.a, 1)], min: 0, score: [0, 0], phase: "esc", nOut: 1, dice: null,
     ev: [], pending: null, status: "playing", ball: { t: 0, x: 0.5, y: 0.5 }, so: null, soRound: 0, soTurn: 0, target: null, w: null, hold: 0, seq: 0, sta: {}, mbStep: -1 };
@@ -1429,7 +1512,7 @@ function slotOf(T, id) { return T.tac.slots.indexOf(id); }
 let CUR_STA = null;
 function staPen(id) { const v = CUR_STA && CUR_STA[id] != null ? CUR_STA[id] : 100; return (100 - v) * 0.12; }
 function gkSave(T) { T.saves++; const g = T.tac.gk; if (g != null) { T.svs = T.svs || {}; T.svs[g] = (T.svs[g] || 0) + 1; } }
-function eff(T, id) { const p = P(id), s = slotOf(T, id); const pen = (s >= 0 ? fitPen(p, FORMS[T.tac.form][s]) : 0) + staPen(id); return { o: p.o - pen, at: p.at - pen, df: p.df - pen, p }; }
+function eff(T, id) { const p = P(id), s = slotOf(T, id); const pen = (s >= 0 ? fitPen(p, FORMS[T.tac.form][s]) : 0) + staPen(id) + (T.unh && T.unh[id] ? 3 : 0); return { o: p.o - pen, at: p.at - pen, df: p.df - pen, p }; }
 function gkRating(T) { const g = P(T.tac.gk); return g ? (g.p === "GOL" ? g.o : g.o - 20) : 50; }
 function teamStr(M, ti) {
   const T = M.t[ti];
@@ -1578,7 +1661,7 @@ function resolvePick(M, now) {
     }
   }
 }
-function bestShooter(M, ti) { const T = M.t[ti]; const c = (T.field.length ? T.field : T.tac.slots.filter(x => x != null)).slice().sort((a, b) => P(b).at - P(a).at); return c[0] || T.tac.gk; }
+function bestShooter(M, ti) { const T = M.t[ti]; if (T.tac.pk != null && T.field.includes(T.tac.pk)) return T.tac.pk; const c = (T.field.length ? T.field : T.tac.slots.filter(x => x != null)).slice().sort((a, b) => P(b).at - P(a).at); return c[0] || T.tac.gk; }
 function activatePP(M, ti, now) {
   if (!canActPP(M, ti)) return false;
   const T = M.t[ti]; T.ppUsed = true;
@@ -1595,10 +1678,10 @@ function resolvePen(M) {
   const skill = sh ? sh.at : 55;
   const gk = gkRating(O);
   let res;
-  const missP = (top ? 0.16 : 0.05) + (p.pres ? 0.18 - (T.presPen - 40) * 0.0045 : 0) - (p.pres ? 0 : (skill - 70) * 0.003);
+  const missP = (top ? 0.16 : 0.05) + (p.pres ? 0.18 - (T.presPen - 40) * 0.0045 : 0) - (p.pres ? 0 : (skill - 75) * 0.005);
   if (Math.random() < Math.max(0.02, missP)) res = "fora";
   else if (col === p.dive) {
-    const saveP = (top ? 0.55 : col === 1 ? 0.85 : 0.75) + (gk - 78) * 0.006 - (p.pres ? (T.presPen - 65) * 0.007 : 0);
+    const saveP = (top ? 0.55 : col === 1 ? 0.85 : 0.75) + (gk - 78) * 0.006 - (p.pres ? (T.presPen - 65) * 0.007 : (skill - 75) * 0.005);
     res = Math.random() < saveP ? "defesa" : "gol";
   } else res = "gol";
   M.pending = null;
@@ -1647,7 +1730,7 @@ function nextShootout(M) {
   if (M.soKicks[0] + M.soKicks[1] > 40) return endMatch(M, M.so[0] >= M.so[1] ? 0 : 1);
   const ti = M.soKicks[0] <= M.soKicks[1] ? 0 : 1;
   const T = M.t[ti];
-  const takers = T.tac.order.filter(id => id != null);
+  const takers = T.tac.order.filter(id => id != null); if (T.tac.pk != null && takers.includes(T.tac.pk)) { takers.splice(takers.indexOf(T.tac.pk), 1); takers.unshift(T.tac.pk); }
   const sh = M.soKicks[ti] === 5 && T.tac.gk != null ? T.tac.gk : (takers[M.soKicks[ti] % takers.length] || T.tac.gk);
   M.soKicks[ti]++;
   M.pending = { k: "so", team: ti, shooter: sh, att: null, gk: null, until: Date.now() + 12000, tb: true };
@@ -2019,7 +2102,15 @@ function matchResult(M) {
 function applyAction(S, act, actorMi, isHost, now) {
   const t = act.t;
   if (t === "join") {
-    if (S.phase !== "lobby") return false;
+    if (S.phase !== "lobby" || S.managers.length >= 12) { // jogo em andamento: volta de outro aparelho com o mesmo nome de presidente
+      if (S.managers.some(m => m.pid === act.pid)) return true;
+      const nm = x => String(x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      const k = S.managers.findIndex((m, i) => !m.cpu && m.pid !== S.hostPid && nm(m.name) === nm(act.name) && S.away && S.away[i]);
+      if (k < 0) return false;
+      const old = S.managers[k].pid; S.managers[k].pid = act.pid; delete S.away[k]; if (S.seqs) delete S.seqs[old];
+      addLog(S, `${S.managers[k].name} voltou por outro aparelho e reassumiu o ${S.managers[k].team}.`);
+      return true;
+    }
     const ex = S.managers.find(m => m.pid === act.pid);
     if (ex) { ex.name = (act.name || ex.name).slice(0, 18); ex.team = (act.team || ex.team).slice(0, 24); return true; }
     if (S.managers.length >= 12) return false;
@@ -2080,7 +2171,7 @@ function applyAction(S, act, actorMi, isHost, now) {
   if (t === "vote") {
     if (!gameOver(S) || actorMi < 0 || S.managers[actorMi].cpu) return false;
     S.votes = S.votes || {}; S.votes[actorMi] = !!act.v;
-    const humans = S.managers.map((m, i) => i).filter(i => !S.managers[i].cpu);
+    const humans = S.managers.map((m, i) => i).filter(i => !isBot(S, i));
     const yes = humans.filter(i => S.votes[i] === true).length;
     if (yes * 2 > humans.length) { if (S.settings.career && act.next) nextSeason(S); else resetToLobby(S); }
     return true;
@@ -2115,7 +2206,7 @@ function applyAction(S, act, actorMi, isHost, now) {
   return false;
 }
 
-if (false) module.exports = { nextSeason, setPov, freeAgents, isInj, chemistry, gameOver, resetToLobby, STAFF, startMarket, buildBracket, closeTrade, newGame, applyAction, auctionTick, marketTick, draftPicker, standings, topScorers, simMatchInstant, matchResult, newMatch, stepMatch, attachRosters, matchAction, autoTac, roundFixtures, advanceRound, isHumanFixture, setPlayers: (arr) => { PLAYERS = arr; PLAYER_BY_ID = {}; arr.forEach(p => PLAYER_BY_ID[p.id] = p); } };
+if (false) module.exports = { isBot, nextSeason, setPov, freeAgents, isInj, chemistry, gameOver, resetToLobby, STAFF, startMarket, buildBracket, closeTrade, newGame, applyAction, auctionTick, marketTick, draftPicker, standings, topScorers, simMatchInstant, matchResult, newMatch, stepMatch, attachRosters, matchAction, autoTac, roundFixtures, advanceRound, isHumanFixture, setPlayers: (arr) => { PLAYERS = arr; PLAYER_BY_ID = {}; arr.forEach(p => PLAYER_BY_ID[p.id] = p); } };
 
 /* ===== UI + rede (v2) ===== */
 const $ = s => document.querySelector(s);
@@ -2157,7 +2248,19 @@ function commit() {
   if (NET.mode === "host") scheduleWrite();
   if (NET.mode === "local") saveLocal();
 }
-function saveLocal() { try { sessionStorage.setItem("kl_local2", JSON.stringify(S)); } catch (e) { } }
+function saveLocal() { try { const j = JSON.stringify(S); sessionStorage.setItem("kl_local2", j); localStorage.setItem("kl_save", j); localStorage.setItem("kl_save_at", String(Date.now())); } catch (e) { } }
+function savedLocal() { try { const raw = JSON.parse(localStorage.getItem("kl_save") || "null"); return raw && raw.mode === "local" && raw.v === 2 ? raw : null; } catch (e) { return null; } }
+function loadLocal(raw) { S = raw; setPov(S.pov); NET.mode = "local"; NET.code = "LOCL"; LIVES = {}; UI.watch = null; startLoop(); commit(); renderLive(true); }
+async function exportSave() {
+  const name = `kings-leilao-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`, data = JSON.stringify({ kl: 1, at: Date.now(), S });
+  try { const dl = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null; if (dl) { await dl.save({ filename: name, data }); toast("Progresso salvo no arquivo."); return; } } catch (e) { toast("O arquivo não foi salvo."); return; }
+  try { const blob = new Blob([JSON.stringify({ kl: 1, at: Date.now(), S })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `kings-leilao-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); toast("Progresso salvo no arquivo."); } catch (e) { toast("Não consegui gerar o arquivo aqui."); }
+}
+function importSave(file) {
+  const r = new FileReader();
+  r.onload = () => { try { const d = JSON.parse(r.result), raw = d && d.S ? d.S : d; if (!raw || raw.v !== 2 || !Array.isArray(raw.managers)) throw 0; raw.mode = "local"; raw.code = "LOCL"; raw.managers.forEach((m, i) => { if (!m.cpu && !/^local/.test(m.pid)) m.pid = "local" + i; }); delete raw.away; loadLocal(raw); toast("Jogo carregado!"); } catch (e) { UI.homeErr = "Esse arquivo não é um jogo salvo do Kings Leilão."; render(); } };
+  r.readAsText(file);
+}
 function scheduleWrite() {
   if (NET.busy) { NET.pending = true; return; }
   const wait = Math.max(0, (window.KL_STATE_MS || 220) - (now() - NET.lastWrite));
@@ -2187,10 +2290,14 @@ function sendIntent(a) {
   if (NET.queue.length > 8) NET.queue.shift();
   const pres = { kl: { pid: MYPID, q: NET.queue } };
   [NET.rjoin, NET.lobby].forEach(r => { try { r && r.presence && r.presence(pres); } catch (e) { } });
-  if (NET.db) { try { NET.db.doc(`games/${NET.code}/in/${MYPID}`).set({ pid: MYPID, q: NET.queue }).then(() => { NET.writeOk = true; }).catch(e => { NET.writeOk = false; NET.writeErr = (e && e.code) || "erro"; }); } catch (e) { NET.writeOk = false; NET.writeErr = "erro"; } }
+  if (NET.db) { try { NET.db.doc(`games/${NET.code}/in/${MYPID}`).set({ pid: MYPID, q: NET.queue, hb: Date.now() }).then(() => { NET.writeOk = true; }).catch(e => { NET.writeOk = false; NET.writeErr = (e && e.code) || "erro"; }); } catch (e) { NET.writeOk = false; NET.writeErr = "erro"; } }
 }
-function handleIntents(pid, q) {
-  if (NET.mode !== "host" || !S || !Array.isArray(q) || !pid) return;
+// marca quem está vivo pela hora em que o anfitrião RECEBE um batimento novo (não depende do relógio de cada aparelho)
+function seen(pid, hb) { if (!pid || pid === MYPID) return; NET.seen = NET.seen || {}; NET.hbv = NET.hbv || {}; if (hb) { if (NET.hbv[pid] === hb) return; const first = NET.hbv[pid] == null; NET.hbv[pid] = hb; if (first && Date.now() - hb > AWAY_MS && Math.abs(Date.now() - hb) < 3600000) return; } NET.seen[pid] = Date.now(); }
+function handleIntents(pid, q, hb) {
+  if (NET.mode !== "host" || !S || !pid) return;
+  if (hb) seen(pid, hb);
+  if (!Array.isArray(q)) return;
   S.seqs = S.seqs || {};
   let changed = false, touched = false;
   q.slice().sort((x, y) => x.s - y.s).forEach(it => {
@@ -2209,7 +2316,7 @@ function peersList(p) { if (!p) return []; if (Array.isArray(p)) return p; if (p
 function findKl(o, d) { if (!o || typeof o !== "object" || d > 4) return null; if (o.kl && o.kl.pid) return o.kl; for (const v of Object.values(o)) { const r = findKl(v, d + 1); if (r) return r; } return null; }
 function onPeers(peers) {
   NET.peers = peersList(peers).length;
-  peersList(peers).forEach(pr => { const k = findKl(pr, 0); if (k && k.pid !== MYPID) { NET.gotPresence = true; handleIntents(k.pid, k.q); } });
+  peersList(peers).forEach(pr => { const k = findKl(pr, 0); if (k && k.pid !== MYPID) { NET.gotPresence = true; if (NET.mode === "host") seen(k.pid); handleIntents(k.pid, k.q); } });
 }
 function applyRemote(data) {
   if (!data || NET.mode !== "client") return;
@@ -2219,13 +2326,13 @@ function applyRemote(data) {
   S = JSON.parse(JSON.stringify(data));
   setPov(S.pov);
   applyLocalOverrides(); applyOptimistic();
-  if (S.hostNow) NET.clockOff = S.hostNow - Date.now();
+  if (S.hostNow && S.hostNow > (NET.lastHostNow || 0)) { NET.lastHostNow = S.hostNow; NET.clockOff = S.hostNow - Date.now(); }
   NET.lastSync = Date.now();
   render(); renderChat();
 }
 function applyRemoteLive(d) {
   if (NET.mode !== "client") return;
-  if (d && d.hostNow && NET.liveNow && d.hostNow < NET.liveNow) return;
+  if (d && d.hostNow && NET.liveNow && d.hostNow <= NET.liveNow) return;
   if (d && d.hostNow) { NET.liveNow = d.hostNow; NET.clockOff = d.hostNow - Date.now(); }
   LIVES = d && d.ms && typeof d.ms === "object" ? d.ms : {};
   syncLive(); renderLive(); updateRoundBoard();
@@ -2257,11 +2364,14 @@ function startPoll() {
     try {
       if (NET.mode === "host") {
         const snap = await NET.db.collection(`games/${NET.code}/in`).get();
-        snap.docs.forEach(d => { const x = d.data(); if (x) handleIntents(x.pid || d.id, x.q); });
+        snap.docs.forEach(d => { const x = d.data(); if (x) handleIntents(x.pid || d.id, x.q, x.hb); });
+        // outro aparelho virou anfitrião enquanto este estava parado? então este vira convidado
+        const md = await NET.docRef.get(); const mdd = md.exists ? md.data() : null;
+        if (mdd && mdd.hostPid && mdd.hostPid !== MYPID) { demoteToClient(); return; }
       } else if (NET.mode === "client") {
         const d = await NET.docRef.get(); if (d.exists) applyRemote(d.data());
         const l = await NET.liveRef.get(); applyRemoteLive(l.exists ? l.data() : null);
-        if (myMi() < 0 && S && S.phase === "lobby" && NET.joinInfo && Date.now() - (NET.lastJoin || 0) > 4000) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team }); }
+        if (myMi() < 0 && S && NET.joinInfo && Date.now() - (NET.lastJoin || 0) > (S.phase === "lobby" ? 4000 : 8000)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team }); }
       }
     } catch (e) { NET.pollErr = (e && e.code) || "erro"; }
   }, window.KL_POLL_MS || (NET.mode === "host" ? 600 : 800));
@@ -2294,19 +2404,27 @@ async function createOnline() {
   becomeHost(room);
 }
 async function becomeHost(room) {
-  NET.mode = "host"; store("kl_last", NET.code);
+  NET.mode = "host"; store("kl_last", NET.code); rememberRoom(NET.code);
+  if (S) { S.hostPid = MYPID; S.away = S.away || {}; const me = S.managers.findIndex(m => m.pid === MYPID); if (me >= 0) delete S.away[me]; }
+  NET.seen = {}; NET.hbv = {}; NET.hostSince = Date.now();
   NET.liveRef = NET.db.doc("live/" + NET.code);
   try { const l = await NET.liveRef.get(); const d = l.exists ? l.data() : null; if (d && d.ms) { LIVES = d.ms; syncLive(); } } catch (e) { }
   const lobby = room || (await getCaps()).room;
   NET.rjoin = await joinRoom(lobby, NET.code);
   [NET.rjoin, lobby].forEach(r => { if (r && r.onPeers) { try { r.presence && r.presence({ kl: { pid: MYPID, host: true, q: [] } }); r.onPeers(onPeers); } catch (e) { } } });
   NET.lobby = lobby; startPoll();
-  try { NET.unsub.push(NET.db.collection(`games/${NET.code}/in`).onSnapshot(snap => snap.docs.forEach(d => { const x = d.data(); if (x) handleIntents(x.pid || d.id, x.q); }), () => { })); } catch (e) { }
+  try { NET.unsub.push(NET.db.collection(`games/${NET.code}/in`).onSnapshot(snap => snap.docs.forEach(d => { const x = d.data(); if (x) handleIntents(x.pid || d.id, x.q, x.hb); }), () => { })); } catch (e) { }
   startLoop(); UI.busy = false; UI.homeErr = "";
   commit(); renderLive();
 }
-async function joinOnline() {
-  const code = $("#j-code").value.trim().toUpperCase(), name = $("#j-name").value.trim(), team = $("#j-team").value.trim();
+function rememberRoom(code) { try { const l = JSON.parse(store("kl_rooms") || "[]").filter(x => x.c !== code); l.unshift({ c: code, at: Date.now(), t: store("kl_team") || "" }); store("kl_rooms", JSON.stringify(l.slice(0, 5))); } catch (e) { } }
+function demoteToClient() {
+  const code = NET.code; NET.unsub.forEach(u => { try { u(); } catch (e) { } }); NET.unsub = [];
+  NET.mode = "none"; toast("Outro aparelho assumiu como anfitrião. Reconectando como convidado…");
+  joinOnline(code, store("kl_name") || "Presidente", store("kl_team") || "Meu Time FC");
+}
+async function joinOnline(c0, n0, t0) {
+  const code = (c0 || $("#j-code").value).trim().toUpperCase(), name = (n0 || $("#j-name").value).trim(), team = (t0 || $("#j-team").value).trim();
   if (code.length !== 4) { UI.homeErr = "O código da sala tem 4 letras."; return render(); }
   if (!name || !team) { UI.homeErr = "Escreva seu nome e o nome do seu time."; return render(); }
   store("kl_name", name); store("kl_team", team);
@@ -2325,7 +2443,7 @@ async function joinOnline() {
     if (first) {
       clearTimeout(timer); first = false;
       if (data.hostPid === MYPID) { S = JSON.parse(JSON.stringify(data)); setPov(S.pov); NET.unsub.forEach(u => u()); NET.unsub = []; becomeHost(room); return; }
-      NET.mode = "client"; store("kl_last", code); UI.busy = false; UI.homeErr = "";
+      NET.mode = "client"; store("kl_last", code); rememberRoom(code); UI.busy = false; UI.homeErr = "";
       NET.joinInfo = { name, team };
       (async () => {
         NET.lobby = room; NET.rjoin = await joinRoom(room, code);
@@ -2346,6 +2464,43 @@ function startLocal() {
   NET.mode = "local"; NET.code = "LOCL";
   startLoop(); commit();
 }
+// ---- quem caiu da sala: um bot assume até a pessoa voltar ----
+const AWAY_MS = 30000, HOST_GONE_MS = 45000;
+function awayCheck() {
+  if (!S || !S.managers) return;
+  const t = Date.now(), A = S.away = S.away || {}; let ch = false;
+  S.managers.forEach((m, i) => {
+    if (m.cpu || m.pid === MYPID) { if (A[i]) { delete A[i]; ch = true; } return; }
+    const sn = (NET.seen || {})[m.pid], last = sn || NET.hostSince || t, off = t - last > AWAY_MS;
+    if (A[i] && !sn) return; // já estava fora e ainda não deu sinal de vida
+    if (off && !A[i] && S.phase !== "lobby") { A[i] = true; ch = true; addLog(S, `${m.name} saiu da sala. Um bot assume o ${m.team} até ele voltar.`); }
+    if (!off && A[i]) { delete A[i]; ch = true; addLog(S, `${m.name} voltou e reassumiu o ${m.team}!`); }
+  });
+  Object.values(LIVES).forEach(M => M.t.forEach(T => { const b = isBot(S, T.mi); if (T.cpu !== b) { T.cpu = b; if (b) T.autoSub = true; ch = true; } }));
+  if (ch) { commit(); writeLive(); }
+}
+function heartbeat() {
+  try { NET.db.doc(`games/${NET.code}/in/${MYPID}`).set({ pid: MYPID, q: NET.queue || [], hb: Date.now(), host: NET.mode === "host" }).catch(() => { }); } catch (e) { }
+  if (NET.mode === "client" && S && S.hostPid && S.hostPid !== MYPID) hostWatch();
+}
+async function hostWatch() {
+  try {
+    const d = await NET.db.doc(`games/${NET.code}/in/${S.hostPid}`).get(); const x = d.exists ? d.data() : null;
+    const hb = x && x.hb ? x.hb : (S.hostNow || 0), gone = Date.now() + (NET.clockOff || 0) - hb;
+    // ordem de quem assume: os humanos na ordem da sala (sem o anfitrião); cada um espera um pouco mais
+    const order = S.managers.filter((m, i) => !m.cpu && m.pid !== S.hostPid && !(S.away && S.away[i])).map(m => m.pid), k = order.indexOf(MYPID);
+    if (k < 0 || gone < HOST_GONE_MS + k * 15000) { NET.hostGone = gone > 20000 ? gone : 0; return; }
+    const fresh = await NET.docRef.get(); const data = fresh.exists ? fresh.data() : null;
+    if (!data || data.hostPid !== S.hostPid) return;
+    const oldMi = data.managers.findIndex(m => m.pid === data.hostPid);
+    S = JSON.parse(JSON.stringify(data)); setPov(S.pov);
+    S.hostPid = MYPID; S.away = S.away || {}; if (oldMi >= 0) S.away[oldMi] = true;
+    addLog(S, `O anfitrião caiu. ${(S.managers.find(m => m.pid === MYPID) || {}).name || "Outro jogador"} assumiu a sala.`);
+    NET.unsub.forEach(u => { try { u(); } catch (e) { } }); NET.unsub = [];
+    toast("O anfitrião caiu: você assumiu a sala. O jogo continua daqui.");
+    becomeHost(NET.lobby);
+  } catch (e) { }
+}
 let loopT = null, lastAuc = 0, nextTick = 0;
 function startLoop() {
   if (loopT) return;
@@ -2354,13 +2509,15 @@ function startLoop() {
     if (S && isHost() && ["auction", "wc", "lottery", "draft", "staff", "trade", "keep"].includes(S.phase) && t - lastAuc > 450) { lastAuc = t; if (marketTick(S, t)) commit(); }
     if (S && isHost() && S.phase === "season") roundTick(t);
     if (isHost()) Object.values(LIVES).forEach(M => { if (M.status === "playing") liveLoop(M, t); });
+    if (NET.mode === "host" && t - (NET.awayChk || 0) > 2000) { NET.awayChk = t; awayCheck(); }
+    if ((NET.mode === "host" || NET.mode === "client") && NET.db && t - (NET.hbAt || 0) > 10000) { NET.hbAt = t; heartbeat(); }
     tickClocks();
   }, 100);
 }
 function leave() {
   NET.unsub.forEach(u => { try { u(); } catch (e) { } }); NET.unsub = [];
   try { NET.rjoin && NET.rjoin.leave && NET.rjoin.leave(); } catch (e) { }
-  NET.mode = "none"; S = null; LIVE = null; LIVES = {}; UI.watch = null; try { sessionStorage.removeItem("kl_local2"); } catch (e) { }
+  NET.mode = "none"; S = null; LIVE = null; LIVES = {}; UI.watch = null; NET.code = null; try { sessionStorage.removeItem("kl_local2"); } catch (e) { }
   render(); renderLive();
 }
 
@@ -2551,7 +2708,11 @@ function crestSVG(c, size) {
     flamula: `<path d="M8 8 H92 V70 L50 116 L8 70 Z"/>`,
     brasao: `<path d="M10 6 H36 L50 14 L64 6 H90 V60 C90 90 70 106 50 116 C30 106 10 90 10 60 Z"/>`,
     oval: `<ellipse cx="50" cy="60" rx="40" ry="54"/>`,
-    quadrado: `<rect x="8" y="10" width="84" height="100" rx="14"/>`
+    quadrado: `<rect x="8" y="10" width="84" height="100" rx="14"/>`,
+    classico: `<path d="M8 8 Q50 18 92 8 V62 C92 90 70 106 50 116 C30 106 8 90 8 62 Z"/>`,
+    angular: `<polygon points="10,6 90,6 96,40 82,92 50,116 18,92 4,40"/>`,
+    coroado: `<path d="M8 22 L22 8 L36 20 L50 4 L64 20 L78 8 L92 22 V62 C92 90 70 106 50 116 C30 106 8 90 8 62 Z"/>`,
+    losango: `<path d="M50 6 C60 6 92 48 92 60 C92 72 60 114 50 114 C40 114 8 72 8 60 C8 48 40 6 50 6 Z"/>`
   };
   const sh = shapes[c.shape] || shapes.escudo, c1 = c.c1 || "#f5c542", c2 = c.c2 || "#111";
   const pats = {
@@ -2560,7 +2721,14 @@ function crestSVG(c, size) {
     diagonal: `<polygon points="0,30 30,0 100,70 100,100 70,120"/>`,
     metade: `<rect x="50" y="0" width="50" height="120"/>`,
     faixa: `<rect x="0" y="46" width="100" height="26"/>`,
-    xadrez: Array.from({ length: 30 }, (_, k) => { const x = k % 5, y = Math.floor(k / 5); return (x + y) % 2 ? `<rect x="${x * 20}" y="${y * 20}" width="20" height="20"/>` : ""; }).join("")
+    xadrez: Array.from({ length: 30 }, (_, k) => { const x = k % 5, y = Math.floor(k / 5); return (x + y) % 2 ? `<rect x="${x * 20}" y="${y * 20}" width="20" height="20"/>` : ""; }).join(""),
+    horizontais: [14, 38, 62, 86, 110].map(y => `<rect x="0" y="${y - 6}" width="100" height="12"/>`).join(""),
+    cruz: `<rect x="40" y="0" width="20" height="120"/><rect x="0" y="40" width="100" height="20"/>`,
+    chevron: `<polygon points="0,30 50,70 100,30 100,52 50,92 0,52"/>`,
+    quartos: `<rect x="50" y="0" width="50" height="60"/><rect x="0" y="60" width="50" height="60"/>`,
+    aro: `<circle cx="50" cy="60" r="34" fill="none" stroke="${c2}" stroke-width="8"/>`,
+    diagonal2: `<polygon points="0,10 10,0 100,90 100,100 90,110 0,20"/><polygon points="0,50 10,40 100,130 100,140 90,150 0,60" transform="translate(0 -12)"/>`,
+    triangulo: `<polygon points="0,120 50,40 100,120"/>`
   };
   const icons = {
     coroa: `<path d="M34 64 L36 48 L43 55 L50 44 L57 55 L64 48 L66 64 Z"/><rect x="34" y="65" width="32" height="4" rx="1"/>`,
@@ -2575,17 +2743,26 @@ function crestSVG(c, size) {
     ancora: `<circle cx="50" cy="44" r="4" fill="none" stroke-width="3"/><rect x="48" y="47" width="4" height="30"/><rect x="40" y="53" width="20" height="3"/><path d="M36 64 C38 76 62 76 64 64" fill="none" stroke-width="4"/>`,
     espadas: `<path d="M38 42 L62 76 M62 42 L38 76" stroke-width="5" fill="none"/><path d="M34 70 L44 80 M66 70 L56 80" stroke-width="4" fill="none"/>`,
     coracao: `<path d="M50 78 C40 70 32 62 32 54 C32 47 37 43 42 43 C46 43 49 46 50 49 C51 46 54 43 58 43 C63 43 68 47 68 54 C68 62 60 70 50 78 Z"/>`,
+    lua: `<path d="M56 42 C44 44 38 54 40 64 C42 74 52 80 62 76 C52 74 46 66 47 58 C48 50 52 45 56 42 Z"/>`,
+    sol: `<circle cx="50" cy="60" r="8"/>${Array.from({ length: 8 }, (_, k) => `<rect x="48.5" y="40" width="3" height="8" rx="1.5" transform="rotate(${k * 45} 50 60)"/>`).join("")}`,
+    montanha: `<polygon points="32,74 44,52 50,61 57,48 70,74"/><polygon points="54,53 57,48 60,53" fill="${c1}"/>`,
+    onda: `<path d="M32 58 C38 50 44 50 50 58 C56 66 62 66 68 58" fill="none" stroke-width="4"/><path d="M32 68 C38 60 44 60 50 68 C56 76 62 76 68 68" fill="none" stroke-width="4"/>`,
+    gema: `<polygon points="40,48 60,48 68,58 50,78 32,58"/><polyline points="32,58 68,58" fill="none" stroke="${c1}" stroke-width="2"/>`,
+    asas: `<path d="M50 62 C42 52 34 48 28 50 C32 54 34 58 38 60 C34 60 31 62 30 64 C36 66 44 66 50 62 Z"/><path d="M50 62 C58 52 66 48 72 50 C68 54 66 58 62 60 C66 60 69 62 70 64 C64 66 56 66 50 62 Z"/>`,
+    caveira: `<path d="M50 42 C40 42 34 49 34 57 C34 63 37 66 40 68 V74 H60 V68 C63 66 66 63 66 57 C66 49 60 42 50 42 Z"/><circle cx="44" cy="58" r="4" fill="${c1}"/><circle cx="56" cy="58" r="4" fill="${c1}"/>`,
+    touro: `<path d="M40 52 C40 64 44 74 50 74 C56 74 60 64 60 52 Z"/><path d="M40 54 C34 52 30 46 30 40 C34 46 38 48 42 48" fill="none" stroke-width="3"/><path d="M60 54 C66 52 70 46 70 40 C66 46 62 48 58 48" fill="none" stroke-width="3"/>`,
     nenhum: ""
   };
   const ic = icons[c.icon] != null ? icons[c.icon] : icons.coroa;
   const c3 = c.c3 || c2, tc = c.tc || c2;
   const txt = c.txt ? `<text x="50" y="${c.shape === "diamante" ? 96 : 101}" text-anchor="middle" font-family="Big Shoulders Display, Arial Narrow, sans-serif" font-weight="900" font-size="17" fill="${tc}" stroke="${c1}" stroke-width="3" paint-order="stroke">${esc(c.txt)}</text>` : "";
-  const ns = Math.max(0, Math.min(5, c.stars | 0));
-  const stars = ns ? Array.from({ length: ns }, (_, k) => { const cx = 50 + (k - (ns - 1) / 2) * 11, cy = c.shape === "diamante" ? 30 : 24; return `<polygon transform="translate(${cx} ${cy}) scale(.22)" points="0,-20 6,-6 21,-6 9,3 13,18 0,9 -13,18 -9,3 -21,-6 -6,-6" fill="${c3}" stroke="${c1}" stroke-width="4"/>`; }).join("") : "";
-  return `<svg class="crest" viewBox="0 0 100 120" width="${size}" height="${size * 1.2}" aria-hidden="true"><defs><clipPath id="${id}">${sh}</clipPath></defs>
+  const ns = Math.max(0, Math.min(7, c.stars | 0)), out = ns && c.spos !== "dentro", sc = c.sc || (out ? "#f5c542" : c3);
+  const stars = ns ? Array.from({ length: ns }, (_, k) => { const gap = out ? 13 : 11, cx = 50 + (k - (ns - 1) / 2) * gap, cy = out ? -10 - (Math.abs(k - (ns - 1) / 2) < 0.6 ? 2 : 0) : c.shape === "diamante" ? 30 : 24; return `<polygon transform="translate(${cx} ${cy}) scale(${out ? 0.27 : 0.22})" points="0,-20 6,-6 21,-6 9,3 13,18 0,9 -13,18 -9,3 -21,-6 -6,-6" fill="${sc}" stroke="${out ? "rgba(0,0,0,.45)" : c1}" stroke-width="4"/>`; }).join("") : "";
+  const icc = c.ic || c2;
+  return `<svg class="crest" viewBox="0 ${out ? -22 : 0} 100 ${out ? 142 : 120}" width="${size}" height="${size * (out ? 1.42 : 1.2)}" aria-hidden="true"><defs><clipPath id="${id}">${sh}</clipPath></defs>
     <g clip-path="url(#${id})"><rect width="100" height="120" fill="${c1}"/><g fill="${c2}">${pats[c.pat] || ""}</g></g>
     <g fill="none" stroke="${c3}" stroke-width="6">${sh}</g>
-    ${ic ? `<circle cx="50" cy="60" r="22" fill="${c1}" stroke="${c3}" stroke-width="3"/><g fill="${c2}" stroke="${c2}">${ic}</g>` : ""}${stars}${txt}</svg>`;
+    ${ic ? `<circle cx="50" cy="60" r="22" fill="${c1}" stroke="${c3}" stroke-width="3"/><g fill="${icc}" stroke="${icc}">${ic}</g>` : ""}${stars}${txt}</svg>`;
 }
 function kitSVG(k, size, num) {
   k = k || {}; const id = "kt" + (CREST_N++); const c1 = k.c1 || "#f5c542", c2 = k.c2 || "#111";
@@ -2599,10 +2776,19 @@ function kitSVG(k, size, num) {
     centro: `<rect x="42" y="0" width="16" height="100"/>`,
     ombros: `<rect x="0" y="0" width="100" height="22"/>`,
     v: `<polygon points="20,20 50,52 80,20 80,32 50,64 20,32"/>`,
-    finas: [30, 38, 46, 54, 62, 70].map(x => `<rect x="${x - 1.2}" y="0" width="2.4" height="100"/>`).join("")
+    finas: [30, 38, 46, 54, 62, 70].map(x => `<rect x="${x - 1.2}" y="0" width="2.4" height="100"/>`).join(""),
+    degrade: Array.from({ length: 10 }, (_, q) => `<rect x="0" y="${40 + q * 6}" width="100" height="6.2" opacity="${(q + 1) / 10}"/>`).join(""),
+    laterais: `<rect x="28" y="0" width="9" height="100"/><rect x="63" y="0" width="9" height="100"/>`,
+    peito: `<rect x="0" y="34" width="100" height="16"/>`,
+    bicolor: `<polygon points="100,0 100,100 0,100"/>`,
+    chevron: `<polygon points="20,26 50,46 80,26 80,38 50,58 20,38"/><polygon points="20,46 50,66 80,46 80,54 50,74 20,54"/>`,
+    quadros: Array.from({ length: 12 }, (_, q) => { const x = q % 4, y = Math.floor(q / 4); return (x + y) % 2 ? `<rect x="${x * 25}" y="${y * 33}" width="25" height="33"/>` : ""; }).join(""),
+    mangas: `<polygon points="0,0 30,8 30,40 0,40"/><polygon points="100,0 70,8 70,40 100,40"/>`
   };
+  const c3 = k.c3 || null;
+  const trim = c3 ? `<g fill="${c3}"><path d="M42 4 C45 10 55 10 58 4 L60 6 C56 14 44 14 40 6 Z"/><polygon points="8,24 18,40 21,38 11,22"/><polygon points="92,24 82,40 79,38 89,22"/><rect x="28" y="88" width="44" height="4"/></g>` : "";
   return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true"><defs><clipPath id="${id}">${body}</clipPath></defs>
-    <g clip-path="url(#${id})"><rect width="100" height="100" fill="${c1}"/><g fill="${c2}">${pats[k.pat] || ""}</g></g>
+    <g clip-path="url(#${id})"><rect width="100" height="100" fill="${c1}"/><g fill="${c2}">${pats[k.pat] || ""}</g>${trim}</g>
     <g fill="none" stroke="rgba(0,0,0,.55)" stroke-width="2.5">${body}</g>
     <text x="50" y="68" text-anchor="middle" font-family="Big Shoulders Display, Arial Narrow, sans-serif" font-weight="900" font-size="30" fill="${k.num || "#fff"}" stroke="rgba(0,0,0,.45)" stroke-width="2" paint-order="stroke">${num || 10}</text></svg>`;
 }
@@ -2620,7 +2806,7 @@ function pcard(p) {
   </div>`;
 }
 function posb(p, p2) { return `<span class="posb ${p}">${p}${p2 ? `<small>/${p2}</small>` : ""}</span>`; }
-function mgrName(i) { const m = S.managers[i]; return `<span class="mcrest">${crestSVG(m.crest, 16)}</span> ${esc(m.team)}`; }
+function mgrName(i) { const m = S.managers[i]; return `<span class="mcrest">${crestSVG(m.crest, 16)}</span> ${esc(m.team)}${S.away && S.away[i] ? ' <span class="pill away" title="Saiu da sala: um bot está jogando por ele até ele voltar">🔌 bot no comando</span>' : ""}`; }
 function connStatus() {
   const w = NET.writeOk === true ? "envio por banco OK" : NET.writeOk === false ? `envio por banco bloqueado (${NET.writeErr})` : "envio por banco testando";
   const r = NET.rjoin || NET.lobby ? "canal ao vivo OK" : "canal ao vivo indisponível";
@@ -2637,6 +2823,7 @@ function header() {
     ${me ? `<span class="chip"><span class="dot" style="--c:${me.color}"></span>${esc(me.team)}</span>` : ""}
     ${NET.mode === "host" ? `<span class="chip">Anfitrião</span>` : ""}
     ${S && S.phase === "season" ? `<button class="btn sm gold" id="hdr-live" data-a="showlive" style="${anyLive() ? "" : "display:none"}">Ao vivo</button>` : ""}
+    ${S && NET.mode === "local" ? `<button class="btn sm ghost" data-a="exportsave" title="Baixa um arquivo com o jogo inteiro">Salvar arquivo</button>` : ""}
     ${S ? `<button class="btn sm ghost" data-a="leave">Sair</button>` : ""}
   </div></div>`;
 }
@@ -2654,6 +2841,7 @@ function viewHome() {
     <h1>Monte seu time.<br><em>Leilão</em> da Kings League.</h1>
     <p>Jogadores da Kings League Brasil sorteados um a um no leilão, com overall calculado pelo Split 1, Split 2, Kings Cup, Nations e Mundial. Depois, cada jogo é disputado ao vivo no campo: você escolhe formação, estilo, ordem do escalonado e a hora de usar a carta secreta e o pênalti do presidente.</p>
   </div>
+  ${resumeBox()}
   <div class="rules">${RULES.map(r => `<div style="--c:${r[2]}"><b>${r[0]}</b>${r[1]}</div>`).join("")}</div>
   <div class="grid3">
     <div class="card" style="display:grid;gap:10px;align-content:start">
@@ -2681,6 +2869,19 @@ function viewHome() {
   </div>
   <p class="err" role="status">${esc(UI.homeErr)}</p>
   ${howOvr()}`;
+}
+function resumeBox() {
+  let rooms = []; try { rooms = JSON.parse(store("kl_rooms") || "[]"); } catch (e) { }
+  const sv = savedLocal(), at = +(store("kl_save_at") || 0);
+  if (!rooms.length && !sv) return "";
+  const when = t => { const d = Math.round((Date.now() - t) / 60000); return d < 60 ? `há ${Math.max(1, d)} min` : d < 1440 ? `há ${Math.round(d / 60)} h` : `há ${Math.round(d / 1440)} dia${d >= 2880 ? "s" : ""}`; };
+  const ph = { lobby: "vestiário", staff: "leilão de staff", auction: "leilão", wc: "wild cards", lottery: "sorteio do draft", draft: "draft", trade: "mercado", keep: "mantidos", season: "campeonato", done: "fim de temporada" };
+  return `<div class="card resume" style="display:grid;gap:10px;margin-bottom:14px"><h2 style="font-size:22px;margin:0">Continuar de onde parou</h2>
+    ${rooms.length ? `<div class="row" style="gap:8px">${rooms.map(r => `<button class="btn ${r === rooms[0] ? "gold" : ""}" data-a="rejoin" data-code="${esc(r.c)}">Voltar para a sala <b>${esc(r.c)}</b> <span class="muted" style="font-size:12px">${when(r.at)}</span></button>`).join("")}</div>
+    <p class="muted" style="margin:0;font-size:13px">As salas online ficam salvas: dá para voltar outro dia com os mesmos elencos. Entrando de outro celular, use o mesmo nome de presidente que você usou na sala.</p>` : ""}
+    ${sv ? `<div class="row" style="gap:8px"><button class="btn ${rooms.length ? "" : "gold"}" data-a="resumelocal">Continuar o jogo salvo neste aparelho</button><span class="muted" style="font-size:13px">${esc(sv.managers.filter(m => !m.cpu).map(m => m.team).join(", "))} · ${ph[sv.phase] || sv.phase}${sv.career ? ` · carreira, temporada ${sv.career.year}` : ""}${at ? " · " + when(at) : ""}</span><button class="btn sm ghost" data-a="dellocal">Apagar</button></div>` : ""}
+    <div class="row" style="gap:8px"><label class="btn sm ghost" style="cursor:pointer">Carregar arquivo salvo<input type="file" id="loadsave" accept=".json,application/json" style="display:none"></label><span class="muted" style="font-size:12.5px">No modo "um aparelho só", use "Salvar arquivo" no topo para guardar o jogo e continuar em qualquer computador.</span></div>
+  </div>`;
 }
 function howOvr() {
   return `<details class="card" style="margin-top:14px"><summary>Como o overall foi calculado</summary><div class="howto" style="margin-top:10px">
@@ -2761,15 +2962,18 @@ function crestEditor() {
       <div style="display:grid;gap:10px">
         <div class="presets">${CREST_PRESETS.map((p, k) => `<button class="preset" data-a="crestpre" data-k="${k}" data-mi="${mi}" title="${esc(p.n)}">${crestSVG(Object.assign({}, p, { txt: c.txt }), 40)}<span>${esc(p.n)}</span></button>`).join("")}</div>
         <div class="grid3" style="gap:8px">
-          <label class="f" for="c-shape">Formato${sel("c-shape", CREST_SHAPES, c.shape, ["Escudo", "Redondo", "Hexágono", "Diamante", "Flâmula", "Brasão", "Oval", "Quadrado"])}</label>
-          <label class="f" for="c-pat">Desenho${sel("c-pat", CREST_PATS, c.pat, ["Liso", "Listras", "Diagonal", "Metade", "Faixa", "Xadrez"])}</label>
-          <label class="f" for="c-icon">Símbolo${sel("c-icon", CREST_ICONS, c.icon, ["Coroa", "Raio", "Estrela", "Bola", "Chama", "Olho", "Garra", "Foguete", "Troféu", "Âncora", "Espadas", "Coração", "Nenhum"])}</label>
+          <label class="f" for="c-shape">Formato${sel("c-shape", CREST_SHAPES, c.shape, ["Escudo", "Redondo", "Hexágono", "Diamante", "Flâmula", "Brasão", "Oval", "Quadrado", "Clássico", "Angular", "Coroado", "Losango"])}</label>
+          <label class="f" for="c-pat">Desenho${sel("c-pat", CREST_PATS, c.pat, ["Liso", "Listras", "Diagonal", "Metade", "Faixa", "Xadrez", "Listras horizontais", "Cruz", "Chevron", "Quartos", "Aro", "Diagonal dupla", "Triângulo"])}</label>
+          <label class="f" for="c-icon">Símbolo${sel("c-icon", CREST_ICONS, c.icon, ["Coroa", "Raio", "Estrela", "Bola", "Chama", "Olho", "Garra", "Foguete", "Troféu", "Âncora", "Espadas", "Coração", "Lua", "Sol", "Montanha", "Onda", "Gema", "Asas", "Caveira", "Touro", "Nenhum"])}</label>
           <label class="f" for="c-c1">Cor principal<input id="c-c1" type="color" data-mi="${mi}" value="${c.c1 || "#f5c542"}"></label>
           <label class="f" for="c-c2">Cor secundária<input id="c-c2" type="color" data-mi="${mi}" value="${c.c2 || "#111111"}"></label>
           <label class="f" for="c-txt">Sigla (até 3)<input id="c-txt" type="text" maxlength="3" data-mi="${mi}" value="${esc(c.txt || "")}" style="text-transform:uppercase"></label>
           <label class="f" for="c-c3">Cor da borda<input id="c-c3" type="color" data-mi="${mi}" value="${c.c3 || c.c2 || "#ffffff"}"></label>
           <label class="f" for="c-tc">Cor da sigla<input id="c-tc" type="color" data-mi="${mi}" value="${c.tc || c.c2 || "#111111"}"></label>
-          <label class="f" for="c-stars">Estrelas (títulos)<select id="c-stars" data-mi="${mi}">${[0, 1, 2, 3, 4, 5].map(n => `<option value="${n}" ${(c.stars | 0) === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+          <label class="f" for="c-ic">Cor do símbolo<input id="c-ic" type="color" data-mi="${mi}" value="${c.ic || c.c2 || "#111111"}"></label>
+          <label class="f" for="c-stars">Estrelas (títulos)<select id="c-stars" data-mi="${mi}">${[0, 1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(c.stars | 0) === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+          <label class="f" for="c-spos">Posição das estrelas<select id="c-spos" data-mi="${mi}"><option value="fora" ${c.spos !== "dentro" ? "selected" : ""}>Em cima, fora do escudo</option><option value="dentro" ${c.spos === "dentro" ? "selected" : ""}>Dentro do escudo</option></select></label>
+          <label class="f" for="c-sc">Cor das estrelas<input id="c-sc" type="color" data-mi="${mi}" value="${c.sc || "#f5c542"}"></label>
         </div>
       </div>
     </div>
@@ -2778,7 +2982,7 @@ function crestEditor() {
   <div class="sec-title"><h2>Uniformes</h2><span class="muted">principal no campo e na torcida; o reserva entra quando as cores batem com o do rival</span></div>
   ${kitEditor(mi, m)}`;
 }
-const KIT_NAMES = ["Lisa", "Listras verticais", "Listras horizontais", "Faixa diagonal", "Metade", "Xadrez", "Gola e punhos", "Faixa central", "Ombros", "V no peito", "Listras finas"];
+const KIT_NAMES = ["Lisa", "Listras verticais", "Listras horizontais", "Faixa diagonal", "Metade", "Xadrez", "Gola e punhos", "Faixa central", "Ombros", "V no peito", "Listras finas", "Degradê", "Faixas laterais", "Faixa no peito", "Bicolor diagonal", "Chevron duplo", "Quadros grandes", "Mangas"];
 function kitEditor(mi, m) {
   const which = UI.kitTab === 2 ? 2 : 1, key = which === 2 ? "kit2" : "kit";
   const k = m[key] || (which === 2 ? awayKit(m.kit) : {}) || {};
@@ -2789,6 +2993,7 @@ function kitEditor(mi, m) {
       <label class="f" for="k-c1">Cor da camisa<input id="k-c1" type="color" data-mi="${mi}" value="${k.c1 || "#f5c542"}"></label>
       <label class="f" for="k-c2">Cor do detalhe<input id="k-c2" type="color" data-mi="${mi}" value="${k.c2 || "#111111"}"></label>
       <label class="f" for="k-num">Cor do número<input id="k-num" type="color" data-mi="${mi}" value="${k.num || "#ffffff"}"></label>
+      <label class="f" for="k-c3">3ª cor (gola, punhos e barra)<span class="row" style="gap:6px;flex-wrap:nowrap"><input id="k-c3" type="color" data-mi="${mi}" value="${k.c3 || "#ffffff"}" ${k.c3 ? "" : 'style="opacity:.45"'}><button class="btn sm ${k.c3 ? "gold" : "ghost"}" data-a="kitc3" data-mi="${mi}">${k.c3 ? "Ligada" : "Desligada"}</button></span></label>
       <label class="f" for="k-pat">Modelo<select id="k-pat" data-mi="${mi}">${KIT_PATS.map((p, i) => `<option value="${p}" ${k.pat === p ? "selected" : ""}>${KIT_NAMES[i] || p}</option>`).join("")}</select></label>
       <div class="row" style="gap:6px;align-items:flex-end;grid-column:span 2"><button class="btn sm" data-a="kitfromcrest" data-mi="${mi}">Usar cores do escudo</button>${which === 2 ? `<button class="btn sm ghost" data-a="kitinvert" data-mi="${mi}">Inverter o principal</button>` : ""}</div>
     </div></div></div>`;
@@ -2878,14 +3083,16 @@ function viewTrade() {
     <div class="row" style="justify-content:space-between"><span class="muted" style="font-size:13px">Cada elenco fica entre ${mn} e ${mx} jogadores e com pelo menos 1 goleiro. Bots aceitam se a troca for boa pra eles.</span><button class="btn gold" data-a="tsend">Propor troca</button></div>
     ${tr.lastErr && tr.lastErr.mi === me && Date.now() - tr.lastErr.at < 8000 ? `<p class="err">${esc(tr.lastErr.err)}</p>` : ""}
   </div>` : "";
-  const desc = o => `<b>${esc(S.managers[o.from].team)}</b> entrega ${o.give.map(id => esc(P(id).n)).join(", ") || "—"}${o.cf ? ` + ${o.cf} K$` : ""} · recebe ${o.get.map(id => esc(P(id).n)).join(", ") || "—"}${o.ct ? ` + ${o.ct} K$` : ""} <span class="muted">(com ${esc(S.managers[o.to].team)})</span>`;
+  const pn = id => `${esc(P(id).n)} <span class="num muted">${O(P(id))}</span>`;
+  const desc = o => `${o.bot ? '<span class="pill cpu">proposta do bot</span> ' : ""}<b>${esc(S.managers[o.from].team)}</b> entrega ${o.give.map(pn).join(", ") || "—"}${o.cf ? ` + ${o.cf} K$` : ""} · recebe ${o.get.map(pn).join(", ") || "—"}${o.ct ? ` + ${o.ct} K$` : ""} <span class="muted">(com ${esc(S.managers[o.to].team)})</span>`;
   const stl = { pend: "pendente", ok: "aceita", no: "recusada", cancel: "cancelada", fail: "inválida" };
-  const offers = tr.offers.map(o => `<div class="row" style="justify-content:space-between;border-bottom:1px solid #1b212c;padding:8px 0;gap:8px"><div style="flex:1;min-width:240px">${desc(o)}${o.err ? ` <span class="err">${esc(o.err)}</span>` : ""}</div>
+  const inc = tr.offers.filter(o => o.st === "pend" && mis.includes(o.to)).length;
+  const offers = tr.offers.slice().sort((a, b) => (b.st === "pend" && mis.includes(b.to)) - (a.st === "pend" && mis.includes(a.to))).map(o => `<div class="row" style="justify-content:space-between;border-bottom:1px solid #1b212c;padding:8px 0;gap:8px"><div style="flex:1;min-width:240px">${desc(o)}${o.err ? ` <span class="err">${esc(o.err)}</span>` : ""}</div>
     <div class="row" style="gap:6px"><span class="pill ${o.st === "ok" ? "you" : ""}">${stl[o.st]}</span>${o.st === "pend" && mis.includes(o.to) ? `<button class="btn sm gold" data-a="tresp" data-id="${o.id}" data-ok="1" data-mi="${o.to}">Aceitar</button><button class="btn sm" data-a="tresp" data-id="${o.id}" data-ok="0" data-mi="${o.to}">Recusar</button>` : ""}${o.st === "pend" && mis.includes(o.from) ? `<button class="btn sm ghost" data-a="tcancel" data-id="${o.id}" data-mi="${o.from}">Cancelar</button>` : ""}</div></div>`).join("");
   return `${tr.when === "carreira" ? careerWindow(me) : ""}<div class="sec-title"><h2>Mercado de trocas</h2><span class="phase">${tr.when === "carreira" ? `temporada ${S.career.year}` : tr.when === "antes" ? "antes do campeonato" : "antes do mata-mata"}</span>${tr.deadline ? `<span class="pill">fecha em <b class="num" data-dl="${tr.deadline}">1:00</b></span>` : ""}</div>
   ${isHost() ? `<div class="row" style="margin-bottom:10px"><span class="muted" style="font-size:13px">Anfitrião:</span><button class="btn gold sm" data-a="tclose">Fechar mercado e seguir</button></div>` : `<p class="muted">O anfitrião fecha o mercado quando todo mundo terminar.</p>`}
   ${builder}
-  <div class="sec-title"><h2>Propostas</h2></div><div class="card">${offers || '<p class="muted" style="margin:0">Nenhuma proposta ainda.</p>'}</div>
+  <div class="sec-title"><h2>Propostas</h2>${inc ? `<span class="pill you">📩 ${inc} esperando sua resposta</span>` : ""}</div><div class="card">${offers || '<p class="muted" style="margin:0">Nenhuma proposta ainda.</p>'}</div>
   <div class="sec-title"><h2>Elencos</h2></div><div class="mgrs">${S.managers.map((m, i) => mgrBox(m, i)).join("")}</div>`;
 }
 // modo carreira: evolução, agentes livres e dispensas
@@ -2928,6 +3135,7 @@ function careerWindow(me) {
   return `<div class="sec-title"><h2>Temporada ${C.year}</h2><span class="phase">janela de transferências</span></div>
   <div class="card" style="display:grid;gap:10px">
     ${lastGoalsView()}
+    ${m && m.roster.some(id => isUnh(id)) ? `<div class="unhbox">😤 Insatisfeitos no seu elenco: ${m.roster.filter(id => isUnh(id)).map(id => esc(P(id).n)).join(", ")}. Craque que fica no banco perde rendimento (−3) até jogar 3 partidas.</div>` : ""}
     ${evo ? `<div><div class="muted" style="font-size:12px;margin-bottom:4px">QUEM EVOLUIU NA TEMPORADA PASSADA</div><div class="row" style="gap:6px">${evo}</div></div>` : ""}
     ${m && S.career.log ? `<details><summary class="muted" style="cursor:pointer;font-size:13px">Ver ficha de carreira do elenco</summary>${fichaView(me)}</details>` : ""}
     ${S.trade.lastErr && m && S.trade.lastErr.mi === me && Date.now() - S.trade.lastErr.at < 8000 ? `<p class="err" style="margin:0">${esc(S.trade.lastErr.err)}</p>` : ""}
@@ -3011,9 +3219,10 @@ function viewWC() {
 }
 function viewLottery() {
   const d = S.draft;
-  return `<div class="sec-title"><h2>Sorteio do draft</h2><span class="muted">a ordem das escolhas</span></div>
+  return `<div class="sec-title"><h2>${d.byTable ? "Ordem do draft" : "Sorteio do draft"}</h2><span class="muted">${d.byTable ? "o pior da última temporada escolhe primeiro" : "a ordem das escolhas"}</span></div>
   <div class="card lottery">
     <div class="balls">${d.order.map((mi, k) => k < d.revealed ? `<div class="ball on" style="--c:${S.managers[mi].color}"><span class="num">${k + 1}º</span>${crestSVG(S.managers[mi].crest, 44)}<b>${esc(S.managers[mi].team)}</b></div>` : `<div class="ball ${k === d.revealed ? "spin" : ""}"><span class="num">${k + 1}º</span><b>?</b></div>`).join("")}</div>
+    ${d.byTable ? `<p style="margin:10px 0 0"><b>Regra da Kings:</b> a ordem segue a classificação da última temporada nesta sala, do último colocado para o campeão. Quem ficou fora da última temporada entra no fim da fila.</p>` : ""}
     <p class="muted" style="margin:10px 0 0">Ordem em cobra: na rodada 1 vai do 1º ao último, na rodada 2 volta do último ao 1º, e assim por diante.</p>
   </div>
   ${isHost() ? `<div class="row" style="margin-top:10px"><button class="btn sm" data-a="autofill">Fazer o draft todo automático</button></div>` : ""}`;
@@ -3093,13 +3302,15 @@ function viewSeason() {
   ${UI.tab === "time" ? teamView() : UI.tab === "tabela" ? (se.fmt === "cup" ? `<div class="grid2">${[0, 1].map(g => `<div><h3 style="font-size:20px;margin-bottom:6px">Grupo ${"AB"[g]}</h3>${tableView(standings(S, g), g)}</div>`).join("")}</div>` : tableView(tb)) + bracketView() : UI.tab === "jogos" ? fixturesView() : UI.tab === "elencos" ? rostersView() : UI.tab === "carreira" ? goalsView() + fichaView() : statsView()}`;
 }
 function hallView() {
-  const H = S.hall; if (!H || (!H.titles.length && !Object.keys(H.h2h).length)) return "";
+  const H = S.hall; if (!H || (!H.titles.length && !Object.keys(H.h2h).length && !H.rec)) return "";
+  const Rc = H.rec || {}, recs = [["Maior goleada", Rc.win && Rc.win.txt], ["Jogo com mais gols", Rc.goals && `${Rc.goals.txt} (${Rc.goals.t} gols)`], ["Mais gols de um jogador num jogo", Rc.pg && `${Rc.pg.n} gols · ${Rc.pg.txt}`], ["Artilheiro de uma temporada", Rc.top && `${Rc.top.n} gols · ${Rc.top.txt}`], ["Mais títulos seguidos", Rc.streak && Rc.streak.n >= 2 && `${Rc.streak.n} · ${Rc.streak.txt}`]].filter(x => x[1]);
   const tot = {}; H.titles.forEach(t => { const k = t.pid ? t.name : "Bots"; tot[k] = (tot[k] || 0) + 1; });
   const rk = Object.entries(tot).sort((a, b) => b[1] - a[1]);
   const h2h = Object.values(H.h2h).sort((a, b) => (b.wa + b.wb) - (a.wa + a.wb));
   return `<div class="card" style="display:grid;gap:8px;margin-top:16px"><h3 style="font-size:22px">Histórico da sala</h3>
     <div class="row" style="gap:10px;flex-wrap:wrap">${rk.map(([n, c], k) => `<span class="pill ${k === 0 ? "you" : ""}">${k === 0 ? "👑 " : ""}${esc(n)}: <b>${c}</b> título${c > 1 ? "s" : ""}</span>`).join("")}</div>
     <div class="muted" style="font-size:13px">Últimos campeões: ${H.titles.slice(-6).reverse().map(t => `<b style="color:var(--ink)">${esc(t.team)}</b> (${t.comp}${t.season ? " " + t.season : ""}, ${t.pid ? esc(t.name) : "bot"})`).join(" · ")}</div>
+    ${recs.length ? `<div style="display:grid;gap:4px"><div class="muted" style="font-size:12px">RECORDES DA SALA</div><div class="recs">${recs.map(([k, v]) => `<div class="rec"><span class="muted">${k}</span><b>${esc(v)}</b></div>`).join("")}</div></div>` : ""}
     ${h2h.length ? `<div style="display:grid;gap:4px"><div class="muted" style="font-size:12px">CONFRONTO DIRETO ENTRE AMIGOS</div>${h2h.slice(0, 8).map(r => `<div class="row" style="gap:8px"><b>${esc(r.na)}</b><span class="num" style="color:var(--gold);font-weight:800">${r.wa} x ${r.wb}</span><b>${esc(r.nb)}</b></div>`).join("")}</div>` : ""}
   </div>`;
 }
@@ -3159,8 +3370,9 @@ function luChip(mi, key, id, slot, extra) {
   const p = id != null ? P(id) : null, sel = UI.lsel && UI.lsel.mi === mi && UI.lsel.k === key;
   const fit = slot ? fitOf(p, slot) : "";
   return `<button class="luchip ${fit} ${sel ? "sel" : ""}" data-a="lu" data-mi="${mi}" data-k="${key}" ${extra || ""} aria-label="${p ? esc(p.n) : "vaga"}">
-    ${slot ? `<span class="lupos">${slot}</span>` : ""}<span class="luo num">${p ? O(p) : "–"}</span><span class="lun">${p ? esc(shortName(p.n)) : "vaga"}${p && isInj(S, id) ? " 🩹" : ""}</span>${p ? `<span class="lup">${p.p}${p.p2 ? "/" + p.p2 : ""}</span>` : ""}</button>`;
+    ${slot ? `<span class="lupos">${slot}</span>` : ""}<span class="luo num">${p ? O(p) : "–"}</span><span class="lun">${p ? esc(shortName(p.n)) : "vaga"}${p && isInj(S, id) ? " 🩹" : ""}${p && isUnh(id) ? " 😤" : ""}</span>${p ? `<span class="lup">${p.p}${p.p2 ? "/" + p.p2 : ""}</span>` : ""}</button>`;
 }
+function isUnh(id) { const u = S.career && S.career.unhappy && S.career.unhappy[id]; return !!(u && u.left > 0); }
 function lineupBoard(mi, m, tac) {
   const slots = FORMS[tac.form], xy = FORM_XY[tac.form];
   const used = new Set([tac.gk].concat(tac.slots));
@@ -3169,6 +3381,7 @@ function lineupBoard(mi, m, tac) {
   const bad = slots.filter((sl, i) => tac.slots[i] != null && fitOf(P(tac.slots[i]), sl) === "bad").length + (P(tac.gk) && P(tac.gk).p !== "GOL" ? 1 : 0);
   const chem = chemistry({ field: tac.slots.filter(x => x != null).concat(tac.gk != null ? [tac.gk] : []) });
   const injd = [tac.gk].concat(tac.slots).filter(id => isInj(S, id));
+  const unh = m.roster.filter(id => isUnh(id));
   return `<div class="lubox">
     <div class="lupitch">
       <div class="luline mid"></div><div class="luline box"></div><div class="luline box top"></div>
@@ -3177,6 +3390,7 @@ function lineupBoard(mi, m, tac) {
     </div>
     <div class="muted" style="font-size:12.5px">${UI.lsel && UI.lsel.mi === mi ? "<b style='color:var(--gold)'>Agora toque em quem vai trocar de lugar com ele.</b>" : "Toque num jogador e depois em outro (no campo ou no banco) para trocar."} Verde: posição dele · amarelo: posição secundária · vermelho: fora de posição.${bad ? ` <b style="color:var(--red)">${bad} fora de posição.</b>` : ""}</div>
     <div class="row" style="gap:6px"><span class="pill ${chem.pairs ? "you" : ""}">Química: ${chem.pairs} dupla${chem.pairs === 1 ? "" : "s"} do mesmo clube${chem.pairs ? ` (+${Math.round((chem.mult - 1) * 100)}%)` : ""}</span>${injd.length ? `<span class="pill" style="color:var(--red)">🩹 ${injd.map(id => esc(shortName(P(id).n)) + " fora " + S.season.inj[id] + " rod.").join(", ")} — o jogo troca na hora</span>` : ""}</div>
+    ${unh.length ? `<div class="unhbox">😤 <b>Insatisfeito${unh.length > 1 ? "s" : ""}:</b> ${unh.map(id => `${esc(P(id).n)} (faltam ${S.career.unhappy[id].left} jogo${S.career.unhappy[id].left > 1 ? "s" : ""})`).join(", ")}. Quase não jogou na temporada passada e rende 3 pontos a menos até entrar em campo de novo. Escale, troque ou dispense.</div>` : ""}
     <div class="lubench"><span class="muted" style="font-size:12px">BANCO</span>${bench.map(id => luChip(mi, "b" + id, id, null, "")).join("") || '<span class="muted">sem reservas</span>'}</div>
   </div>`;
 }
@@ -3217,6 +3431,7 @@ function teamView() {
       </div>
       ${lineupBoard(mi, m, tac)}
       <label class="row" for="t-auto" style="gap:8px;font-size:14px"><input id="t-auto" type="checkbox" data-mi="${mi}" ${tac.autoSub !== false ? "checked" : ""}> Substituições automáticas (ilimitadas: quem cansa sai e pode voltar)</label>
+      <label class="f" for="t-pk">Cobrador oficial (pênaltis e shootouts)<select id="t-pk" data-mi="${mi}"><option value="">Automático (melhor finalizador em campo)</option>${m.roster.map(P).filter(p => p.p !== "GOL").sort((a, b) => b.at - a.at).map(p => `<option value="${p.id}" ${tac.pk === p.id ? "selected" : ""}>${esc(p.n)} · finalização ${p.at}</option>`).join("")}</select></label>
       <label class="f" for="t-gkm">Goleiro linha<select id="t-gkm" data-mi="${mi}">${[["auto", "Automático (escalonado até 3x3, dado às vezes, match ball 2x2/1x1)"], ["sempre", "Sempre que der"], ["nunca", "Nunca"]].map(([k, v]) => `<option value="${k}" ${(tac.gkMode || "auto") === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
     </div>
     <div style="display:grid;gap:16px;align-content:start">
@@ -3395,6 +3610,7 @@ function render(force) {
   else if (S.phase === "trade") body = viewTrade();
   else if (S.phase === "keep") body = viewKeep();
   else body = viewSeason();
+  if (S && NET.mode === "client" && myMi() < 0 && S.phase !== "lobby") body = `<div class="card unhbox" style="margin-bottom:12px">Você entrou assistindo. Se você é presidente de um time desta sala e voltou por outro aparelho, entre com o mesmo nome de presidente: assim que o aparelho antigo ficar uns 30 segundos fora, você reassume o seu time sozinho.</div>` + body;
   $("#app").innerHTML = header() + `<main class="wrap">${body}</main>`;
   if (aid) { const el = document.getElementById(aid); if (el) { if (keepVal != null) el.value = keepVal; el.focus(); try { if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, ss); } catch (e) { } } }
   tickClocks(); renderChat();
@@ -3428,6 +3644,10 @@ document.addEventListener("click", e => {
   const a = b.dataset.a;
   if (a === "create") return createOnline();
   if (a === "join") return joinOnline();
+  if (a === "rejoin") { const c = b.dataset.code; return joinOnline(c, ($("#j-name") && $("#j-name").value) || store("kl_name") || "Presidente", ($("#j-team") && $("#j-team").value) || store("kl_team") || "Meu Time FC"); }
+  if (a === "resumelocal") { const sv = savedLocal(); if (sv) loadLocal(sv); return; }
+  if (a === "dellocal") { try { localStorage.removeItem("kl_save"); localStorage.removeItem("kl_save_at"); } catch (e) { } return render(); }
+  if (a === "exportsave") return exportSave();
   if (a === "local") return startLocal();
   if (a === "lpadd") { const lp = $("#lp"); if (lp.children.length < 12) { const i = document.createElement("input"); i.className = "lp-name"; i.type = "text"; i.maxLength = 18; i.id = "lp" + lp.children.length; i.placeholder = "Jogador " + (lp.children.length + 1); lp.appendChild(i); i.focus(); } return; }
   if (a === "leave") return leave();
@@ -3479,6 +3699,7 @@ document.addEventListener("click", e => {
   if (a === "fasign" || a === "farel") return act({ t: a, id: +b.dataset.id, mi: +b.dataset.mi });
   if (a === "nextseason") return act({ t: "nextseason" });
   if (a === "replay") { if (LV.lastGoal) { LV.replay = { frames: LV.lastGoal.frames, i: 0 }; } return; }
+  if (a === "kitc3") { const m = S.managers[+b.dataset.mi], k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; return setKit(+b.dataset.mi, { c3: k.c3 ? null : (($("#k-c3") && $("#k-c3").value) || "#ffffff") }); }
   if (a === "kittab") { UI.kitTab = +b.dataset.v; return render(true); }
   if (a === "kitinvert") { const m = S.managers[+b.dataset.mi]; const k = m.kit || {}; return setKit(+b.dataset.mi, { c1: k.c2 || "#111111", c2: k.c1 || "#f5c542", pat: k.pat || "liso", num: k.c1 || "#ffffff" }); }
   if (a === "kitfromcrest") { const m = S.managers[+b.dataset.mi]; const c = m.crest || {}; return setKit(+b.dataset.mi, { c1: c.c1 || "#f5c542", c2: c.c2 || "#111111" }); }
@@ -3507,14 +3728,19 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   const el = e.target, id = el.id;
+  if (id === "loadsave" && el.files && el.files[0]) return importSave(el.files[0]);
   if (id === "mpos") { UI.mpos = el.value; return render(); }
   if (id && id.startsWith("st-")) { const mi = +el.dataset.mi; if (NET.mode === "client" && S.managers[mi]) { const st = Object.assign({}, S.managers[mi].strat, { [el.dataset.k]: el.value }); S.managers[mi].strat = st; setLocal(mi, "strat", st); } return act({ t: "strat", [el.dataset.k]: el.value, mi }); }
   if (["s-fmt", "s-year", "s-staff", "s-trades", "s-hide", "s-career"].includes(id) && isHost()) return act(readSettings());
   if (id === "c-stars") return setCrest(+el.dataset.mi, { stars: +el.value });
+  if (id === "c-spos") return setCrest(+el.dataset.mi, { spos: el.value });
+  if (id === "c-sc" || id === "c-ic") return setCrest(+el.dataset.mi, { [id.slice(2)]: el.value });
+  if (id === "k-c3") return setKit(+el.dataset.mi, { c3: el.value });
   if (id === "k-c1" || id === "k-c2" || id === "k-num" || id === "k-pat") return setKit(+el.dataset.mi, { [id.slice(2)]: el.value });
   if (id === "c-shape" || id === "c-pat" || id === "c-icon" || id === "c-c1" || id === "c-c2" || id === "c-c3" || id === "c-tc" || id === "c-txt") return setCrest(+el.dataset.mi, { [id.slice(2) === "shape" ? "shape" : id.slice(2)]: id === "c-txt" ? el.value.toUpperCase().slice(0, 3) : el.value });
   if (id === "t-auto") return tacChange(+el.dataset.mi, tac => { tac.autoSub = el.checked; });
   if (id === "t-gkm") return tacChange(+el.dataset.mi, tac => { tac.gkMode = el.value; });
+  if (id === "t-pk") return tacChange(+el.dataset.mi, tac => { tac.pk = el.value ? +el.value : null; });
   if (id === "t-form") return tacChange(+el.dataset.mi, tac => { tac.form = el.value; tac.slots = autoTac(S, +el.dataset.mi, el.value, tac.style, tac.gk).slots; });
   if (id === "t-style") return tacChange(+el.dataset.mi, tac => { tac.style = el.value; });
   if (id === "t-gk") return tacChange(+el.dataset.mi, tac => { const nv = +el.value; const s = tac.slots.indexOf(nv); if (s >= 0) tac.slots[s] = tac.gk; tac.gk = nv; });
