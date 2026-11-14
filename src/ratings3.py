@@ -53,6 +53,12 @@ def career(h, P):
     perf = (perf * den + 68 * k) / (den + k)
     return perf, den, tot
 
+# idade em nov/2026, pela data de nascimento do site oficial
+AGE = {}
+for _x in json.load(open('data/all_klb.json', encoding='utf-8')):
+    bd = _x[6]
+    if bd and not bd.startswith('0000'):
+        y, m_, d_ = map(int, bd.split('-')); AGE[norm(_x[1])] = 2026 - y - (1 if (m_, d_) > (11, 14) else 0)
 out = []
 def rate(team, name, P, med, fis, due, chu, dfe, pas, hab, g, a, j, h, fz, xtags=()):
     o_old = old.get(norm(name)); g = g or 0; a = a or 0; j = j or 0
@@ -76,7 +82,14 @@ def rate(team, name, P, med, fis, due, chu, dfe, pas, hab, g, a, j, h, fz, xtags
     o = int(round(clamp(o, 62, 94)))
     # potencial: quem tem pouca rodagem na Kings ainda pode crescer bastante
     seed = sum(ord(ch) for ch in name) % 3
-    pot = int(min(95, o + round(1 + 7 * math.exp(-games / 18)) + seed))
+    # potencial: idade (data de nascimento do site oficial) + pouca rodagem na Kings
+    age = AGE.get(norm(name))
+    if age is None: gap = 4 + round(5 * math.exp(-games / 18))
+    else: gap = 13 if age <= 21 else 11 if age <= 23 else 9 if age <= 25 else 7 if age <= 27 else 5 if age <= 29 else 4 if age <= 32 else 2
+    gap += round(2 * math.exp(-games / 18)) + seed
+    pot = o + gap
+    if age is not None and age <= 25: pot = max(pot, 82)
+    pot = int(min(97, o + 15, max(pot, o + 2)))
     if med and chu:
         at = round(0.5 * chu + 0.3 * hab + 0.2 * fis) + (o - med); df = round(0.6 * dfe + 0.4 * due) + (o - med)
     else:

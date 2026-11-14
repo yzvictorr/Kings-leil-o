@@ -736,15 +736,30 @@ function careerRelease(S, mi, id) {
 function nextSeason(S) {
   if (!gameOver(S)) return false;
   const C = S.career = S.career || { year: 1 };
-  const st = {}; (S.season ? S.season.fixtures : []).forEach(f => { if (!f.res) return; (f.res.nt || []).forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0 }; x.j++; x.n += n; }); });
-  S.pov = S.pov || {}; const evo = [];
-  S.managers.forEach(m => m.roster.forEach(id => {
-    const p = P(id), x = st[id] || { j: 0, n: 0 }, avg = x.j ? x.n / x.j : 6;
+  // desempenho da temporada: nota média, gols e assistências por jogo
+  const st = {}, gm = {};
+  (S.season ? S.season.fixtures : []).forEach(f => { const r = f.res; if (!r) return; [f.h, f.a].forEach(mi => gm[mi] = (gm[mi] || 0) + 1);
+    (r.nt || []).forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.j++; x.n += n; });
+    (r.sc || []).concat(r.ast || []).forEach(l => l.forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.ga += n; })); });
+  S.pov = S.pov || {}; const evo = [], potUp = [];
+  S.managers.forEach((m, mi) => m.roster.forEach(id => {
+    const p = P(id), x = st[id] || { j: 0, n: 0, ga: 0 }, avg = x.j ? x.n / x.j : 6;
+    // potencial dinâmico: quem faz temporada muito boa ganha teto mais alto (bom para o jogador mediano crescer)
+    let ps = avg + (p.p !== "GOL" && x.j ? Math.min(0.6, Math.max(0, x.ga / x.j - (p.p === "ATA" ? 1 : p.p === "MEI" ? 0.7 : 0.4)) * 0.4) : 0);
+    const reg = x.j >= Math.max(2, (gm[mi] || 0) * 0.6);
+    let pot = p.pot || p.o;
+    if (x.j >= 2) pot += ps >= 8 ? 3 : ps >= 7.4 ? 2 : ps >= 6.9 ? 1 : (ps < 6 && x.j >= 3) ? -1 : 0;
+    pot = Math.min(97, Math.max(p.o, pot));
     let d = 0;
-    if (p.o < p.pot) { d = (x.j >= 3 ? 1 : 0) + (avg >= 7 ? 1 : 0) + (avg >= 7.8 ? 1 : 0) + (Math.random() < 0.35 ? 1 : 0); d = Math.min(d, p.pot - p.o); }
-    else if (x.j >= 2 && avg < 6.2 && Math.random() < 0.4) d = -1;
-    if (d) { S.pov[id] = { o: p.o + d, at: p.at + d, df: p.df + d, v: Math.max(1, Math.round(1.25 * Math.exp((p.o + d - 64) * 0.13))) }; evo.push([id, p.o, p.o + d]); }
+    if (p.o < pot) { d = (ps >= 8 ? 3 : ps >= 7.4 ? 2 : ps >= 6.8 ? 1 : 0) + (reg ? 1 : 0) + (Math.random() < 0.3 ? 1 : 0); if (!x.j) d = Math.random() < 0.3 ? 1 : 0; d = Math.min(d, pot - p.o); }
+    else if (x.j >= 2 && ps < 6.2 && Math.random() < 0.4) d = -1;
+    if (d || pot !== (p.pot || p.o)) {
+      S.pov[id] = Object.assign({}, S.pov[id] || {}, { o: p.o + d, at: p.at + d, df: p.df + d, pot, v: Math.max(1, Math.round(1.25 * Math.exp((p.o + d - 64) * 0.13))) });
+      if (d) evo.push([id, p.o, p.o + d]);
+      if (pot > (p.pot || p.o)) potUp.push([id, p.pot || p.o, pot]);
+    }
   }));
+  C.lastPot = potUp.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10);
   setPov(S.pov);
   // premiação pela campanha
   const tb = standings(S).map(r => r.i), ch = S.season && S.season.champion;

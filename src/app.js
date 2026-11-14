@@ -928,6 +928,7 @@ function careerWindow(me) {
     ${lastGoalsView()}
     ${m && m.roster.some(id => isUnh(id)) ? `<div class="unhbox">😤 Insatisfeitos no seu elenco: ${m.roster.filter(id => isUnh(id)).map(id => esc(P(id).n)).join(", ")}. Craque que fica no banco perde rendimento (−3) até jogar 3 partidas.</div>` : ""}
     ${evo ? `<div><div class="muted" style="font-size:12px;margin-bottom:4px">QUEM EVOLUIU NA TEMPORADA PASSADA</div><div class="row" style="gap:6px">${evo}</div></div>` : ""}
+    ${(C.lastPot || []).length ? `<div><div class="muted" style="font-size:12px;margin-bottom:4px">POTENCIAL SUBIU (TEMPORADA MUITO BOA)</div><div class="row" style="gap:6px">${C.lastPot.map(([id, a, b]) => `<span class="pill you">${esc(shortName(P(id).n))} pot ${a}→<b>${b}</b></span>`).join("")}</div></div>` : ""}
     ${m && S.career.log ? `<details><summary class="muted" style="cursor:pointer;font-size:13px">Ver ficha de carreira do elenco</summary>${fichaView(me)}</details>` : ""}
     ${S.trade.lastErr && m && S.trade.lastErr.mi === me && Date.now() - S.trade.lastErr.at < 8000 ? `<p class="err" style="margin:0">${esc(S.trade.lastErr.err)}</p>` : ""}
     ${m ? `<div class="muted" style="font-size:13px">Saldo do ${esc(m.team)}: <b style="color:var(--gold)">${m.budget} K$</b> · elenco ${m.roster.length} (entre ${mn} e ${mx}). Contratar custa o valor do jogador; dispensar devolve metade.</div>
