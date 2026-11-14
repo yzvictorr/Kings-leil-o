@@ -1444,11 +1444,12 @@ function stepMatch(M, now, auto) {
     const T = M.t[ti], O = M.t[1 - ti];
     const poss = ti ? 1 - possA : possA;
     const edge = 1 + styleEdge(T.tac.style, O.tac.style);
-    const base = M.phase === "mb" ? 0.11 : 0.074;
-    let pr = base * TICK * open * Math.pow(me.att / op.df, 2.3) * edge * Math.pow(poss * 2, 0.5);
+    // escalonado e dado têm campo aberto: é onde mais sai gol na Kings
+    const base = M.phase === "mb" ? 0.11 : 0.065, boost = M.phase === "esc" ? 1.85 : M.phase === "dice" ? 2.15 : 1;
+    let pr = base * TICK * open * boost * Math.pow(me.att / op.df, 2.3) * edge * Math.pow(poss * 2, 0.5);
     if (T.gkOut) pr *= 1.45;
     if (O.gkOut) pr *= 1.35;
-    pr = Math.max(0.006, Math.min(0.14, pr));
+    pr = Math.max(0.006, Math.min(boost > 1 ? 0.22 : 0.14, pr));
     if (Math.random() < pr) {
       const sc = pickScorer(M, ti); if (!sc) continue;
       T.shots++;
