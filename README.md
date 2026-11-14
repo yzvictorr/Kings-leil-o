@@ -34,4 +34,4 @@ node tests/test_cup.js       # confere as regras da Kings Cup (1 desafio por tim
 ## Observações
 - Os escudos oficiais da Kings League são marcas registradas. Por isso os escudos do jogo são originais, e você cria o seu no editor.
 - Os nomes de técnicos e presidentes vêm de fontes públicas. A formação preferida de cada técnico e a pontaria dos presidentes foram inventadas para o jogo.
-- Os overalls são calculados a partir dos números do Split 1, Split 2, Kings Cup, Nations e Mundial.
+- Os overalls (src/ratings3.py) usam o elenco oficial da Kings Cup Brasil 2026/27, as notas oficiais do kingsleague.pro, as estatísticas de Split 1, Kings Cup 2025, Split 2, Kings Cup 2026, Mundial 2025/2026 e Nations 2025/2026, e os salários do fantasy oficial.

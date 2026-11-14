@@ -7,6 +7,7 @@ function initLive() {
     <div class="row" style="justify-content:space-between;gap:8px"><span class="phase" id="l-stage"></span><div class="row" id="l-host" style="gap:6px"></div></div>
     <div class="sbstrip" id="l-sb"></div>
     <div class="board" id="l-board"></div>
+    <div class="reacts" id="l-reacts">${REACTS.map(e => `<button class="rbtn" data-a="react" data-e="${e}" aria-label="Reagir ${e}">${e}</button>`).join("")}</div>
     <div class="pitchwrap"><canvas id="pitch" width="900" height="520" aria-label="Campo da partida"></canvas><div id="ovl" class="ovl"></div></div>
     <div class="timeline" id="l-tl" aria-hidden="true"></div>
     <div id="l-prompt"></div>
@@ -21,7 +22,7 @@ function renderLive(force) {
   const root = $("#live");
   if (!LIVE || !LIVE.status || LIVE.status === "none") { const was = LV.fid != null || root.classList.contains("on"); root.classList.remove("on"); document.body.style.overflow = ""; LV.fid = null; if (was && S) render(); return; }
   if (LV.fid !== LIVE.fid) {
-    LV.fid = LIVE.fid; LV.rp = {}; LV.queue = []; LV.parts = []; UI.hideLive = false; UI.gate = null;
+    LV.fid = LIVE.fid; LV.rp = {}; LV.queue = []; LV.parts = []; UI.hideLive = false; UI.gate = null; LV.hist = []; LV.lastGoal = null; LV.replay = null;
     LV.animSeq = LIVE.seq > 4 ? LIVE.seq : 0; LV.sigCtrl = ""; LV.sigPrompt = ""; LV.sigFeed = -1;
     if (S) render();
   }
@@ -33,6 +34,7 @@ function renderLive(force) {
   const host = isHost();
   $("#l-host").innerHTML = (host && M.status === "playing" ? `${[1, 2, 4].map(s => `<button class="btn sm ${(M.speed || 1) === s ? "gold" : ""}" data-a="lspeed" data-v="${s}">${s}x</button>`).join("")}
     <button class="btn sm" data-a="lpause">${M.paused ? "Continuar" : "Pausar"}</button><button class="btn sm ghost" data-a="lff">Simular até o fim</button>` : "")
+    + (LV.lastGoal ? `<button class="btn sm" data-a="replay" title="Rever o último gol">▶ Replay: ${esc(shortName(LV.lastGoal.who || "gol"))}</button>` : "")
     + `<button class="btn sm ghost" data-a="hidelive">${M.status === "done" ? "Fechar" : "Minimizar"}</button>`;
   const ph = phaseLabel(M);
   const mm = Math.floor(M.min), ss = Math.round((M.min - mm) * 60);
@@ -44,7 +46,7 @@ function renderLive(force) {
     <div class="tn" style="text-align:right;color:${A.color}"><span class="bcrest">${crestSVG(S && S.managers[A.mi] ? S.managers[A.mi].crest : null, 34)}</span>${esc(A.name)}<small>pres. ${esc(A.pres)} · ${A.tac.form} · ${STYLES[A.tac.style].n}</small></div>`;
   const zone = (a, b, c) => `<div class="z" style="left:${a / 40 * 100}%;width:${(b - a) / 40 * 100}%;background:${c}"></div>`;
   $("#l-tl").innerHTML = zone(0, 6, "rgba(76,201,240,.35)") + zone(6, 17, "rgba(179,146,240,.25)") + zone(17, 20, "rgba(245,197,66,.6)") + zone(20, 23, "rgba(47,212,126,.45)") + zone(23, 36, "rgba(179,146,240,.25)") + zone(36, 40, "rgba(255,77,97,.5)") + `<div class="cur" style="left:${Math.min(39.6, M.min) / 40 * 100}%"></div>`;
-  renderPrompt(force); renderCtrl(force); renderFeed();
+  renderPrompt(force); renderCtrl(force); renderFeed(); showReacts(M);
   queueAnims();
 }
 function phaseLabel(M) {
@@ -52,7 +54,7 @@ function phaseLabel(M) {
   const n = M.nOut;
   return {
     esc: { k: "", t: `Escalonado ${n}x${n}` }, full: { k: "", t: inWindow(M.min) ? "7x7 · cartas liberadas" : "7x7" }, dob: { k: "dob", t: "Gol dobro (17'-20')" },
-    dice: { k: "dice", t: `Dado: ${M.dice}x${M.dice}` }, mb: { k: "mb", t: `Match ball ${M.nOut === 6 ? "7x7" : M.nOut + "x" + M.nOut}${M.mbStep >= 6 ? " (goleiro linha liberado)" : ""} · primeiro a ${M.target}` }, so: { k: "mb", t: "Shootouts" }
+    dice: { k: "dice", t: M.dice === 1 ? "Dado: 1x1 com goleiro" : `Dado: ${M.dice}x${M.dice}` }, mb: { k: "mb", t: `Match ball ${MB_LBL[Math.max(0, Math.min(4, M.mbStep))]} · primeiro a ${M.target}` }, so: { k: "mb", t: "Shootouts" }
   }[M.phase] || { k: "", t: "" };
 }
 function myTeams(M) { // índices de times que este aparelho controla
@@ -120,12 +122,13 @@ function renderCtrl(force) {
     const host = isHost(), r = matchResult(M);
     el.innerHTML = `<div class="prompt" style="text-align:center"><h3 style="font-size:30px;color:${M.t[M.w].color}">${esc(M.t[M.w].name)} vence!</h3>
       <p class="muted">${M.so ? `Shootouts ${M.so[0]}-${M.so[1]} · ` : ""}Finalizações ${M.t[0].shots} x ${M.t[1].shots} · Defesas ${M.t[0].saves} x ${M.t[1].saves}${r.mvp ? ` · MVP: <b style="color:var(--ink)">${esc(P(r.mvp).n)}</b>` : ""}</p>
-      <p class="muted">Cartas: ${esc(M.t[0].name)} tinha <b>${cardNames(M.t[0].cards.map(c => c.k).join("+"))}</b>, ${esc(M.t[1].name)} tinha <b>${cardNames(M.t[1].cards.map(c => c.k).join("+"))}</b>. Cartões: 🟨 ${M.t[0].cardsY}x${M.t[1].cardsY} · 🟥 ${M.t[0].cardsR}x${M.t[1].cardsR}.</p>
+      ${r.nt && r.nt.length ? `<p class="muted">Notas: ${r.nt.slice().sort((x, y) => y[1] - x[1]).slice(0, 4).map(([id, n]) => `<b style="color:var(--ink)">${esc(shortName(P(id).n))}</b> ${n.toFixed(1)}`).join(" · ")}</p>` : ""}
+      <p class="muted">Cartas: ${esc(M.t[0].name)} tinha <b>${cardNames(M.t[0].cards.map(c => c.k).join("+"))}</b>, ${esc(M.t[1].name)} tinha <b>${cardNames(M.t[1].cards.map(c => c.k).join("+"))}</b>. Faltas ${M.t[0].fouls || 0}x${M.t[1].fouls || 0} · Cartões: 🟨 ${M.t[0].cardsY}x${M.t[1].cardsY} · 🟥 ${M.t[0].cardsR}x${M.t[1].cardsR}.</p>
       <button class="btn gold big" data-a="closelive">Voltar ao campeonato</button>${Object.values(LIVES).some(x => x.status === "playing") ? `<p class="muted" style="margin-top:8px">Outros jogos da rodada ainda estão rolando: toque no placar lá em cima pra assistir.</p>` : ""}</div>`;
     return;
   }
   if (!mine.length) { el.innerHTML = `<p class="muted" style="text-align:center">Você está assistindo. Os técnicos dos dois times controlam cartas, pênaltis e táticas.</p>`; return; }
-  const win = M.min < 6 ? "Cartas liberadas no 6'." : M.min < 17 ? "Liberadas até o 17'." : M.min < 23 ? "Bloqueadas até o 23'." : M.min < 36 ? "Liberadas até o 36'." : "Encerradas.";
+  const win = M.min < 5 ? "Cartas liberadas no 5'." : M.min < 17 ? "Liberadas até o 17'." : M.min < 23 ? "Bloqueadas até o 23'." : M.min < 36 ? "Liberadas até o 36'." : "Encerradas.";
   el.innerHTML = mine.map(ti => {
     const T = M.t[ti], cc = canActCard(M, ti), cp = canActPP(M, ti);
     const fieldSlots = T.tac.slots.filter(x => x != null);
@@ -140,17 +143,18 @@ function renderCtrl(force) {
       </div>
       <div class="muted" style="font-size:12px;margin-top:4px">ESTILO</div>
       <div class="row" style="gap:6px">${Object.entries(STYLES).map(([k, v]) => `<button class="btn sm ${T.tac.style === k ? "gold" : ""}" data-a="lstyle" data-v="${k}" data-ti="${ti}">${v.n}</button>`).join("")}</div>
-      <div class="row" style="align-items:flex-end;margin-top:6px">
+      <div class="row" style="align-items:flex-end;margin-top:6px;gap:10px">
         <label class="f" for="l-form-${ti}">Formação<select id="l-form-${ti}" data-ti="${ti}" class="lform">${Object.keys(FORMS).map(f => `<option ${f === T.tac.form ? "selected" : ""}>${f}</option>`).join("")}</select></label>
-        <label class="f" for="sub-out-${ti}">Sai<select id="sub-out-${ti}">${fieldSlots.map(id => `<option value="${id}">${O(P(id))} ${esc(P(id).n)} · ${Math.round(M.sta[id] || 100)}%</option>`).join("")}</select></label>
-        <label class="f" for="sub-in-${ti}">Entra<select id="sub-in-${ti}">${(T.bench || []).map(id => `<option value="${id}">${O(P(id))} ${P(id).p} ${esc(P(id).n)} · ${Math.round(M.sta[id] || 100)}%</option>`).join("") || '<option value="">sem reservas</option>'}</select></label>
-        <button class="btn sm" data-a="lsub" data-ti="${ti}" ${(T.bench || []).length ? "" : "disabled"}>Substituir</button>
+        <span class="muted" style="font-size:12.5px;flex:1">${LV.subSel && LV.subSel[ti] ? `<b style="color:var(--gold)">Sai ${esc(shortName(P(LV.subSel[ti]).n))}.</b> Agora toque em quem entra (banco).` : "Substituição: toque em quem sai (em campo) e depois em quem entra (banco)."}</span>
+      </div>
+      <div class="subgrid">
+        <div><div class="muted" style="font-size:11px;margin-bottom:4px">EM CAMPO</div><div class="subrow">${fieldSlots.map(id => subChip(M, ti, id, "f")).join("")}</div></div>
+        <div><div class="muted" style="font-size:11px;margin-bottom:4px">BANCO</div><div class="subrow">${(T.bench || []).map(id => subChip(M, ti, id, "b")).join("") || '<span class="muted">sem reservas</span>'}</div></div>
       </div>
       <div class="row" style="gap:14px;align-items:flex-end">
         <label class="row" for="l-auto-${ti}" style="gap:6px;font-size:13.5px"><input id="l-auto-${ti}" class="lauto" data-ti="${ti}" type="checkbox" ${T.autoSub ? "checked" : ""}> Substituições automáticas</label>
         <label class="f" for="l-gk-${ti}">Goleiro linha ${T.gkOut ? '<b style="color:var(--gold)">· NA LINHA AGORA</b>' : ""}<select id="l-gk-${ti}" class="lgk" data-ti="${ti}">${[["auto", "Automático"], ["sempre", "Sempre que der"], ["nunca", "Nunca"]].map(([k, v]) => `<option value="${k}" ${T.gkMode === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
       </div>
-      <div class="stam">${fieldSlots.map(id => { const v = Math.round(M.sta[id] || 100); return `<div title="${esc(P(id).n)}"><span>${esc(shortName(P(id).n))}</span><i style="width:${v}%;background:${v > 70 ? "var(--pitch)" : v > 50 ? "var(--gold)" : "var(--red)"}"></i></div>`; }).join("")}</div>
       </div>`;
   }).join("");
 }
@@ -161,14 +165,34 @@ document.addEventListener("change", e => {
 });
 function renderFeed() {
   const M = LIVE; if (LV.sigFeed === M.seq) return; LV.sigFeed = M.seq;
-  const icon = e => ({ goal: "⚽", card: "🃏", pp: "👔", penres: "🥅", sores: "🥅", chance: "↗", so: e.ok ? "⚽" : "✖", end: "🏁", phase: "⏱", dice: "🎲", sub: "⇄", tac: "📋", gkl: "🧤", info: "•" }[e.type] || "•");
+  const icon = e => ({ goal: "⚽", card: "🃏", pp: "👔", penres: "🥅", sores: "🥅", chance: "↗", so: e.ok ? "⚽" : "✖", end: "🏁", phase: "⏱", dice: "🎲", foul: "🦶", inj: "🩹", yellow: "🟨", red: "🟥", sub: "⇄", tac: "📋", gkl: "🧤", info: "•" }[e.type] || "•");
   $("#l-feed").innerHTML = M.ev.filter(e => e.text).slice(-14).reverse().map(e => `<div class="ev k-${e.type}" style="--c:${e.team === 0 ? M.t[0].color : e.team === 1 ? M.t[1].color : "#555"}"><div class="m num">${e.type === "so" ? "SO" : Math.floor(e.m) + "'"}</div><div class="ic">${icon(e)}</div><div class="t">${esc(e.text)}${e.type === "goal" ? ` <span class="muted num">${e.s[0]}-${e.s[1]}</span>` : ""}</div></div>`).join("");
 }
 
+function subChip(M, ti, id, side) {
+  const T = M.t[ti], p = P(id), v = Math.round(M.sta[id] || 100), sel = side === "f" && LV.subSel && LV.subSel[ti] === id;
+  const out = T.out.some(o => o.id === id && o.until > M.min) || T.banned.includes(id);
+  const slot = side === "f" ? FORMS[T.tac.form][T.tac.slots.indexOf(id)] : null, fit = slot ? fitOf(p, slot) : "";
+  return `<button class="subchip ${fit} ${sel ? "sel" : ""} ${out ? "off" : ""}" data-a="lsubpick" data-ti="${ti}" data-id="${id}" data-side="${side}" ${side === "b" && T.banned.includes(id) ? "disabled" : ""}>
+    <span class="lup">${slot || p.p}</span><b>${esc(shortName(p.n))}${T.banned.includes(id) && (T.injR || []).some(x => x[0] === id) ? " 🩹" : ""}</b><span class="num muted">${O(p)}</span>
+    <i class="stbar"><i style="width:${v}%;background:${v > 70 ? "var(--pitch)" : v > 50 ? "var(--gold)" : "var(--red)"}"></i></i></button>`;
+}
+/* ---------- reações dos amigos ---------- */
+function showReacts(M) {
+  const rs = M.reacts || []; if (LV.rfid !== M.fid) { LV.rfid = M.fid; LV.rseen = rs.length ? rs[rs.length - 1].i : 0; return; }
+  rs.filter(r => r.i > (LV.rseen || 0)).forEach(r => {
+    const el = document.createElement("div"); el.className = "rfloat"; el.style.left = (10 + Math.random() * 80) + "%";
+    el.innerHTML = `<span>${r.e}</span><small style="color:${r.c}">${esc(r.n)}</small>`;
+    const ov = $("#ovl"); if (ov) { ov.appendChild(el); setTimeout(() => el.remove(), 2600); }
+  });
+  if (rs.length) LV.rseen = Math.max(LV.rseen || 0, rs[rs.length - 1].i);
+}
 /* ---------- animações em sobreposição ---------- */
 function queueAnims() {
   const M = LIVE;
   const fresh = M.ev.filter(e => e.i > LV.animSeq && ["goal", "card", "pp", "dice", "penres", "sores", "phase", "so", "end", "gkl", "yellow", "red"].includes(e.type));
+  const g = fresh.filter(e => e.type === "goal").pop();
+  if (g && M.status !== "done") setTimeout(() => { if (LV.hist && LV.hist.length > 10) { LV.lastGoal = { frames: LV.hist.slice(-48), who: g.who, team: g.team }; LV.sigCtrl = ""; renderLive(true); } }, 1300);
   if (M.ev.length) LV.animSeq = Math.max(LV.animSeq, M.ev[M.ev.length - 1].i);
   if (M.status === "done" && fresh.length > 3) { LV.queue = fresh.filter(e => e.type === "end"); }
   else fresh.forEach(e => LV.queue.push(e));
@@ -296,6 +320,15 @@ function frame(ts) {
     if (best) bt = { x: best.x + (M.ball.t === 0 ? 0.012 : -0.012), y: best.y + 0.01 };
   }
   LV.ball.x += (bt.x - LV.ball.x) * 0.09; LV.ball.y += (bt.y - LV.ball.y) * 0.09;
+  // replay do gol: grava as últimas posições e, quando pedido, reproduz em câmera lenta
+  if (!LV.replay) {
+    if (!LV.recT || ts - LV.recT > 90) { LV.recT = ts; LV.hist = LV.hist || []; const rp = {}; Object.entries(LV.rp).forEach(([id, r]) => { rp[id] = { x: r.x, y: r.y, gk: r.gk, bench: r.bench, out: r.out, ti: r.ti }; }); LV.hist.push({ rp, b: { x: LV.ball.x, y: LV.ball.y } }); if (LV.hist.length > 70) LV.hist.shift(); }
+  } else {
+    const fr = LV.replay.frames[Math.min(LV.replay.frames.length - 1, Math.floor(LV.replay.i))];
+    Object.entries(fr.rp).forEach(([id, r]) => { if (LV.rp[id]) Object.assign(LV.rp[id], r); });
+    LV.ball.x = fr.b.x; LV.ball.y = fr.b.y; LV.replay.i += 0.4;
+    if (LV.replay.i >= LV.replay.frames.length + 8) LV.replay = null;
+  }
   // jogadores
   const rad = Math.max(8, Math.min(13, W / 70));
   const kits = teamKits(M);
@@ -322,14 +355,22 @@ function frame(ts) {
   if (M.phase === "dob") { c.fillStyle = "rgba(245,197,66,.13)"; c.fillRect(0, SH, W, H); }
   if (M.phase === "mb") { c.fillStyle = "rgba(255,77,97,.10)"; c.fillRect(0, SH, W, H); }
   M.t.forEach((T, ti) => { if (T.dobLeft > 0 && M.phase === "full") { c.fillStyle = T.color; c.globalAlpha = .2; c.fillRect(ti === 0 ? W / 2 : 0, SH, W / 2, H); c.globalAlpha = 1; } });
+  if (LV.replay) { c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(0, SH, W, H); c.fillStyle = "#ff4d61"; c.font = `900 ${Math.round(H * 0.07)}px "Big Shoulders Display", sans-serif`; c.textAlign = "left"; c.fillText("● REPLAY", fx(0) + 8, fy(0) + H * 0.09); c.textAlign = "center"; }
   c.restore();
 }
 /* ---------- uniformes, torcida e mosaico ---------- */
 function hex2rgb(h) { const n = parseInt((h || "#888888").slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 function cdist(a, b) { const x = hex2rgb(a), y = hex2rgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); }
-function teamKits(M) {
-  const k = M.t.map(T => Object.assign({ c1: T.color, c2: "#111111", pat: "liso", num: "#0b0d12" }, T.kit || {}));
-  if (cdist(k[0].c1, k[1].c1) < 90) k[1] = Object.assign({}, k[1], { c1: k[1].c2, c2: k[1].c1, num: cdist(k[1].c2, "#ffffff") < 200 ? "#111111" : "#ffffff" });
+// uniforme de cada time em campo: se as camisas forem parecidas, o visitante usa o reserva
+function teamKits(M, raw) {
+  const base = T => Object.assign({ c1: T.color, c2: "#111111", pat: "liso", num: "#0b0d12" }, T.kit || {});
+  const k = M.t.map(base);
+  if (raw) return k;
+  if (cdist(k[0].c1, k[1].c1) < 90) {
+    const alt = M.t[1].kit2 ? Object.assign({ c2: "#111111", pat: "liso", num: "#ffffff" }, M.t[1].kit2) : null;
+    if (alt && cdist(k[0].c1, alt.c1) >= 90) k[1] = alt;
+    else k[1] = Object.assign({}, k[1], { c1: k[1].c2, c2: k[1].c1, num: cdist(k[1].c2, "#ffffff") < 200 ? "#111111" : "#ffffff" });
+  }
   return k;
 }
 function drawKit(c, X, Y, r, k, gk) {
@@ -343,6 +384,10 @@ function drawKit(c, X, Y, r, k, gk) {
     else if (k.pat === "horizontais") for (let i = -2; i <= 2; i += 2) c.fillRect(X - r, Y + i * r * 0.38 - r * 0.16, 2 * r, r * 0.32);
     else if (k.pat === "faixa") { c.beginPath(); c.moveTo(X - r, Y - r * 0.6); c.lineTo(X - r * 0.4, Y - r); c.lineTo(X + r, Y + r * 0.6); c.lineTo(X + r * 0.4, Y + r); c.closePath(); c.fill(); }
     else if (k.pat === "metade") c.fillRect(X, Y - r, r, 2 * r);
+    else if (k.pat === "centro") c.fillRect(X - r * 0.22, Y - r, r * 0.44, 2 * r);
+    else if (k.pat === "ombros") c.fillRect(X - r, Y - r, 2 * r, r * 0.65);
+    else if (k.pat === "v") { c.beginPath(); c.moveTo(X - r, Y - r * 0.5); c.lineTo(X, Y + r * 0.3); c.lineTo(X + r, Y - r * 0.5); c.lineTo(X + r, Y - r * 0.15); c.lineTo(X, Y + r * 0.65); c.lineTo(X - r, Y - r * 0.15); c.closePath(); c.fill(); }
+    else if (k.pat === "finas") for (let i = -3; i <= 3; i++) c.fillRect(X + i * r * 0.28 - r * 0.05, Y - r, r * 0.1, 2 * r);
     else if (k.pat === "xadrez") { c.fillRect(X - r, Y - r, r, r); c.fillRect(X, Y, r, r); }
     else if (k.pat === "gola") { c.beginPath(); c.arc(X, Y - r * 0.9, r * 0.55, 0, Math.PI); c.fill(); }
   } else { c.fillRect(X - r, Y - r * 0.25, 2 * r, r * 0.5); }
@@ -370,7 +415,7 @@ function mosaicFor(M, ti) {
   return null;
 }
 function drawStands(c, M, W, HT, SH, t) {
-  const kits = teamKits(M);
+  const kits = teamKits(M, true);
   [0, 1].forEach(ti => {
     const y0 = ti === 0 ? 0 : HT - SH;
     // concreto da arquibancada

@@ -285,10 +285,76 @@ input[type=color]{width:100%;height:40px;padding:2px;border-radius:10px;border:1
 .sbm{flex:0 0 auto;background:#12151c;border:1px solid var(--line);border-radius:10px;padding:6px 10px;color:var(--ink);font:600 13px Inter,sans-serif;cursor:pointer;white-space:nowrap}
 .sbm.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
 .sbm small{color:var(--muted);margin-left:4px}
+.stepper{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:4px 6px;background:rgba(255,255,255,.02);min-height:40px}
+.stepper b{min-width:36px;text-align:center;font-size:20px}
+.stepper .btn{min-width:36px;font-size:18px;line-height:1}
+.f>span{font-size:13px;color:var(--muted)}
+.votecard{border-color:var(--gold)}
+.posb small{opacity:.75;font-size:.82em;margin-left:1px}
+.reacts{display:flex;gap:6px;justify-content:center;margin:6px 0}
+.rbtn{font-size:22px;background:#12151c;border:1px solid var(--line);border-radius:999px;width:42px;height:42px;cursor:pointer;line-height:1}
+.rbtn:active{transform:scale(.9)}
+.rfloat{position:absolute;bottom:8%;display:flex;flex-direction:column;align-items:center;pointer-events:none;animation:rfly 2.6s ease-out forwards;z-index:6}
+.rfloat span{font-size:40px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+.rfloat small{font:700 12px Inter,sans-serif;text-shadow:0 1px 3px #000}
+@keyframes rfly{0%{opacity:0;transform:translateY(20px) scale(.6)}15%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-220px) scale(1)}}
+.toty{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.totyc{border:1px solid var(--line);border-top:3px solid var(--c);border-radius:12px;padding:10px;display:grid;gap:4px;background:rgba(255,255,255,.02)}
+.totyc b{font-size:15px}
+.totyc span{font-size:12px}
+/* escalação visual */
+.lubox{display:grid;gap:10px}
+.lupitch{position:relative;aspect-ratio:4/5;max-height:560px;width:100%;margin:0 auto;border-radius:14px;background:repeating-linear-gradient(180deg,#141518 0 10%,#101113 10% 20%);border:2px solid rgba(255,255,255,.55);overflow:hidden}
+.luline{position:absolute;left:0;right:0;border-top:2px solid rgba(255,255,255,.45)}
+.luline.mid{top:50%}
+.luline.box{left:25%;right:25%;bottom:0;height:14%;border:2px solid rgba(255,255,255,.45);border-bottom:0}
+.luline.box.top{top:0;bottom:auto;border-top:0;border-bottom:2px solid rgba(255,255,255,.45)}
+.luslot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center}
+.luchip{display:grid;justify-items:center;gap:1px;min-width:78px;max-width:96px;padding:6px 6px 5px;border-radius:12px;background:#1b1f28;border:2px solid #3a404d;color:var(--ink);cursor:pointer;font:600 12px Inter,sans-serif;line-height:1.15}
+.luchip.ok{border-color:#2fd47e}.luchip.mid{border-color:#f5c542}.luchip.bad{border-color:#ff4d61}
+.luchip.sel{box-shadow:0 0 0 3px var(--gold),0 0 18px rgba(245,197,66,.6);transform:scale(1.06)}
+.luchip .luo{font-size:18px;font-weight:900}
+.luchip .lun{max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.luchip .lup,.subchip .lup{font-size:10px;color:var(--muted);letter-spacing:.04em}
+.lupos{font-size:9.5px;font-weight:800;color:#0b0d12;background:rgba(255,255,255,.75);border-radius:6px;padding:0 5px}
+.luord{margin-top:2px;font:800 10px Inter,sans-serif;color:var(--gold)}
+.lubench{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lubench .luchip{min-width:70px}
+@media (max-width:640px){.luchip{min-width:62px;padding:4px}.luchip .luo{font-size:15px}.luchip .lun{max-width:66px;font-size:11px}}
+/* substituições ao vivo */
+.subgrid{display:grid;gap:8px}
+.subrow{display:flex;flex-wrap:wrap;gap:6px}
+.subchip{display:grid;gap:2px;justify-items:start;min-width:96px;padding:6px 8px;border-radius:10px;background:#161a22;border:2px solid #343a46;color:var(--ink);cursor:pointer;font:600 12.5px Inter,sans-serif;text-align:left}
+.subchip.ok{border-color:#2fd47e}.subchip.mid{border-color:#f5c542}.subchip.bad{border-color:#ff4d61}
+.subchip.sel{box-shadow:0 0 0 3px var(--gold);transform:scale(1.04)}
+.subchip.off{opacity:.5}
+.subchip .stbar{display:block;width:100%;height:4px;border-radius:3px;background:#2a2f3a;overflow:hidden}
+.subchip .stbar i{display:block;height:100%}
+/* rankings */
+.ranks{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.rank{display:grid;gap:4px;align-content:start}
+.rank h4{font:800 16px "Big Shoulders Display",Inter,sans-serif;letter-spacing:.04em;text-transform:uppercase;margin:0 0 4px}
+.rrow{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:5px 0}
+.rrow .rk{width:18px;color:var(--gold);font-weight:800}
+.rrow .rn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow b{font-size:18px}
+.ranks{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+.rrow small{font-size:11px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis}
+.rrow .rn .muted{font-size:11px}
+/* chat da sala */
+.chat{position:fixed;right:14px;bottom:14px;z-index:60;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.chatbtn{width:52px;height:52px;border-radius:999px;border:1px solid var(--line);background:#1b1f28;font-size:24px;cursor:pointer;position:relative;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.chatn{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border-radius:999px;font:800 12px Inter,sans-serif;padding:2px 6px}
+.chatpanel{display:none;width:min(340px,calc(100vw - 28px));background:#12151c;border:1px solid var(--line);border-radius:14px;padding:10px;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.chat.open .chatpanel{display:grid}
+.chatlist{max-height:260px;overflow-y:auto;display:grid;gap:4px;font-size:14px}
+.cmsg{line-height:1.3}
+.chatq{display:flex;flex-wrap:wrap;gap:4px}
+.chat input{min-width:0}
 </style></head><body>
 <div id="app"></div><div id="live" class="live" role="dialog" aria-label="Partida ao vivo"></div><div id="viewer" class="viewer" role="dialog" aria-label="Lances"></div><div id="toast" class="toast" role="status"></div>
 <script>
-let PLAYERS = [{"id": 1, "n": "Kelvin Oliveira", "t": "G3X FC", "p": "ATA", "o": 96, "at": 93, "df": 82, "v": 70, "pm": 12, "g": 33, "a": 6, "tags": ["Split 1", "Artilheiro Split 2", "Vice Kings Cup", "Nations 2026"]}, {"id": 2, "n": "Davi Ilario", "t": "DesimpaiN", "p": "ATA", "o": 92, "at": 91, "df": 78, "v": 49, "pm": 11, "g": 21, "a": 10, "tags": ["Split 1", "Campeão Split 2", "MVP Split 2"]}, {"id": 3, "n": "Lipão Pinheiro", "t": "Furia FC", "p": "ATA", "o": 91, "at": 88, "df": 77, "v": 45, "pm": 8, "g": 16, "a": 0, "tags": ["Split 1", "Campeão Split 1", "Campeão Kings Cup", "Nations 2026"]}, {"id": 4, "n": "Kaiky Souza", "t": "DesimpaiN", "p": "GOL", "o": 90, "at": 65, "df": 90, "v": 40, "pm": 11, "g": 5, "a": 3, "tags": ["Campeão Split 2", "Melhor goleiro Split 2"]}, {"id": 5, "n": "Leleti Garcia", "t": "Furia FC", "p": "ATA", "o": 89, "at": 77, "df": 75, "v": 36, "pm": 6, "g": 4, "a": 1, "tags": ["Split 1", "Artilheiro Split 1", "Campeão Split 1", "Campeão Kings Cup"]}, {"id": 6, "n": "Andreas Vaz", "t": "G3X FC", "p": "MEI", "o": 87, "at": 83, "df": 83, "v": 29, "pm": 12, "g": 14, "a": 3, "tags": ["Vice Kings Cup", "Nations 2026", "Campeão Nations", "Campeão Mundial 2026"]}, {"id": 7, "n": "Luan 'Mestre'", "t": "Podpah Funkbol", "p": "MEI", "o": 87, "at": 86, "df": 83, "v": 29, "pm": 11, "g": 19, "a": 5, "tags": ["Nations 2026", "Campeão Nations"]}, {"id": 8, "n": "Léo 'Gol'", "t": "Nyvelados FC", "p": "ATA", "o": 87, "at": 86, "df": 73, "v": 29, "pm": 9, "g": 12, "a": 5, "tags": ["Split 1", "Mundial 2025"]}, {"id": 9, "n": "Esaú Nascimento", "t": "LOUD SC", "p": "GOL", "o": 87, "at": 62, "df": 87, "v": 29, "pm": 7, "g": 6, "a": 2, "tags": ["Campeão Nations"]}, {"id": 10, "n": "Well Andrade", "t": "Fluxo FC", "p": "MEI", "o": 86, "at": 83, "df": 82, "v": 26, "pm": 11, "g": 16, "a": 4, "tags": ["Nations 2026", "Campeão Nations", "Campeão Mundial 2026"]}, {"id": 11, "n": "Wellinton 'Gigante'", "t": "DesimpaiN", "p": "DEF", "o": 86, "at": 76, "df": 89, "v": 26, "pm": 11, "g": 11, "a": 1, "tags": ["Campeão Split 2"]}, {"id": 12, "n": "Felipe Viana", "t": "LOUD SC", "p": "ATA", "o": 85, "at": 82, "df": 71, "v": 23, "pm": 10, "g": 18, "a": 2, "tags": []}, {"id": 13, "n": "Ton 'Spider'", "t": "G3X FC", "p": "ATA", "o": 85, "at": 80, "df": 71, "v": 23, "pm": 11, "g": 13, "a": 3, "tags": ["Vice Kings Cup", "Nations 2026", "Campeão Nations", "Campeão Mundial 2026"]}, {"id": 14, "n": "Josildo Barata", "t": "G3X FC", "p": "GOL", "o": 85, "at": 60, "df": 85, "v": 23, "pm": 12, "g": 4, "a": 2, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 15, "n": "Gerard Nolla", "t": "Capim FC", "p": "ATA", "o": 84, "at": 81, "df": 70, "v": 21, "pm": 10, "g": 11, "a": 4, "tags": []}, {"id": 16, "n": "Matheus 'Dedo'", "t": "Furia FC", "p": "DEF", "o": 84, "at": 72, "df": 87, "v": 21, "pm": 9, "g": 6, "a": 2, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Nations 2026", "Campeão Nations"]}, {"id": 17, "n": "Gustavo Húngaro", "t": "Dendele FC", "p": "GOL", "o": 84, "at": 59, "df": 84, "v": 21, "pm": 10, "g": 6, "a": 3, "tags": []}, {"id": 18, "n": "Helber Júnior", "t": "Fluxo FC", "p": "ATA", "o": 83, "at": 79, "df": 69, "v": 18, "pm": 11, "g": 14, "a": 1, "tags": []}, {"id": 19, "n": "Yan 'Coringa'", "t": "Podpah Funkbol", "p": "ATA", "o": 83, "at": 78, "df": 69, "v": 18, "pm": 11, "g": 12, "a": 3, "tags": []}, {"id": 20, "n": "Lucas Hector", "t": "Capim FC", "p": "ATA", "o": 83, "at": 78, "df": 69, "v": 18, "pm": 10, "g": 10, "a": 2, "tags": ["Split 1"]}, {"id": 21, "n": "Cristhian 'Canhoto'", "t": "Dendele FC", "p": "MEI", "o": 83, "at": 78, "df": 79, "v": 18, "pm": 9, "g": 8, "a": 3, "tags": ["Campeão Nations"]}, {"id": 22, "n": "Marcos 'Bolivia'", "t": "Capim FC", "p": "GOL", "o": 83, "at": 58, "df": 83, "v": 18, "pm": 10, "g": 1, "a": 0, "tags": []}, {"id": 23, "n": "Carlos 'Ferrão'", "t": "Nyvelados FC", "p": "ATA", "o": 82, "at": 78, "df": 68, "v": 16, "pm": 7, "g": 10, "a": 0, "tags": []}, {"id": 24, "n": "Lucas 'L7'", "t": "Dendele FC", "p": "ATA", "o": 82, "at": 78, "df": 68, "v": 16, "pm": 10, "g": 8, "a": 4, "tags": []}, {"id": 25, "n": "Luisinho Alves", "t": "DesimpaiN", "p": "ATA", "o": 82, "at": 74, "df": 68, "v": 16, "pm": 11, "g": 12, "a": 0, "tags": ["Campeão Split 2"]}, {"id": 26, "n": "Juninho Antunes", "t": "Podpah Funkbol", "p": "MEI", "o": 82, "at": 77, "df": 78, "v": 16, "pm": 11, "g": 8, "a": 7, "tags": []}, {"id": 27, "n": "Luan Teles", "t": "Dibrados FC", "p": "GOL", "o": 82, "at": 57, "df": 82, "v": 16, "pm": 8, "g": 3, "a": 1, "tags": []}, {"id": 28, "n": "Gabriel Costa", "t": "Dibrados FC", "p": "ATA", "o": 81, "at": 76, "df": 67, "v": 14, "pm": 9, "g": 11, "a": 3, "tags": []}, {"id": 29, "n": "Christian Santos", "t": "DesimpaiN", "p": "ATA", "o": 81, "at": 75, "df": 67, "v": 14, "pm": 11, "g": 9, "a": 3, "tags": ["Campeão Split 2"]}, {"id": 30, "n": "Rafinha Cunha", "t": "LOUD SC", "p": "MEI", "o": 81, "at": 76, "df": 77, "v": 14, "pm": 10, "g": 7, "a": 5, "tags": []}, {"id": 31, "n": "João Pedro", "t": "Fluxo FC", "p": "GOL", "o": 81, "at": 56, "df": 81, "v": 14, "pm": 11, "g": 3, "a": 0, "tags": []}, {"id": 32, "n": "Wembley Luiz", "t": "G3X FC", "p": "DEF", "o": 81, "at": 60, "df": 84, "v": 14, "pm": 12, "g": 0, "a": 0, "tags": ["Vice Kings Cup", "Campeão Nations", "Campeão Mundial 2026"]}, {"id": 33, "n": "Matheus 'Chaveirinho'", "t": "Fluxo FC", "p": "ATA", "o": 80, "at": 75, "df": 66, "v": 12, "pm": 11, "g": 10, "a": 6, "tags": []}, {"id": 34, "n": "Chay Medeiros", "t": "Dibrados FC", "p": "ATA", "o": 80, "at": 76, "df": 66, "v": 12, "pm": 6, "g": 8, "a": 0, "tags": []}, {"id": 35, "n": "Dani Liñares", "t": "Capim FC", "p": "DEF", "o": 80, "at": 66, "df": 83, "v": 12, "pm": 10, "g": 5, "a": 1, "tags": []}, {"id": 36, "n": "Gabriel Messias", "t": "G3X FC", "p": "DEF", "o": 80, "at": 61, "df": 83, "v": 12, "pm": 11, "g": 0, "a": 1, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 37, "n": "Victor Hugo", "t": "Furia FC", "p": "GOL", "o": 80, "at": 55, "df": 80, "v": 12, "pm": 3, "g": 0, "a": 1, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Nations 2026", "Campeão Nations"]}, {"id": 38, "n": "Lyncoln Oliveira", "t": "Dendele FC", "p": "ATA", "o": 79, "at": 71, "df": 65, "v": 10, "pm": 9, "g": 10, "a": 0, "tags": []}, {"id": 39, "n": "Jeffinho Honorato", "t": "Furia FC", "p": "MEI", "o": 79, "at": 67, "df": 75, "v": 10, "pm": 9, "g": 3, "a": 3, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Campeão Nations", "Final Four Mundial 2026"]}, {"id": 40, "n": "Matheus Rufino", "t": "G3X FC", "p": "MEI", "o": 79, "at": 67, "df": 75, "v": 10, "pm": 11, "g": 5, "a": 2, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 41, "n": "Gustavinho Henrique", "t": "Fluxo FC", "p": "DEF", "o": 79, "at": 64, "df": 82, "v": 10, "pm": 11, "g": 3, "a": 1, "tags": []}, {"id": 42, "n": "Juvenal Oliveira", "t": "DesimpaiN", "p": "DEF", "o": 79, "at": 63, "df": 82, "v": 10, "pm": 8, "g": 2, "a": 1, "tags": ["Campeão Split 2"]}, {"id": 43, "n": "Ivo Alves", "t": "Furia FC", "p": "GOL", "o": 79, "at": 54, "df": 79, "v": 10, "pm": 3, "g": 1, "a": 1, "tags": []}, {"id": 44, "n": "Ailton José", "t": "Nyvelados FC", "p": "ATA", "o": 78, "at": 72, "df": 64, "v": 9, "pm": 8, "g": 8, "a": 2, "tags": []}, {"id": 45, "n": "Daniel Shiraishi", "t": "LOUD SC", "p": "MEI", "o": 78, "at": 68, "df": 74, "v": 9, "pm": 10, "g": 7, "a": 1, "tags": []}, {"id": 46, "n": "Thiago 'TH' Brito", "t": "G3X FC", "p": "MEI", "o": 78, "at": 66, "df": 74, "v": 9, "pm": 12, "g": 6, "a": 2, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 47, "n": "Igor Campos", "t": "Podpah Funkbol", "p": "GOL", "o": 78, "at": 53, "df": 78, "v": 9, "pm": 11, "g": 3, "a": 2, "tags": []}, {"id": 48, "n": "Caio Miranda", "t": "Podpah Funkbol", "p": "DEF", "o": 78, "at": 63, "df": 81, "v": 9, "pm": 11, "g": 3, "a": 1, "tags": []}, {"id": 49, "n": "Vini Alexandre", "t": "Podpah Funkbol", "p": "MEI", "o": 77, "at": 66, "df": 73, "v": 8, "pm": 11, "g": 8, "a": 0, "tags": ["Mundial 2025"]}, {"id": 50, "n": "Ryan Soares", "t": "Dendele FC", "p": "MEI", "o": 77, "at": 68, "df": 73, "v": 8, "pm": 10, "g": 7, "a": 1, "tags": []}, {"id": 51, "n": "Igor 'BB'", "t": "Nyvelados FC", "p": "GOL", "o": 77, "at": 52, "df": 77, "v": 8, "pm": 9, "g": 3, "a": 3, "tags": []}, {"id": 52, "n": "Rafa Sousa", "t": "Capim FC", "p": "DEF", "o": 77, "at": 65, "df": 80, "v": 8, "pm": 7, "g": 2, "a": 2, "tags": []}, {"id": 53, "n": "Douglinhas Melo", "t": "DesimpaiN", "p": "MEI", "o": 77, "at": 64, "df": 73, "v": 8, "pm": 4, "g": 2, "a": 0, "tags": ["Split 1"]}, {"id": 54, "n": "William Costa", "t": "DesimpaiN", "p": "DEF", "o": 77, "at": 59, "df": 80, "v": 8, "pm": 11, "g": 0, "a": 0, "tags": ["Campeão Split 2"]}, {"id": 55, "n": "Kenu Leandro", "t": "Furia FC", "p": "MEI", "o": 76, "at": 65, "df": 72, "v": 6, "pm": 9, "g": 5, "a": 1, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Final Four Mundial 2026"]}, {"id": 56, "n": "Gui Carvalho", "t": "Dendele FC", "p": "DEF", "o": 76, "at": 60, "df": 79, "v": 6, "pm": 10, "g": 1, "a": 0, "tags": ["Mundial 2025"]}, {"id": 57, "n": "Álex Guti", "t": "Capim FC", "p": "DEF", "o": 76, "at": 62, "df": 79, "v": 6, "pm": 8, "g": 2, "a": 0, "tags": []}, {"id": 58, "n": "Daniel Coringa", "t": "Nyvelados FC", "p": "ATA", "o": 76, "at": 82, "df": 62, "v": 6, "pm": 1, "g": 2, "a": 1, "tags": []}, {"id": 59, "n": "Matheus 'Biro'", "t": "LOUD SC", "p": "DEF", "o": 76, "at": 60, "df": 79, "v": 6, "pm": 10, "g": 0, "a": 2, "tags": []}, {"id": 60, "n": "Victor 'Bolt'", "t": "DesimpaiN", "p": "MEI", "o": 75, "at": 65, "df": 71, "v": 5, "pm": 11, "g": 4, "a": 4, "tags": ["Campeão Split 2"]}, {"id": 61, "n": "Murillo Pulino", "t": "Fluxo FC", "p": "DEF", "o": 75, "at": 59, "df": 78, "v": 5, "pm": 11, "g": 2, "a": 0, "tags": []}, {"id": 62, "n": "Tuco Magalhães", "t": "Fluxo FC", "p": "DEF", "o": 75, "at": 60, "df": 78, "v": 5, "pm": 11, "g": 2, "a": 1, "tags": []}, {"id": 63, "n": "Gabriel 'Dudu'", "t": "Capim FC", "p": "DEF", "o": 75, "at": 60, "df": 78, "v": 5, "pm": 10, "g": 2, "a": 0, "tags": []}, {"id": 64, "n": "Thiago Oliveira", "t": "LOUD SC", "p": "GOL", "o": 75, "at": 50, "df": 75, "v": 5, "pm": 2, "g": 1, "a": 1, "tags": []}, {"id": 65, "n": "Gabriel Medeiros", "t": "G3X FC", "p": "DEF", "o": 75, "at": 62, "df": 78, "v": 5, "pm": 4, "g": 1, "a": 1, "tags": []}, {"id": 66, "n": "Sam Silva", "t": "LOUD SC", "p": "MEI", "o": 74, "at": 64, "df": 70, "v": 4, "pm": 10, "g": 6, "a": 1, "tags": []}, {"id": 67, "n": "Luiggi Longo", "t": "Dibrados FC", "p": "MEI", "o": 74, "at": 66, "df": 70, "v": 4, "pm": 9, "g": 7, "a": 1, "tags": []}, {"id": 68, "n": "Danilo Belém", "t": "Nyvelados FC", "p": "MEI", "o": 74, "at": 70, "df": 70, "v": 4, "pm": 4, "g": 3, "a": 0, "tags": []}, {"id": 69, "n": "Paulo 'Pinguinho'", "t": "Fluxo FC", "p": "DEF", "o": 74, "at": 59, "df": 77, "v": 4, "pm": 9, "g": 2, "a": 0, "tags": []}, {"id": 70, "n": "Thiago Santos", "t": "Capim FC", "p": "GOL", "o": 74, "at": 49, "df": 74, "v": 4, "pm": 6, "g": 1, "a": 1, "tags": []}, {"id": 71, "n": "Felipe Cassiano", "t": "LOUD SC", "p": "DEF", "o": 74, "at": 57, "df": 77, "v": 4, "pm": 10, "g": 1, "a": 0, "tags": []}, {"id": 72, "n": "Vanderson 'Neguiim Jr'", "t": "Nyvelados FC", "p": "MEI", "o": 73, "at": 66, "df": 69, "v": 4, "pm": 10, "g": 6, "a": 2, "tags": []}, {"id": 73, "n": "Danilo Alemão", "t": "DesimpaiN", "p": "MEI", "o": 73, "at": 62, "df": 69, "v": 4, "pm": 10, "g": 4, "a": 2, "tags": ["Campeão Split 2"]}, {"id": 74, "n": "Paulo 'Pulão'", "t": "LOUD SC", "p": "DEF", "o": 73, "at": 57, "df": 76, "v": 4, "pm": 8, "g": 1, "a": 0, "tags": []}, {"id": 75, "n": "Jheferson Falcão", "t": "Fluxo FC", "p": "DEF", "o": 73, "at": 57, "df": 76, "v": 4, "pm": 11, "g": 0, "a": 1, "tags": []}, {"id": 76, "n": "Murillo Donato", "t": "Capim FC", "p": "DEF", "o": 73, "at": 59, "df": 76, "v": 4, "pm": 8, "g": 2, "a": 0, "tags": []}, {"id": 77, "n": "Arthur Facas", "t": "LOUD SC", "p": "GOL", "o": 73, "at": 48, "df": 73, "v": 4, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 78, "n": "Gabriel Repulho", "t": "Dendele FC", "p": "DEF", "o": 72, "at": 58, "df": 75, "v": 3, "pm": 8, "g": 1, "a": 0, "tags": []}, {"id": 79, "n": "Marcos 'MV'", "t": "Fluxo FC", "p": "DEF", "o": 72, "at": 57, "df": 75, "v": 3, "pm": 10, "g": 1, "a": 0, "tags": []}, {"id": 80, "n": "Marinho Filho", "t": "G3X FC", "p": "DEF", "o": 72, "at": 55, "df": 75, "v": 3, "pm": 7, "g": 0, "a": 0, "tags": []}, {"id": 81, "n": "Maicon 'Barata'", "t": "LOUD SC", "p": "DEF", "o": 72, "at": 55, "df": 75, "v": 3, "pm": 8, "g": 0, "a": 0, "tags": []}, {"id": 82, "n": "Ryan Lima", "t": "G3X FC", "p": "ATA", "o": 71, "at": 59, "df": 57, "v": 2, "pm": 11, "g": 4, "a": 0, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 83, "n": "Maicon Macabeu", "t": "Nyvelados FC", "p": "DEF", "o": 71, "at": 59, "df": 74, "v": 2, "pm": 8, "g": 2, "a": 1, "tags": []}, {"id": 84, "n": "Bruninho Mandarino", "t": "Dendele FC", "p": "DEF", "o": 71, "at": 56, "df": 74, "v": 2, "pm": 8, "g": 1, "a": 0, "tags": []}, {"id": 85, "n": "Edda Marcelino", "t": "Dibrados FC", "p": "DEF", "o": 71, "at": 56, "df": 74, "v": 2, "pm": 8, "g": 1, "a": 0, "tags": []}, {"id": 86, "n": "Sidney Pages", "t": "Dibrados FC", "p": "DEF", "o": 71, "at": 56, "df": 74, "v": 2, "pm": 9, "g": 1, "a": 0, "tags": []}, {"id": 87, "n": "Douglas 'Doth'", "t": "Fluxo FC", "p": "GOL", "o": 71, "at": 46, "df": 71, "v": 2, "pm": 4, "g": 0, "a": 0, "tags": []}, {"id": 88, "n": "Bruno 'Gan'", "t": "Nyvelados FC", "p": "GOL", "o": 71, "at": 46, "df": 71, "v": 2, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 89, "n": "Jeferson Titon", "t": "Capim FC", "p": "MEI", "o": 70, "at": 61, "df": 66, "v": 2, "pm": 10, "g": 4, "a": 1, "tags": []}, {"id": 90, "n": "Matheus Klynsmann", "t": "Nyvelados FC", "p": "DEF", "o": 70, "at": 58, "df": 73, "v": 2, "pm": 9, "g": 1, "a": 1, "tags": []}, {"id": 91, "n": "Lucas 'Caroço'", "t": "Capim FC", "p": "DEF", "o": 70, "at": 54, "df": 73, "v": 2, "pm": 10, "g": 0, "a": 0, "tags": []}, {"id": 92, "n": "Daniel Ferreira", "t": "Dibrados FC", "p": "DEF", "o": 70, "at": 54, "df": 73, "v": 2, "pm": 9, "g": 0, "a": 0, "tags": []}, {"id": 93, "n": "Victor 'VB' Bueno", "t": "DesimpaiN", "p": "DEF", "o": 70, "at": 55, "df": 73, "v": 2, "pm": 5, "g": 0, "a": 0, "tags": []}, {"id": 94, "n": "Vitor 'Barba'", "t": "Furia FC", "p": "GOL", "o": 70, "at": 45, "df": 70, "v": 2, "pm": 5, "g": 0, "a": 0, "tags": []}, {"id": 95, "n": "João 'Choco'", "t": "Podpah Funkbol", "p": "MEI", "o": 69, "at": 60, "df": 65, "v": 1, "pm": 11, "g": 4, "a": 1, "tags": []}, {"id": 96, "n": "Walid Jaadi", "t": "LOUD SC", "p": "MEI", "o": 69, "at": 59, "df": 65, "v": 1, "pm": 5, "g": 3, "a": 0, "tags": []}, {"id": 97, "n": "Etinho Lima", "t": "Dibrados FC", "p": "MEI", "o": 69, "at": 62, "df": 65, "v": 1, "pm": 3, "g": 2, "a": 0, "tags": []}, {"id": 98, "n": "Tiago Marinho", "t": "Furia FC", "p": "GOL", "o": 69, "at": 44, "df": 69, "v": 1, "pm": 3, "g": 1, "a": 1, "tags": []}, {"id": 99, "n": "Ronaldinho Reis", "t": "Podpah Funkbol", "p": "DEF", "o": 69, "at": 55, "df": 72, "v": 1, "pm": 6, "g": 1, "a": 0, "tags": []}, {"id": 100, "n": "Leonardo 'Belletti'", "t": "Dendele FC", "p": "DEF", "o": 69, "at": 54, "df": 72, "v": 1, "pm": 8, "g": 0, "a": 0, "tags": []}, {"id": 101, "n": "Leléo Moura", "t": "Podpah Funkbol", "p": "MEI", "o": 68, "at": 57, "df": 64, "v": 1, "pm": 11, "g": 4, "a": 0, "tags": []}, {"id": 102, "n": "Nicollas Nascimento", "t": "Dendele FC", "p": "MEI", "o": 68, "at": 58, "df": 64, "v": 1, "pm": 10, "g": 4, "a": 0, "tags": []}, {"id": 103, "n": "Rafael 'Tambinha'", "t": "Furia FC", "p": "MEI", "o": 68, "at": 56, "df": 64, "v": 1, "pm": 9, "g": 2, "a": 0, "tags": ["Campeão Split 1", "Campeão Kings Cup"]}, {"id": 104, "n": "Luisinho Barreiros", "t": "Nyvelados FC", "p": "DEF", "o": 68, "at": 56, "df": 71, "v": 1, "pm": 7, "g": 2, "a": 0, "tags": []}, {"id": 105, "n": "Gustavo Silva", "t": "Podpah Funkbol", "p": "GOL", "o": 68, "at": 43, "df": 68, "v": 1, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 106, "n": "Lucas Nascimento", "t": "Dibrados FC", "p": "MEI", "o": 67, "at": 57, "df": 63, "v": 1, "pm": 9, "g": 3, "a": 1, "tags": []}, {"id": 107, "n": "Caio Felipe", "t": "LOUD SC", "p": "MEI", "o": 67, "at": 56, "df": 63, "v": 1, "pm": 10, "g": 3, "a": 0, "tags": []}, {"id": 108, "n": "William Jesus", "t": "Podpah Funkbol", "p": "MEI", "o": 67, "at": 58, "df": 63, "v": 1, "pm": 9, "g": 3, "a": 1, "tags": []}, {"id": 109, "n": "Luiz Camilo", "t": "Furia FC", "p": "DEF", "o": 67, "at": 55, "df": 70, "v": 1, "pm": 4, "g": 1, "a": 0, "tags": []}, {"id": 110, "n": "Patrick Habibi", "t": "Fluxo FC", "p": "DEF", "o": 67, "at": 53, "df": 70, "v": 1, "pm": 3, "g": 0, "a": 0, "tags": []}, {"id": 111, "n": "Renan Augusto", "t": "Fluxo FC", "p": "MEI", "o": 66, "at": 56, "df": 62, "v": 1, "pm": 9, "g": 3, "a": 0, "tags": []}, {"id": 112, "n": "Rafão 'Portuga'", "t": "Podpah Funkbol", "p": "MEI", "o": 66, "at": 57, "df": 62, "v": 1, "pm": 6, "g": 3, "a": 0, "tags": []}, {"id": 113, "n": "Jonatas 'Batman'", "t": "Dibrados FC", "p": "MEI", "o": 66, "at": 57, "df": 62, "v": 1, "pm": 5, "g": 2, "a": 0, "tags": []}, {"id": 114, "n": "Marcelinho Junior", "t": "Dibrados FC", "p": "MEI", "o": 66, "at": 58, "df": 62, "v": 1, "pm": 2, "g": 1, "a": 0, "tags": []}, {"id": 115, "n": "João Pelegrini", "t": "Furia FC", "p": "DEF", "o": 66, "at": 52, "df": 69, "v": 1, "pm": 8, "g": 0, "a": 0, "tags": []}, {"id": 116, "n": "Gabriel Braga", "t": "G3X FC", "p": "GOL", "o": 66, "at": 41, "df": 66, "v": 1, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 117, "n": "Marquinhos Samora", "t": "Dendele FC", "p": "MEI", "o": 65, "at": 54, "df": 61, "v": 1, "pm": 10, "g": 1, "a": 0, "tags": []}, {"id": 118, "n": "Lucas Nascimento (Furia)", "t": "Furia FC", "p": "MEI", "o": 65, "at": 55, "df": 61, "v": 1, "pm": 6, "g": 1, "a": 0, "tags": ["Campeão Kings Cup"]}, {"id": 119, "n": "Breno Arantes", "t": "Capim FC", "p": "MEI", "o": 65, "at": 55, "df": 61, "v": 1, "pm": 6, "g": 2, "a": 0, "tags": []}, {"id": 120, "n": "Lucas 'Japa'", "t": "Nyvelados FC", "p": "DEF", "o": 65, "at": 53, "df": 68, "v": 1, "pm": 7, "g": 0, "a": 0, "tags": []}, {"id": 121, "n": "Willy dos Santos", "t": "Podpah Funkbol", "p": "MEI", "o": 64, "at": 54, "df": 60, "v": 1, "pm": 4, "g": 0, "a": 0, "tags": []}, {"id": 122, "n": "João Guimarães", "t": "G3X FC", "p": "MEI", "o": 64, "at": 52, "df": 60, "v": 1, "pm": 9, "g": 0, "a": 0, "tags": []}, {"id": 123, "n": "Gabriel Lopes", "t": "DesimpaiN", "p": "MEI", "o": 64, "at": 53, "df": 60, "v": 1, "pm": 3, "g": 0, "a": 0, "tags": []}, {"id": 124, "n": "Lucas 'Pulguinha'", "t": "Dibrados FC", "p": "MEI", "o": 64, "at": 54, "df": 60, "v": 1, "pm": 9, "g": 0, "a": 0, "tags": []}, {"id": 125, "n": "Bruno Mota", "t": "Dibrados FC", "p": "GOL", "o": 64, "at": 40, "df": 64, "v": 1, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 126, "n": "Luandrio 'Pé Fino'", "t": "Nyvelados FC", "p": "MEI", "o": 63, "at": 53, "df": 59, "v": 1, "pm": 4, "g": 1, "a": 0, "tags": []}, {"id": 127, "n": "Ruan Major", "t": "Dibrados FC", "p": "MEI", "o": 63, "at": 52, "df": 59, "v": 1, "pm": 9, "g": 0, "a": 1, "tags": []}, {"id": 128, "n": "Thiago 'Major'", "t": "Furia FC", "p": "MEI", "o": 62, "at": 50, "df": 58, "v": 1, "pm": 6, "g": 0, "a": 0, "tags": []}];
+let PLAYERS = [{"id": 1, "n": "Kelvin Oliveira", "t": "G3X FC", "p": "ATA", "p2": null, "o": 92, "at": 93, "df": 89, "v": 48, "pot": 94, "pm": 42, "g": 112, "a": 19, "tags": ["Split 1", "Artilheiro Split 2", "Vice Kings Cup", "Nations 2026"]}, {"id": 2, "n": "Lipão Pinheiro", "t": "Furia FC", "p": "ATA", "p2": null, "o": 90, "at": 93, "df": 76, "v": 37, "pot": 94, "pm": 51, "g": 81, "a": 39, "tags": ["Split 1", "Campeão Split 1", "Campeão Kings Cup", "Nations 2026"]}, {"id": 3, "n": "Esaú Assunção", "t": "LOUD SC", "p": "GOL", "p2": null, "o": 87, "at": 35, "df": 87, "v": 25, "pot": 91, "pm": 29, "g": 21, "a": 17, "tags": ["Nations 2026", "6 MVPs na carreira"]}, {"id": 4, "n": "Leleti Garcia", "t": "Furia FC", "p": "ATA", "p2": null, "o": 87, "at": 90, "df": 73, "v": 25, "pot": 90, "pm": 50, "g": 60, "a": 23, "tags": ["Split 1", "Artilheiro Split 1", "Campeão Split 1", "Campeão Kings Cup"]}, {"id": 5, "n": "Luan 'Mestre'", "t": "Dibrados FC", "p": "MEI", "p2": "ATA", "o": 87, "at": 87, "df": 80, "v": 25, "pot": 89, "pm": 31, "g": 40, "a": 15, "tags": ["Nations 2026", "Campeão Nations", "9 MVPs na carreira"]}, {"id": 6, "n": "Lyncoln Oliveira", "t": "Dendele FC", "p": "DEF", "p2": "ATA", "o": 87, "at": 77, "df": 90, "v": 25, "pot": 90, "pm": 36, "g": 27, "a": 12, "tags": ["Mundial 2026"]}, {"id": 7, "n": "João Pedro", "t": "Fluxo FC", "p": "GOL", "p2": null, "o": 86, "at": 35, "df": 86, "v": 22, "pot": 90, "pm": 37, "g": 4, "a": 5, "tags": ["Nations 2025"]}, {"id": 8, "n": "Marcos 'Bolivia'", "t": "Capim FC", "p": "GOL", "p2": null, "o": 86, "at": 35, "df": 86, "v": 22, "pot": 92, "pm": 19, "g": 1, "a": 2, "tags": []}, {"id": 9, "n": "Álex Guti", "t": "Capim FC", "p": "DEF", "p2": "MEI", "o": 86, "at": 79, "df": 90, "v": 22, "pot": 89, "pm": 24, "g": 6, "a": 5, "tags": ["Nations 2026"]}, {"id": 10, "n": "Aleix Martí", "t": "G3X FC", "p": "ATA", "p2": "MEI", "o": 85, "at": 85, "df": 83, "v": 19, "pot": 91, "pm": 16, "g": 15, "a": 6, "tags": ["Nations 2026"]}, {"id": 11, "n": "Felipe Viana", "t": "LOUD SC", "p": "ATA", "p2": null, "o": 85, "at": 88, "df": 71, "v": 19, "pot": 91, "pm": 20, "g": 25, "a": 6, "tags": []}, {"id": 12, "n": "Gabriel Costa", "t": "Dibrados FC", "p": "ATA", "p2": "MEI", "o": 85, "at": 85, "df": 82, "v": 19, "pot": 90, "pm": 21, "g": 20, "a": 6, "tags": ["Nations 2026"]}, {"id": 13, "n": "Léo 'Gol'", "t": "Nyvelados FC", "p": "MEI", "p2": "ATA", "o": 85, "at": 85, "df": 78, "v": 19, "pot": 88, "pm": 34, "g": 43, "a": 18, "tags": ["Split 1", "Mundial 2025", "6 MVPs na carreira"]}, {"id": 14, "n": "Well Andrade", "t": "Dibrados FC", "p": "MEI", "p2": "ATA", "o": 85, "at": 85, "df": 78, "v": 19, "pot": 88, "pm": 49, "g": 45, "a": 12, "tags": ["Nations 2026", "Campeão Nations", "Campeão Mundial 2026", "10 MVPs na carreira"]}, {"id": 15, "n": "Andreas Vaz", "t": "G3X FC", "p": "MEI", "p2": "ATA", "o": 84, "at": 86, "df": 82, "v": 17, "pot": 87, "pm": 44, "g": 24, "a": 16, "tags": ["Vice Kings Cup", "Nations 2026", "Campeão Nations", "Campeão Mundial 2026"]}, {"id": 16, "n": "Gabriel Braga", "t": "G3X FC", "p": "GOL", "p2": null, "o": 84, "at": 35, "df": 84, "v": 17, "pot": 89, "pm": 9, "g": 0, "a": 1, "tags": []}, {"id": 17, "n": "Josildo Barata", "t": "G3X FC", "p": "GOL", "p2": null, "o": 84, "at": 35, "df": 84, "v": 17, "pot": 88, "pm": 47, "g": 11, "a": 11, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 18, "n": "Kaiky Souza", "t": "DesimpaiN", "p": "GOL", "p2": null, "o": 84, "at": 35, "df": 84, "v": 17, "pot": 89, "pm": 19, "g": 8, "a": 5, "tags": ["Campeão Split 2", "Melhor goleiro Split 2", "Mundial 2026"]}, {"id": 19, "n": "Lucas 'L7'", "t": "Dendele FC", "p": "ATA", "p2": null, "o": 84, "at": 87, "df": 70, "v": 17, "pot": 89, "pm": 14, "g": 16, "a": 4, "tags": []}, {"id": 20, "n": "Victor Hugo", "t": "Furia FC", "p": "GOL", "p2": null, "o": 84, "at": 35, "df": 84, "v": 17, "pot": 87, "pm": 36, "g": 10, "a": 18, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Nations 2026", "Campeão Nations"]}, {"id": 21, "n": "Yan 'Coringa'", "t": "Podpah Funkbol", "p": "ATA", "p2": null, "o": 84, "at": 87, "df": 70, "v": 17, "pot": 87, "pm": 21, "g": 12, "a": 12, "tags": []}, {"id": 22, "n": "Ailton José", "t": "Dibrados FC", "p": "DEF", "p2": "MEI", "o": 83, "at": 82, "df": 84, "v": 15, "pot": 88, "pm": 19, "g": 5, "a": 4, "tags": ["Mundial 2026"]}, {"id": 23, "n": "Julio Carvalho", "t": "Dendele FC", "p": "GOL", "p2": null, "o": 83, "at": 35, "df": 83, "v": 15, "pot": 88, "pm": 21, "g": 0, "a": 0, "tags": ["Mundial 2025"]}, {"id": 24, "n": "Luan Teles", "t": "Dibrados FC", "p": "GOL", "p2": null, "o": 83, "at": 35, "df": 83, "v": 15, "pot": 90, "pm": 12, "g": 5, "a": 2, "tags": []}, {"id": 25, "n": "Matheus 'Dedo'", "t": "Furia FC", "p": "DEF", "p2": "MEI", "o": 83, "at": 83, "df": 81, "v": 15, "pot": 87, "pm": 48, "g": 21, "a": 14, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Nations 2026", "Campeão Nations"]}, {"id": 26, "n": "Ton 'Spider'", "t": "Dibrados FC", "p": "ATA", "p2": null, "o": 83, "at": 86, "df": 69, "v": 15, "pot": 86, "pm": 36, "g": 31, "a": 14, "tags": ["Vice Kings Cup", "Nations 2026", "Campeão Nations", "Campeão Mundial 2026"]}, {"id": 27, "n": "Helber Júnior", "t": "LOUD SC", "p": "ATA", "p2": null, "o": 82, "at": 85, "df": 68, "v": 13, "pot": 85, "pm": 40, "g": 33, "a": 10, "tags": ["Mundial 2026"]}, {"id": 28, "n": "Matheus 'Chaveirinho'", "t": "Fluxo FC", "p": "MEI", "p2": "ATA", "o": 82, "at": 82, "df": 75, "v": 13, "pot": 86, "pm": 40, "g": 27, "a": 20, "tags": ["Mundial 2026"]}, {"id": 29, "n": "Wembley Luiz", "t": "G3X FC", "p": "DEF", "p2": "MEI", "o": 82, "at": 79, "df": 85, "v": 13, "pot": 85, "pm": 46, "g": 0, "a": 3, "tags": ["Vice Kings Cup", "Campeão Nations", "Campeão Mundial 2026"]}, {"id": 30, "n": "Douglinhas Melo", "t": "DesimpaiN", "p": "ATA", "p2": "MEI", "o": 81, "at": 82, "df": 78, "v": 11, "pot": 85, "pm": 17, "g": 19, "a": 2, "tags": ["Split 1"]}, {"id": 31, "n": "GB Medeiros", "t": "Nyvelados FC", "p": "DEF", "p2": null, "o": 81, "at": 78, "df": 84, "v": 11, "pot": 85, "pm": 23, "g": 4, "a": 3, "tags": []}, {"id": 32, "n": "Gui Carvalho", "t": "Dendele FC", "p": "DEF", "p2": null, "o": 81, "at": 75, "df": 86, "v": 11, "pot": 84, "pm": 35, "g": 3, "a": 4, "tags": ["Mundial 2025"]}, {"id": 33, "n": "Gustavo Húngaro", "t": "Dendele FC", "p": "GOL", "p2": null, "o": 81, "at": 35, "df": 81, "v": 11, "pot": 87, "pm": 20, "g": 6, "a": 5, "tags": []}, {"id": 34, "n": "Lucas Hector", "t": "Capim FC", "p": "ATA", "p2": null, "o": 81, "at": 84, "df": 67, "v": 11, "pot": 84, "pm": 32, "g": 25, "a": 8, "tags": ["Split 1", "Mundial 2025"]}, {"id": 35, "n": "Vini Alexandre", "t": "Podpah Funkbol", "p": "MEI", "p2": "DEF", "o": 81, "at": 78, "df": 86, "v": 11, "pot": 84, "pm": 38, "g": 22, "a": 7, "tags": ["Mundial 2025"]}, {"id": 36, "n": "Wellinton 'Gigante'", "t": "DesimpaiN", "p": "DEF", "p2": "MEI", "o": 81, "at": 71, "df": 84, "v": 11, "pot": 86, "pm": 24, "g": 9, "a": 6, "tags": ["Campeão Split 2", "Mundial 2026"]}, {"id": 37, "n": "Breno Arantes", "t": "Capim FC", "p": "DEF", "p2": "MEI", "o": 80, "at": 80, "df": 77, "v": 10, "pot": 84, "pm": 26, "g": 2, "a": 5, "tags": []}, {"id": 38, "n": "Christian Santos", "t": "Dendele FC", "p": "MEI", "p2": "ATA", "o": 80, "at": 80, "df": 73, "v": 10, "pot": 84, "pm": 19, "g": 13, "a": 6, "tags": ["Campeão Split 2", "Mundial 2026"]}, {"id": 39, "n": "Clebinho Silva", "t": "Furia FC", "p": "GOL", "p2": null, "o": 80, "at": 35, "df": 80, "v": 10, "pot": 87, "pm": 4, "g": 1, "a": 0, "tags": []}, {"id": 40, "n": "Cristhian 'Canhoto'", "t": "Dendele FC", "p": "MEI", "p2": null, "o": 80, "at": 80, "df": 73, "v": 10, "pot": 83, "pm": 41, "g": 21, "a": 15, "tags": ["Campeão Nations", "6 MVPs na carreira"]}, {"id": 41, "n": "Danilo Alemão", "t": "DesimpaiN", "p": "DEF", "p2": "MEI", "o": 80, "at": 70, "df": 83, "v": 10, "pot": 85, "pm": 18, "g": 7, "a": 2, "tags": ["Campeão Split 2", "Mundial 2026"]}, {"id": 42, "n": "Ivo Alves", "t": "Nyvelados FC", "p": "GOL", "p2": null, "o": 80, "at": 35, "df": 80, "v": 10, "pot": 84, "pm": 27, "g": 5, "a": 9, "tags": ["Mundial 2026"]}, {"id": 43, "n": "Juninho Maestro", "t": "Podpah Funkbol", "p": "MEI", "p2": "ATA", "o": 80, "at": 80, "df": 73, "v": 10, "pot": 87, "pm": 4, "g": 3, "a": 2, "tags": []}, {"id": 44, "n": "'Lukinhas' Henrique", "t": "DesimpaiN", "p": "MEI", "p2": "DEF", "o": 79, "at": 81, "df": 75, "v": 9, "pot": 85, "pm": 13, "g": 13, "a": 6, "tags": []}, {"id": 45, "n": "David 'Brinquinho'", "t": "DesimpaiN", "p": "MEI", "p2": null, "o": 79, "at": 81, "df": 75, "v": 9, "pot": 83, "pm": 19, "g": 13, "a": 4, "tags": ["Mundial 2026"]}, {"id": 46, "n": "Jeffinho Honorato", "t": "Furia FC", "p": "MEI", "p2": null, "o": 79, "at": 79, "df": 72, "v": 9, "pot": 81, "pm": 53, "g": 18, "a": 24, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Campeão Nations", "Final Four Mundial 2026"]}, {"id": 47, "n": "Luisinho Alves", "t": "DesimpaiN", "p": "ATA", "p2": null, "o": 79, "at": 82, "df": 65, "v": 9, "pot": 83, "pm": 31, "g": 24, "a": 7, "tags": ["Campeão Split 2", "Mundial 2026"]}, {"id": 48, "n": "Maikon Santos", "t": "Furia FC", "p": "GOL", "p2": null, "o": 79, "at": 35, "df": 79, "v": 9, "pot": 85, "pm": 18, "g": 0, "a": 2, "tags": ["Mundial 2025"]}, {"id": 49, "n": "Victor 'Bolt'", "t": "DesimpaiN", "p": "DEF", "p2": "MEI", "o": 79, "at": 69, "df": 82, "v": 9, "pot": 83, "pm": 33, "g": 6, "a": 8, "tags": ["Campeão Split 2", "Mundial 2026"]}, {"id": 50, "n": "Caio Henrique", "t": "Capim FC", "p": "MEI", "p2": "ATA", "o": 78, "at": 78, "df": 71, "v": 8, "pot": 85, "pm": 4, "g": 4, "a": 3, "tags": []}, {"id": 51, "n": "Gustavinho Henrique", "t": "Fluxo FC", "p": "ATA", "p2": "DEF", "o": 78, "at": 80, "df": 76, "v": 8, "pot": 81, "pm": 28, "g": 4, "a": 3, "tags": ["Mundial 2025"]}, {"id": 52, "n": "LC Paredão", "t": "Podpah Funkbol", "p": "GOL", "p2": null, "o": 78, "at": 35, "df": 78, "v": 8, "pot": 85, "pm": 4, "g": 0, "a": 0, "tags": []}, {"id": 53, "n": "Murillo Pulino", "t": "Fluxo FC", "p": "DEF", "p2": null, "o": 78, "at": 74, "df": 82, "v": 8, "pot": 83, "pm": 33, "g": 4, "a": 2, "tags": ["Mundial 2025"]}, {"id": 54, "n": "Vini Melequinha", "t": "Dendele FC", "p": "DEF", "p2": "MEI", "o": 78, "at": 75, "df": 79, "v": 8, "pot": 83, "pm": 17, "g": 4, "a": 4, "tags": ["Mundial 2025"]}, {"id": 55, "n": "William Jesus", "t": "Podpah Funkbol", "p": "DEF", "p2": "MEI", "o": 78, "at": 68, "df": 81, "v": 8, "pot": 82, "pm": 25, "g": 7, "a": 4, "tags": []}, {"id": 56, "n": "Daniel Shiraishi", "t": "LOUD SC", "p": "MEI", "p2": null, "o": 77, "at": 77, "df": 70, "v": 7, "pot": 83, "pm": 20, "g": 9, "a": 7, "tags": []}, {"id": 57, "n": "Gabriel Pastuch", "t": "G3X FC", "p": "ATA", "p2": null, "o": 77, "at": 79, "df": 71, "v": 7, "pot": 86, "pm": 3, "g": 1, "a": 0, "tags": ["Mundial 2025"]}, {"id": 58, "n": "Gabriel Repulho", "t": "Dendele FC", "p": "ATA", "p2": "DEF", "o": 77, "at": 80, "df": 74, "v": 7, "pot": 80, "pm": 34, "g": 4, "a": 5, "tags": ["Mundial 2025"]}, {"id": 59, "n": "Kenu Leandro", "t": "Furia FC", "p": "MEI", "p2": null, "o": 77, "at": 76, "df": 76, "v": 7, "pot": 81, "pm": 26, "g": 10, "a": 1, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Final Four Mundial 2026"]}, {"id": 60, "n": "Marcelinho Junior", "t": "DesimpaiN", "p": "ATA", "p2": "MEI", "o": 77, "at": 80, "df": 74, "v": 7, "pot": 81, "pm": 23, "g": 19, "a": 5, "tags": ["Mundial 2025"]}, {"id": 61, "n": "Matheus 'Biro'", "t": "LOUD SC", "p": "DEF", "p2": null, "o": 77, "at": 67, "df": 80, "v": 7, "pot": 81, "pm": 20, "g": 3, "a": 4, "tags": []}, {"id": 62, "n": "Matheus Bueno", "t": "DesimpaiN", "p": "MEI", "p2": null, "o": 77, "at": 75, "df": 76, "v": 7, "pot": 83, "pm": 13, "g": 2, "a": 2, "tags": []}, {"id": 63, "n": "Rafinha Cunha", "t": "LOUD SC", "p": "ATA", "p2": "MEI", "o": 77, "at": 80, "df": 63, "v": 7, "pot": 81, "pm": 14, "g": 5, "a": 5, "tags": []}, {"id": 64, "n": "Ryan Lima", "t": "DesimpaiN", "p": "ATA", "p2": null, "o": 77, "at": 79, "df": 75, "v": 7, "pot": 80, "pm": 42, "g": 6, "a": 5, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 65, "n": "Caio Miranda", "t": "Podpah Funkbol", "p": "MEI", "p2": "DEF", "o": 76, "at": 76, "df": 69, "v": 6, "pot": 81, "pm": 27, "g": 12, "a": 2, "tags": []}, {"id": 66, "n": "Daniel Ram", "t": "Dibrados FC", "p": "DEF", "p2": null, "o": 76, "at": 66, "df": 79, "v": 6, "pot": 83, "pm": 3, "g": 1, "a": 0, "tags": []}, {"id": 67, "n": "Fabiano Henrique", "t": "Capim FC", "p": "DEF", "p2": "MEI", "o": 76, "at": 66, "df": 79, "v": 6, "pot": 86, "pm": 1, "g": 1, "a": 0, "tags": []}, {"id": 68, "n": "Gabriel Mendes", "t": "Dendele FC", "p": "DEF", "p2": "MEI", "o": 76, "at": 66, "df": 79, "v": 6, "pot": 83, "pm": 7, "g": 4, "a": 0, "tags": []}, {"id": 69, "n": "Jefferson 'Gegeu'", "t": "Furia FC", "p": "DEF", "p2": null, "o": 76, "at": 66, "df": 79, "v": 6, "pot": 81, "pm": 8, "g": 1, "a": 1, "tags": ["Mundial 2026"]}, {"id": 70, "n": "Juninho Antunes", "t": "Podpah Funkbol", "p": "ATA", "p2": "MEI", "o": 76, "at": 79, "df": 62, "v": 6, "pot": 79, "pm": 26, "g": 9, "a": 11, "tags": []}, {"id": 71, "n": "Marquinhos Samora", "t": "G3X FC", "p": "MEI", "p2": null, "o": 76, "at": 76, "df": 69, "v": 6, "pot": 81, "pm": 22, "g": 1, "a": 1, "tags": []}, {"id": 72, "n": "Matheus Rufino", "t": "Dibrados FC", "p": "MEI", "p2": null, "o": 76, "at": 76, "df": 69, "v": 6, "pot": 78, "pm": 35, "g": 9, "a": 13, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 73, "n": "Rubens Tuco", "t": "Dendele FC", "p": "ATA", "p2": "MEI", "o": 76, "at": 72, "df": 78, "v": 6, "pot": 79, "pm": 36, "g": 11, "a": 11, "tags": ["Mundial 2025"]}, {"id": 74, "n": "Ryan Soares", "t": "Dendele FC", "p": "ATA", "p2": "MEI", "o": 76, "at": 79, "df": 62, "v": 6, "pot": 81, "pm": 15, "g": 9, "a": 1, "tags": []}, {"id": 75, "n": "Sidão Pages", "t": "Dibrados FC", "p": "DEF", "p2": null, "o": 76, "at": 66, "df": 79, "v": 6, "pot": 83, "pm": 10, "g": 2, "a": 0, "tags": []}, {"id": 76, "n": "Thiago 'TH'", "t": "G3X FC", "p": "MEI", "p2": null, "o": 76, "at": 76, "df": 69, "v": 6, "pot": 79, "pm": 28, "g": 10, "a": 4, "tags": ["Mundial 2026"]}, {"id": 77, "n": "Thiago Magalhães", "t": "Podpah Funkbol", "p": "DEF", "p2": null, "o": 76, "at": 66, "df": 79, "v": 6, "pot": 83, "pm": 3, "g": 1, "a": 0, "tags": []}, {"id": 78, "n": "Arthur Facas", "t": "LOUD SC", "p": "GOL", "p2": null, "o": 75, "at": 35, "df": 75, "v": 5, "pot": 83, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 79, "n": "Biel Moreira", "t": "Capim FC", "p": "MEI", "p2": null, "o": 75, "at": 75, "df": 68, "v": 5, "pot": 82, "pm": 4, "g": 2, "a": 1, "tags": []}, {"id": 80, "n": "Gabriel Ribas", "t": "Fluxo FC", "p": "ATA", "p2": null, "o": 75, "at": 78, "df": 61, "v": 5, "pot": 83, "pm": 5, "g": 2, "a": 2, "tags": []}, {"id": 81, "n": "João 'Choco'", "t": "Podpah Funkbol", "p": "ATA", "p2": "MEI", "o": 75, "at": 78, "df": 61, "v": 5, "pot": 78, "pm": 24, "g": 7, "a": 2, "tags": ["Nations 2025"]}, {"id": 82, "n": "Luís Fernando", "t": "LOUD SC", "p": "DEF", "p2": null, "o": 75, "at": 65, "df": 78, "v": 5, "pot": 81, "pm": 10, "g": 1, "a": 1, "tags": []}, {"id": 83, "n": "Matheus Scooby", "t": "Nyvelados FC", "p": "MEI", "p2": null, "o": 75, "at": 75, "df": 68, "v": 5, "pot": 84, "pm": 4, "g": 2, "a": 1, "tags": []}, {"id": 84, "n": "Nicollas Nascimento", "t": "Dendele FC", "p": "ATA", "p2": "MEI", "o": 75, "at": 78, "df": 61, "v": 5, "pot": 80, "pm": 20, "g": 8, "a": 3, "tags": []}, {"id": 85, "n": "Sam Silva", "t": "Fluxo FC", "p": "MEI", "p2": null, "o": 75, "at": 75, "df": 68, "v": 5, "pot": 81, "pm": 12, "g": 6, "a": 1, "tags": []}, {"id": 86, "n": "Yago Martins", "t": "Nyvelados FC", "p": "DEF", "p2": "MEI", "o": 75, "at": 65, "df": 78, "v": 5, "pot": 85, "pm": 1, "g": 0, "a": 1, "tags": []}, {"id": 87, "n": "Cleiton Chupeta", "t": "Fluxo FC", "p": "MEI", "p2": null, "o": 74, "at": 74, "df": 67, "v": 5, "pot": 81, "pm": 4, "g": 2, "a": 0, "tags": []}, {"id": 88, "n": "Gabriel Messias", "t": "G3X FC", "p": "DEF", "p2": null, "o": 74, "at": 64, "df": 77, "v": 5, "pot": 79, "pm": 27, "g": 1, "a": 1, "tags": ["Vice Kings Cup", "Campeão Mundial 2026"]}, {"id": 89, "n": "Heltinho Lima", "t": "Capim FC", "p": "ATA", "p2": null, "o": 74, "at": 77, "df": 60, "v": 5, "pot": 82, "pm": 4, "g": 2, "a": 0, "tags": []}, {"id": 90, "n": "Lucas 'Caroço'", "t": "Capim FC", "p": "DEF", "p2": null, "o": 74, "at": 64, "df": 77, "v": 5, "pot": 79, "pm": 18, "g": 2, "a": 1, "tags": []}, {"id": 91, "n": "Matheus Gomes", "t": "Capim FC", "p": "ATA", "p2": null, "o": 74, "at": 77, "df": 60, "v": 5, "pot": 81, "pm": 4, "g": 4, "a": 0, "tags": []}, {"id": 92, "n": "Matheus Klynsmann", "t": "Nyvelados FC", "p": "ATA", "p2": "MEI", "o": 74, "at": 72, "df": 74, "v": 5, "pot": 78, "pm": 29, "g": 6, "a": 1, "tags": []}, {"id": 93, "n": "Patrick Habibi", "t": "Fluxo FC", "p": "ATA", "p2": "DEF", "o": 74, "at": 77, "df": 60, "v": 5, "pot": 82, "pm": 7, "g": 2, "a": 1, "tags": []}, {"id": 94, "n": "Ronaldinho Reis", "t": "G3X FC", "p": "ATA", "p2": "DEF", "o": 74, "at": 77, "df": 60, "v": 5, "pot": 79, "pm": 12, "g": 2, "a": 0, "tags": []}, {"id": 95, "n": "Ruan Silvestre", "t": "Furia FC", "p": "ATA", "p2": null, "o": 74, "at": 77, "df": 60, "v": 5, "pot": 80, "pm": 8, "g": 4, "a": 2, "tags": ["Mundial 2026"]}, {"id": 96, "n": "Andson 'Romarinho'", "t": "LOUD SC", "p": "ATA", "p2": null, "o": 73, "at": 76, "df": 59, "v": 4, "pot": 80, "pm": 10, "g": 2, "a": 1, "tags": []}, {"id": 97, "n": "Diogo Didiu", "t": "Podpah Funkbol", "p": "DEF", "p2": null, "o": 73, "at": 63, "df": 76, "v": 4, "pot": 83, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 98, "n": "Erick 'Kaká'", "t": "Nyvelados FC", "p": "ATA", "p2": null, "o": 73, "at": 76, "df": 59, "v": 4, "pot": 78, "pm": 21, "g": 5, "a": 3, "tags": ["Mundial 2025"]}, {"id": 99, "n": "Guilherme Alves", "t": "Capim FC", "p": "GOL", "p2": null, "o": 73, "at": 35, "df": 73, "v": 4, "pot": 83, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 100, "n": "Jonathan Sono", "t": "Furia FC", "p": "DEF", "p2": null, "o": 73, "at": 63, "df": 76, "v": 4, "pot": 81, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 101, "n": "Maicon Macabeu", "t": "Nyvelados FC", "p": "DEF", "p2": null, "o": 73, "at": 63, "df": 76, "v": 4, "pot": 77, "pm": 16, "g": 1, "a": 1, "tags": []}, {"id": 102, "n": "Marcelo Vilella", "t": "G3X FC", "p": "DEF", "p2": null, "o": 73, "at": 63, "df": 76, "v": 4, "pot": 80, "pm": 4, "g": 0, "a": 0, "tags": []}, {"id": 103, "n": "Murilo Tudisco", "t": "Podpah Funkbol", "p": "ATA", "p2": null, "o": 73, "at": 76, "df": 59, "v": 4, "pot": 80, "pm": 2, "g": 1, "a": 0, "tags": []}, {"id": 104, "n": "Ricardo Batista", "t": "Capim FC", "p": "DEF", "p2": null, "o": 73, "at": 63, "df": 76, "v": 4, "pot": 80, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 105, "n": "Robinho Conceição", "t": "Fluxo FC", "p": "DEF", "p2": null, "o": 73, "at": 63, "df": 76, "v": 4, "pot": 81, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 106, "n": "Teteu Luiz", "t": "Podpah Funkbol", "p": "MEI", "p2": null, "o": 73, "at": 73, "df": 66, "v": 4, "pot": 81, "pm": 6, "g": 1, "a": 1, "tags": []}, {"id": 107, "n": "Welitim Gomes", "t": "Capim FC", "p": "ATA", "p2": null, "o": 73, "at": 76, "df": 59, "v": 4, "pot": 81, "pm": 4, "g": 1, "a": 0, "tags": []}, {"id": 108, "n": "Caio Felipe", "t": "LOUD SC", "p": "MEI", "p2": null, "o": 72, "at": 72, "df": 65, "v": 4, "pot": 77, "pm": 20, "g": 3, "a": 2, "tags": []}, {"id": 109, "n": "Caiuby Francisco", "t": "LOUD SC", "p": "MEI", "p2": null, "o": 72, "at": 72, "df": 65, "v": 4, "pot": 78, "pm": 7, "g": 4, "a": 0, "tags": []}, {"id": 110, "n": "Drope Oliveira", "t": "Furia FC", "p": "ATA", "p2": null, "o": 72, "at": 75, "df": 58, "v": 4, "pot": 78, "pm": 8, "g": 4, "a": 1, "tags": []}, {"id": 111, "n": "Edipo Felipinho", "t": "Nyvelados FC", "p": "ATA", "p2": null, "o": 72, "at": 75, "df": 58, "v": 4, "pot": 79, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 112, "n": "Gui Marques", "t": "LOUD SC", "p": "MEI", "p2": null, "o": 72, "at": 72, "df": 65, "v": 4, "pot": 79, "pm": 4, "g": 0, "a": 1, "tags": []}, {"id": 113, "n": "Lucas Samurai", "t": "Fluxo FC", "p": "MEI", "p2": null, "o": 72, "at": 72, "df": 65, "v": 4, "pot": 80, "pm": 4, "g": 1, "a": 0, "tags": []}, {"id": 114, "n": "Luiz Felipe", "t": "Fluxo FC", "p": "MEI", "p2": null, "o": 72, "at": 72, "df": 65, "v": 4, "pot": 80, "pm": 6, "g": 3, "a": 1, "tags": []}, {"id": 115, "n": "Luizinho Silva", "t": "Nyvelados FC", "p": "GOL", "p2": null, "o": 72, "at": 35, "df": 72, "v": 4, "pot": 80, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 116, "n": "Maicon 'Barata'", "t": "Nyvelados FC", "p": "DEF", "p2": null, "o": 72, "at": 62, "df": 75, "v": 4, "pot": 77, "pm": 10, "g": 0, "a": 0, "tags": []}, {"id": 117, "n": "Murilinho Oliveira", "t": "Fluxo FC", "p": "MEI", "p2": null, "o": 72, "at": 72, "df": 65, "v": 4, "pot": 80, "pm": 4, "g": 0, "a": 1, "tags": []}, {"id": 118, "n": "Pedro Medina", "t": "Fluxo FC", "p": "DEF", "p2": null, "o": 72, "at": 62, "df": 75, "v": 4, "pot": 79, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 119, "n": "Ruan Major", "t": "Furia FC", "p": "MEI", "p2": null, "o": 72, "at": 72, "df": 65, "v": 4, "pot": 77, "pm": 15, "g": 0, "a": 2, "tags": []}, {"id": 120, "n": "Danilo Silva", "t": "G3X FC", "p": "ATA", "p2": null, "o": 71, "at": 74, "df": 57, "v": 3, "pot": 80, "pm": 4, "g": 1, "a": 1, "tags": []}, {"id": 121, "n": "Gutinho Penha", "t": "Dibrados FC", "p": "ATA", "p2": null, "o": 71, "at": 74, "df": 57, "v": 3, "pot": 79, "pm": 4, "g": 1, "a": 0, "tags": []}, {"id": 122, "n": "Jader Vozinha", "t": "Capim FC", "p": "MEI", "p2": null, "o": 71, "at": 71, "df": 64, "v": 3, "pot": 80, "pm": 3, "g": 0, "a": 0, "tags": []}, {"id": 123, "n": "Jonatas 'Batman'", "t": "G3X FC", "p": "MEI", "p2": null, "o": 71, "at": 71, "df": 64, "v": 3, "pot": 74, "pm": 26, "g": 6, "a": 4, "tags": ["Mundial 2025"]}, {"id": 124, "n": "Luisinho Barreiros", "t": "Nyvelados FC", "p": "MEI", "p2": "DEF", "o": 71, "at": 69, "df": 76, "v": 3, "pot": 74, "pm": 28, "g": 2, "a": 2, "tags": ["Mundial 2025"]}, {"id": 125, "n": "Marcos 'Niniu'", "t": "G3X FC", "p": "ATA", "p2": null, "o": 71, "at": 74, "df": 57, "v": 3, "pot": 79, "pm": 9, "g": 1, "a": 1, "tags": []}, {"id": 126, "n": "Matheusinho Santos", "t": "LOUD SC", "p": "MEI", "p2": null, "o": 71, "at": 71, "df": 64, "v": 3, "pot": 78, "pm": 4, "g": 0, "a": 1, "tags": []}, {"id": 127, "n": "Nikxik Ribeiro", "t": "DesimpaiN", "p": "ATA", "p2": null, "o": 71, "at": 74, "df": 57, "v": 3, "pot": 80, "pm": 4, "g": 0, "a": 0, "tags": []}, {"id": 128, "n": "Paulo 'Pinguinho'", "t": "Fluxo FC", "p": "MEI", "p2": "DEF", "o": 71, "at": 71, "df": 64, "v": 3, "pot": 77, "pm": 18, "g": 1, "a": 1, "tags": []}, {"id": 129, "n": "Paulo Alves", "t": "LOUD SC", "p": "ATA", "p2": "MEI", "o": 71, "at": 74, "df": 57, "v": 3, "pot": 79, "pm": 6, "g": 1, "a": 2, "tags": []}, {"id": 130, "n": "Rafael 'Tambinha'", "t": "Furia FC", "p": "MEI", "p2": null, "o": 71, "at": 71, "df": 64, "v": 3, "pot": 75, "pm": 26, "g": 1, "a": 0, "tags": ["Campeão Split 1", "Campeão Kings Cup", "Mundial 2026"]}, {"id": 131, "n": "Vinicyus Chacon", "t": "Fluxo FC", "p": "GOL", "p2": null, "o": 71, "at": 35, "df": 71, "v": 3, "pot": 81, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 132, "n": "Cristofer Matheus", "t": "DesimpaiN", "p": "ATA", "p2": null, "o": 70, "at": 73, "df": 56, "v": 3, "pot": 78, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 133, "n": "Dudu Barbosa", "t": "G3X FC", "p": "MEI", "p2": null, "o": 70, "at": 70, "df": 63, "v": 3, "pot": 78, "pm": 3, "g": 1, "a": 0, "tags": []}, {"id": 134, "n": "Gabriel 'Dudu'", "t": "Nyvelados FC", "p": "MEI", "p2": "DEF", "o": 70, "at": 70, "df": 63, "v": 3, "pot": 75, "pm": 11, "g": 2, "a": 0, "tags": []}, {"id": 135, "n": "João Pedro 'Pajé'", "t": "G3X FC", "p": "MEI", "p2": null, "o": 70, "at": 70, "df": 63, "v": 3, "pot": 79, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 136, "n": "Rodrigo 'Chocolate'", "t": "Dibrados FC", "p": "MEI", "p2": null, "o": 70, "at": 70, "df": 63, "v": 3, "pot": 79, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 137, "n": "Rodrigo Sheik", "t": "Dibrados FC", "p": "MEI", "p2": null, "o": 70, "at": 70, "df": 63, "v": 3, "pot": 78, "pm": 4, "g": 0, "a": 0, "tags": []}, {"id": 138, "n": "Gustavo Luiz", "t": "DesimpaiN", "p": "GOL", "p2": null, "o": 69, "at": 35, "df": 69, "v": 2, "pot": 74, "pm": 11, "g": 1, "a": 0, "tags": []}, {"id": 139, "n": "Johnny Gomes", "t": "Nyvelados FC", "p": "ATA", "p2": "MEI", "o": 69, "at": 72, "df": 55, "v": 2, "pot": 78, "pm": 2, "g": 0, "a": 1, "tags": []}, {"id": 140, "n": "Raphael Augusto", "t": "Dibrados FC", "p": "MEI", "p2": null, "o": 69, "at": 69, "df": 62, "v": 2, "pot": 77, "pm": 3, "g": 0, "a": 0, "tags": []}, {"id": 141, "n": "Bambam Santos", "t": "Podpah Funkbol", "p": "MEI", "p2": null, "o": 68, "at": 68, "df": 61, "v": 2, "pot": 76, "pm": 2, "g": 0, "a": 0, "tags": []}, {"id": 142, "n": "Marquinhos 'MV'", "t": "Nyvelados FC", "p": "MEI", "p2": null, "o": 68, "at": 68, "df": 61, "v": 2, "pot": 73, "pm": 19, "g": 2, "a": 0, "tags": []}, {"id": 143, "n": "Gustavo Albino", "t": "Podpah Funkbol", "p": "GOL", "p2": null, "o": 65, "at": 35, "df": 65, "v": 1, "pot": 73, "pm": 1, "g": 0, "a": 0, "tags": []}, {"id": 144, "n": "Filipinho Maia", "t": "Dibrados FC", "p": "GOL", "p2": null, "o": 62, "at": 35, "df": 62, "v": 1, "pot": 69, "pm": 3, "g": 0, "a": 0, "tags": []}];
 let PLAYER_BY_ID = {}; PLAYERS.forEach(p => PLAYER_BY_ID[p.id] = p);
 /* ===== ENGINE v2: leilão automático + partida ao vivo ===== */
 const POS_ORDER = { GOL: 0, DEF: 1, MEI: 2, ATA: 3 };
@@ -303,14 +369,14 @@ const CARDS = {
   SO: { name: "Shootout", desc: "Um shootout a favor: 1x1 saindo do meio contra o goleiro." },
   PEN: { name: "Pênalti", desc: "Pênalti a favor. Você escolhe o canto." },
   REV: { name: "Pênalti Reverso", desc: "Você escolhe um jogador rival para bater um pênalti. Se ele errar, é gol seu. Se acertar, nada acontece." },
-  STAR: { name: "Star Player", desc: "Escolha um jogador seu: o próximo gol dele vale 2. Só conta nas janelas de carta (6'-17' e 23'-36')." },
-  DOB: { name: "Gol Dobro", desc: "Seus gols valem 2 por 2 minutos de jogo normal. Pausa durante gol dobro geral, dado e match ball." },
-  SUS: { name: "Suspensão", desc: "Escolha um jogador rival: ele fica 2 minutos fora e o rival joga com um a menos." },
+  STAR: { name: "Star Player", desc: "Escolha um jogador seu: o próximo gol dele (de bola rolando) vale 2. Vale até o 36' ou até ele marcar." },
+  DOB: { name: "Gol Dobro", desc: "Por 4 minutos, seus gols de bola rolando valem 2 (pênalti, shootout e pênalti do presidente valem 1). Pausa no gol dobro geral e no dado." },
+  SUS: { name: "Suspensão", desc: "Escolha um jogador de linha rival: ele fica 4 minutos fora e o rival joga com um a menos." },
   CUR: { name: "Coringa", desc: "Vira qualquer outra carta à sua escolha, ou rouba a carta do rival." }
 };
 const CARD_KEYS = Object.keys(CARDS);
-const CARD_DRAW = ["SO", "PEN", "REV", "STAR", "DOB", "SUS", "CUR", "PEN", "DOB", "SO"];
-const STRATS = { cedo: "Usar cedo (6' a 12')", tarde: "Guardar pro 2º tempo (24' a 33')", perdendo: "Usar quando estiver perdendo" };
+const CARD_DRAW = ["DOB", "DOB", "SUS", "SO", "SO", "STAR", "STAR", "PEN", "REV", "CUR"]; // baralho oficial de 10 cartas
+const STRATS = { cedo: "Usar cedo (5' a 12')", tarde: "Guardar pro 2º tempo (24' a 33')", perdendo: "Usar quando estiver perdendo" };
 const FORMS = {
   "2-3-1": ["DEF", "DEF", "MEI", "MEI", "MEI", "ATA"],
   "3-2-1": ["DEF", "DEF", "DEF", "MEI", "MEI", "ATA"],
@@ -342,46 +408,47 @@ function styleEdge(a, b) { // bônus de ataque do estilo a contra o estilo b
 }
 
 
-/* ================= TÉCNICOS E PRESIDENTES (kingsleague.pro, temporada 2025/26) =================
+/* ================= TÉCNICOS E PRESIDENTES (presidentes: kingsleague.pro e fantasy da Kings Cup 2026/27) =================
    Formação/estilo preferidos e notas de pênalti são do jogo (não são dados oficiais). */
 const STAFF = [
   { id: "c1", k: "tec", n: "Velho Vamp", club: "G3X FC", form: "2-3-1", style: "posse", r: 5, v: 9 },
   { id: "c2", k: "tec", n: "Dudu Oliveira", club: "Furia FC", form: "2-2-2", style: "pressao", r: 5, v: 9 },
   { id: "c3", k: "tec", n: "Felipe Pantera", club: "DesimpaiN", form: "3-1-2", style: "contra", r: 5, v: 9 },
-  { id: "c4", k: "tec", n: "Júlio Carvalho", club: "Dendele FC", form: "3-2-1", style: "equilibrado", r: 4, v: 6 },
   { id: "c5", k: "tec", n: "Carlos Pimenta", club: "LOUD SC", form: "2-3-1", style: "contra", r: 4, v: 6 },
   { id: "c6", k: "tec", n: "Paulo Netto", club: "Fluxo FC", form: "2-2-2", style: "posse", r: 4, v: 6 },
   { id: "c7", k: "tec", n: "Gabriel Altieri", club: "Capim FC", form: "1-3-2", style: "longa", r: 3, v: 4 },
   { id: "c8", k: "tec", n: "Charles Cruz", club: "Capim FC", form: "2-1-3", style: "pressao", r: 3, v: 4 },
   { id: "c9", k: "tec", n: "Dabá", club: "Nyvelados FC", form: "3-2-1", style: "retranca", r: 3, v: 4 },
-  { id: "c10", k: "tec", n: "Luizinho Silva", club: "Nyvelados FC", form: "2-3-1", style: "equilibrado", r: 3, v: 3 },
   { id: "c11", k: "tec", n: "Gustavo da Silva", club: "Podpah Funkbol", form: "2-2-2", style: "longa", r: 3, v: 4 },
   { id: "c12", k: "tec", n: "Preto", club: "Dendele FC (auxiliar)", form: "3-1-2", style: "retranca", r: 2, v: 2 },
   { id: "p1", k: "pres", n: "Neymar", club: "Furia FC", pen: 95, v: 12 },
-  { id: "p2", k: "pres", n: "Cris Guedes", club: "Furia FC", pen: 58, v: 3 },
-  { id: "p3", k: "pres", n: "Gaules", club: "G3X FC", pen: 55, v: 5 },
-  { id: "p4", k: "pres", n: "Kelvin Oliveira", club: "G3X FC", pen: 92, v: 10 },
+  { id: "p2", k: "pres", n: "Cris Guedes", club: "Furia FC", pen: 64, v: 3 },
+  { id: "p3", k: "pres", n: "Gaules", club: "G3X FC", pen: 64, v: 5 },
   { id: "p5", k: "pres", n: "Jon Vlogs", club: "Capim FC", pen: 62, v: 4 },
   { id: "p6", k: "pres", n: "Luva de Pedreiro", club: "Capim FC", pen: 70, v: 5 },
-  { id: "p7", k: "pres", n: "Racha", club: "Capim FC", pen: 55, v: 2 },
+  { id: "p7", k: "pres", n: "Racha", club: "Capim FC", pen: 63, v: 2 },
   { id: "p8", k: "pres", n: "Paulinho o Loko", club: "Dendele FC", pen: 57, v: 3 },
-  { id: "p9", k: "pres", n: "Luquet4", club: "Dendele FC", pen: 60, v: 3 },
-  { id: "p10", k: "pres", n: "Renato Vicente", club: "DesimpaiN", pen: 64, v: 4 },
+  { id: "p9", k: "pres", n: "LuquEt4", club: "Dendele FC", pen: 72, v: 3 },
+  { id: "p10", k: "pres", n: "Renato Vicente", club: "DesimpaiN", pen: 66, v: 4 },
   { id: "p11", k: "pres", n: "Allan Stag", club: "Dibrados FC", pen: 56, v: 2 },
   { id: "p12", k: "pres", n: "Lucas Tylty", club: "Dibrados FC", pen: 55, v: 2 },
-  { id: "p13", k: "pres", n: "Cerol", club: "Fluxo FC", pen: 58, v: 3 },
+  { id: "p13", k: "pres", n: "Cerol", club: "Fluxo FC", pen: 66, v: 3 },
   { id: "p14", k: "pres", n: "Nobru", club: "Fluxo FC", pen: 60, v: 3 },
   { id: "p15", k: "pres", n: "Toguro", club: "Fluxo FC", pen: 63, v: 3 },
   { id: "p16", k: "pres", n: "Coringa", club: "LOUD SC", pen: 61, v: 3 },
-  { id: "p17", k: "pres", n: "Brabox", club: "LOUD SC", pen: 56, v: 2 },
+  { id: "p17", k: "pres", n: "Brabox", club: "LOUD SC", pen: 63, v: 2 },
   { id: "p18", k: "pres", n: "Nyvi Estephan", club: "Nyvelados FC", pen: 62, v: 4 },
   { id: "p19", k: "pres", n: "Falcão", club: "Nyvelados FC", pen: 90, v: 9 },
   { id: "p20", k: "pres", n: "Igão", club: "Podpah Funkbol", pen: 57, v: 3 },
   { id: "p21", k: "pres", n: "Michel Elias", club: "Podpah Funkbol", pen: 55, v: 2 },
-  { id: "p22", k: "pres", n: "MC Hariel", club: "Podpah Funkbol", pen: 58, v: 3 }
+  { id: "p22", k: "pres", n: "MC Hariel", club: "Podpah Funkbol", pen: 58, v: 3 },
+  { id: "p23", k: "pres", n: "Benjamin Back", club: "Fluxo FC", pen: 54, v: 2 }
 ];
 const STAFF_BY_ID = {}; STAFF.forEach(x => STAFF_BY_ID[x.id] = x);
-function P(id) { return PLAYER_BY_ID[id]; }
+// evolução no modo carreira: S.pov guarda o overall atual de quem evoluiu
+let POVC = {};
+function setPov(pov) { POVC = {}; if (pov) Object.entries(pov).forEach(([id, o]) => { const b = PLAYER_BY_ID[id]; if (b) POVC[id] = Object.assign({}, b, o); }); }
+function P(id) { return POVC[id] || PLAYER_BY_ID[id]; }
 function shuffle(a, R) { R = R || Math.random; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function rnd(n) { return Math.floor(Math.random() * n); }
 function pick(arr) { return arr[rnd(arr.length)]; }
@@ -389,7 +456,7 @@ function pick(arr) { return arr[rnd(arr.length)]; }
 function newGame(code, hostPid, hostName, hostTeam, mode) {
   return {
     v: 2, code, mode, hostPid, phase: "lobby", rev: 0, hostNow: Date.now(),
-    settings: { budget: 150, squad: 10, timer: 10, total: 6, speed: 1, hide: "nao", mode: "leilao", wc: 6, picks: 6, dtimer: 30, fmt: "split", year: false, staff: "nenhum", trades: "nenhum" },
+    settings: { budget: 150, squad: 10, timer: 10, total: 6, speed: 1, hide: "nao", mode: "leilao", wc: 6, picks: 6, dtimer: 30, tmin: 1, fmt: "split", year: false, staff: "nenhum", trades: "nenhum" },
     managers: hostName ? [mkMgr(hostPid, hostName, hostTeam, 0, false)] : [],
     auction: null, season: null, log: []
   };
@@ -419,10 +486,11 @@ function validCrest(c) {
 }
 function mkMgr(pid, name, team, i, cpu, pers) {
   const color = COLORS[i % COLORS.length];
-  return { pid, name: (name || "Presidente").slice(0, 18), team: (team || "Meu Time FC").slice(0, 24), color, cpu: !!cpu, pers: pers || 1, budget: 0, roster: [], strat: { card: "perdendo", pp: "perdendo" }, tac: null, crest: randCrest(color, team), kit: randKit(color), coach: null, pres: null };
+  return { pid, name: (name || "Presidente").slice(0, 18), team: (team || "Meu Time FC").slice(0, 24), color, cpu: !!cpu, pers: pers || 1, budget: 0, roster: [], strat: { card: "perdendo", pp: "perdendo" }, tac: null, crest: randCrest(color, team), kit: randKit(color), kit2: null, coach: null, pres: null };
 }
-const KIT_PATS = ["liso", "listras", "horizontais", "faixa", "metade", "xadrez", "gola"];
+const KIT_PATS = ["liso", "listras", "horizontais", "faixa", "metade", "xadrez", "gola", "centro", "ombros", "v", "finas"];
 function randKit(color) { return { c1: color || "#f5c542", c2: pick(["#111111", "#ffffff", "#0b0d12", "#f5c542"]), pat: pick(KIT_PATS), num: "#ffffff" }; }
+function awayKit(k) { const dark = !k || /^#(0|1|2)/.test(k.c1); return { c1: dark ? "#f2f2f2" : "#15171c", c2: (k && k.c1) || "#f5c542", pat: "gola", num: dark ? "#111111" : "#ffffff" }; }
 function validKit(k) {
   if (!k || typeof k !== "object") return null;
   const hex = v => /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
@@ -449,6 +517,7 @@ function fillCpus(S) {
 }
 function staffKinds(S) { const s = S.settings.staff; return s === "ambos" ? ["tec", "pres"] : s === "tecnicos" ? ["tec"] : s === "presidentes" ? ["pres"] : []; }
 function startMarket(S, now) {
+  S.base = { fmt: S.settings.fmt, squad: S.settings.squad, picks: S.settings.picks };
   if (S.settings.year) S.settings.fmt = "split";
   if (staffKinds(S).length && !S.staffDone) return startStaff(S, now);
   return startAuction(S, now);
@@ -878,7 +947,7 @@ function marketTick(S, now) {
 
 /* ================= MERCADO DE TROCAS ================= */
 function openTrade(S, when) {
-  S.phase = "trade"; S.trade = { when, offers: [], n: 0, deadline: Date.now() + 60000 };
+  S.phase = "trade"; S.trade = { when, offers: [], n: 0, deadline: Date.now() + (S.settings.tmin || 1) * 60000 };
   addLog(S, when === "antes" ? "Mercado de trocas aberto antes do campeonato!" : "Mercado de trocas aberto antes do mata-mata!");
 }
 function sqLimits(S) { const sq = S.settings.squad; return [Math.max(7, sq - 2), sq + 2]; }
@@ -930,8 +999,91 @@ function closeTrade(S) {
   S.trade.offers.forEach(x => { if (x.st === "pend") x.st = "cancel"; });
   const when = S.trade.when;
   S.phase = "season";
-  addLog(S, "Mercado de trocas fechado.");
+  addLog(S, when === "carreira" ? "Janela de transferências fechada." : "Mercado de trocas fechado.");
   if (when === "mata") openKOLevel(S);
+  if (when === "carreira") startCareerSeason(S);
+}
+
+/* ================= MODO CARREIRA ================= */
+function freeAgents(S) { const own = new Set(S.managers.flatMap(m => m.roster)); return PLAYERS.map(p => p.id).filter(id => !own.has(id)); }
+function careerSign(S, mi, id) {
+  if (S.phase !== "trade" || !S.trade || S.trade.when !== "carreira") return false;
+  const m = S.managers[mi], p = P(id); if (!m || !p || !freeAgents(S).includes(id)) return false;
+  const [, mx] = sqLimits(S); if (m.roster.length >= mx || m.budget < p.v) { S.trade.lastErr = { mi, err: m.roster.length >= mx ? `Elenco cheio (máx. ${mx}).` : "Saldo insuficiente.", at: Date.now() }; return true; }
+  m.budget -= p.v; m.roster.push(id); addLog(S, `${m.team} contrata ${p.n} por ${p.v} K$.`); return true;
+}
+function careerRelease(S, mi, id) {
+  if (S.phase !== "trade" || !S.trade || S.trade.when !== "carreira") return false;
+  const m = S.managers[mi], p = P(id); if (!m || !p || !m.roster.includes(id)) return false;
+  const [mn] = sqLimits(S), rest = m.roster.filter(x => x !== id);
+  if (rest.length < mn || !rest.some(x => P(x).p === "GOL")) { S.trade.lastErr = { mi, err: `Precisa ficar com pelo menos ${mn} jogadores e um goleiro.`, at: Date.now() }; return true; }
+  m.roster = rest; m.budget += Math.floor(p.v / 2); if (m.wc) m.wc = m.wc.filter(x => x !== id);
+  if (m.tac && [m.tac.gk].concat(m.tac.slots).includes(id)) m.tac = autoTac(S, mi, m.tac.form, m.tac.style);
+  addLog(S, `${m.team} dispensa ${p.n} (recebe ${Math.floor(p.v / 2)} K$).`); return true;
+}
+// fim de temporada: evolução rumo ao potencial, premiação e janela de transferências
+function nextSeason(S) {
+  if (!gameOver(S)) return false;
+  const C = S.career = S.career || { year: 1 };
+  const st = {}; (S.season ? S.season.fixtures : []).forEach(f => { if (!f.res) return; (f.res.nt || []).forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0 }; x.j++; x.n += n; }); });
+  S.pov = S.pov || {}; const evo = [];
+  S.managers.forEach(m => m.roster.forEach(id => {
+    const p = P(id), x = st[id] || { j: 0, n: 0 }, avg = x.j ? x.n / x.j : 6;
+    let d = 0;
+    if (p.o < p.pot) { d = (x.j >= 3 ? 1 : 0) + (avg >= 7 ? 1 : 0) + (avg >= 7.8 ? 1 : 0) + (Math.random() < 0.35 ? 1 : 0); d = Math.min(d, p.pot - p.o); }
+    else if (x.j >= 2 && avg < 6.2 && Math.random() < 0.4) d = -1;
+    if (d) { S.pov[id] = { o: p.o + d, at: p.at + d, df: p.df + d, v: Math.max(1, Math.round(1.25 * Math.exp((p.o + d - 64) * 0.13))) }; evo.push([id, p.o, p.o + d]); }
+  }));
+  setPov(S.pov);
+  // premiação pela campanha
+  const tb = standings(S).map(r => r.i), ch = S.season && S.season.champion;
+  S.managers.forEach((m, i) => { const pos = tb.indexOf(i); m.budget += 15 + (i === ch ? 40 : 0) + Math.max(0, 25 - pos * 3); });
+  C.lastEvo = evo.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10);
+  C.year++;
+  ["season", "history", "yearDone", "keep", "votes"].forEach(k => delete S[k]);
+  if (S.base) { S.settings.fmt = S.base.fmt; }
+  if (S.settings.year) S.settings.fmt = "split";
+  addLog(S, `Temporada ${C.year}! Elencos mantidos, jogadores evoluíram e a janela de transferências está aberta.`);
+  S.phase = "trade"; S.trade = { when: "carreira", offers: [], n: 0, deadline: Date.now() + Math.max(2, S.settings.tmin || 1) * 60000 };
+  return true;
+}
+function startCareerSeason(S) {
+  // bots completam o elenco com agentes livres
+  S.managers.forEach((m, i) => {
+    if (!m.cpu) return;
+    let g = 0; while (m.roster.length < S.settings.squad && g++ < 12) { const fa = freeAgents(S).map(P).filter(p => p.v <= m.budget).sort((a, b) => b.o - a.o)[0]; if (!fa) break; careerSign(S, i, fa.id); }
+  });
+  S.managers.forEach((m, i) => { if (!validTac(S, i, m.tac)) m.tac = autoTac(S, i, m.tac ? m.tac.form : "2-3-1", m.tac ? m.tac.style : "equilibrado"); });
+  S.season = buildSeason(S); S.phase = "season";
+}
+
+/* ================= HISTÓRICO DA SALA (títulos e confronto direto entre amigos) ================= */
+function hall(S) { return S.hall = S.hall || { titles: [], h2h: {}, games: 0 }; }
+function hallMatch(S, f) {
+  if (!f.res || f.hall) return; f.hall = true;
+  const A = S.managers[f.h], B = S.managers[f.a]; if (!A || !B || A.cpu || B.cpu) return;
+  const H = hall(S), [x, y] = [A.pid, B.pid].sort(), k = x + "|" + y, w = f.res.w === 0 ? A.pid : B.pid;
+  const r = H.h2h[k] = H.h2h[k] || { a: x, b: y, wa: 0, wb: 0, na: A.name, nb: B.name };
+  if (w === x) r.wa++; else r.wb++;
+  r.na = S.managers.find(m => m.pid === x).name; r.nb = S.managers.find(m => m.pid === y).name;
+}
+function hallTitle(S, mi, comp) {
+  const m = S.managers[mi]; if (!m) return;
+  hall(S).titles.push({ comp, team: m.team, name: m.name, pid: m.cpu ? null : m.pid, season: S.settings && S.settings.career ? ((S.career && S.career.year) || 1) : null, at: Date.now() });
+  if (hall(S).titles.length > 60) hall(S).titles.shift();
+}
+
+/* ================= REVANCHE: VOLTAR AO LOBBY DA MESMA SALA ================= */
+function gameOver(S) { return S.phase === "done" && (!S.settings.year || !!S.yearDone); }
+function resetToLobby(S) {
+  S.managers = S.managers.filter(m => !m.cpu);
+  S.managers.forEach(m => { m.budget = 0; m.roster = []; m.tac = null; m.coach = null; m.pres = null; delete m.wc; });
+  ["auction", "season", "draft", "wc", "trade", "keep", "staffA", "history", "yearDone", "cupDraft", "staffDone", "votes", "pov", "career"].forEach(k => delete S[k]);
+  setPov(null);
+  if (S.base) { S.settings.fmt = S.base.fmt; S.settings.squad = S.base.squad; S.settings.picks = S.base.picks; }
+  S.games = (S.games || 0) + 1;
+  S.phase = "lobby";
+  addLog(S, "Revanche! Todo mundo de volta ao vestiário da mesma sala.");
 }
 
 /* ================= TEMPORADA COMPLETA (Split + Kings Cup) ================= */
@@ -976,6 +1128,7 @@ function closeKeep(S, now) {
 function fitPen(pl, slot) {
   if (pl.p === "GOL") return 20;
   if (pl.p === slot) return 0;
+  if (pl.p2 === slot) return 2; // joga bem na posição secundária
   const d = Math.abs(POS_ORDER[pl.p] - POS_ORDER[slot]);
   return d === 1 ? 5 : 12;
 }
@@ -1141,6 +1294,11 @@ function openKOLevel(S) {
 function advanceRound(S) {
   const se = S.season;
   if (roundFixtures(S).some(f => !f.res)) return false;
+  // lesões: quem já estava fora cumpre uma rodada; quem se machucou agora fica fora das próximas
+  se.inj = se.inj || {};
+  Object.keys(se.inj).forEach(k => { se.inj[k]--; if (se.inj[k] <= 0) delete se.inj[k]; });
+  roundFixtures(S).forEach(f => ((f.res && f.res.inj) || []).forEach(l => l.forEach(([id, r]) => { se.inj[id] = Math.max(se.inj[id] || 0, r); })));
+  roundFixtures(S).forEach(f => hallMatch(S, f));
   // desafios da rodada
   roundFixtures(S).filter(f => f.stage === "Desafio" && !f.counted).forEach(f => {
     f.counted = true; const w = f.res.w === 0 ? f.h : f.a; const g = se.groups[0].includes(w) ? 0 : 1;
@@ -1159,6 +1317,7 @@ function advanceRound(S) {
     const fin = se.fixtures.find(f => f.id === "fin");
     se.champion = fin.res.w === 0 ? fin.h : fin.a; se.stage = "done"; S.phase = "done";
     addLog(S, `${S.managers[se.champion].team} é CAMPEÃO!`);
+    hallTitle(S, se.champion, se.fmt === "cup" ? "Kings Cup" : "Split");
     if (S.settings.year) yearAfterComp(S);
     return true;
   }
@@ -1178,11 +1337,13 @@ function newMatch(S, f) {
   const mk = (mi, side) => {
     const m = S.managers[mi];
     if (!validTac(S, mi, m.tac)) m.tac = autoTac(S, mi, "2-3-1", "equilibrado");
-    const tac = JSON.parse(JSON.stringify(m.tac));
+    let tac = JSON.parse(JSON.stringify(m.tac));
+    // lesionados não jogam: o jogo arruma a escalação com quem está disponível
+    if ([tac.gk].concat(tac.slots).some(id => isInj(S, id))) { const full = m.roster; m.roster = full.filter(id => !isInj(S, id)); tac = autoTac(S, mi, tac.form, tac.style); m.roster = full; }
     const nCards = 1 + (f.stage !== "Liga" && f.stage !== "Desafio" && S.season && S.season.dwin && S.season.dwin[mi] ? 1 : 0);
     const pres = m.pres && STAFF_BY_ID[m.pres] ? STAFF_BY_ID[m.pres] : null;
     const coach = m.coach && STAFF_BY_ID[m.coach] ? STAFF_BY_ID[m.coach] : null;
-    return { mi, side, name: m.team, pres: pres ? pres.n : m.name, presPen: pres ? pres.pen : 60, coach: coach ? { n: coach.n, form: coach.form, style: coach.style, r: coach.r } : null, color: m.color, kit: m.kit || null, crest: m.crest || null, cpu: m.cpu, strat: Object.assign({}, m.strat), tac,
+    return { mi, side, name: m.team, pres: pres ? pres.n : m.name, presPen: pres ? pres.pen : 60, coach: coach ? { n: coach.n, form: coach.form, style: coach.style, r: coach.r } : null, color: m.color, kit: m.kit || null, kit2: m.kit2 || awayKit(m.kit), crest: m.crest || null, cpu: m.cpu, strat: Object.assign({}, m.strat), tac,
       cards: Array.from({ length: nCards }, () => ({ k: pick(CARD_DRAW), used: false })), ppUsed: false, dobLeft: 0, star: null, out: [], banned: [], yc: {}, cardsY: 0, cardsR: 0, goals: {}, shots: 0, saves: 0, field: [], gkOut: false,
       autoSub: m.cpu ? true : tac.autoSub !== false, gkMode: m.cpu ? "auto" : (tac.gkMode || "auto"), subs: 0 };
   };
@@ -1198,19 +1359,22 @@ function updateField(M) {
   M.t.forEach(T => {
     const order = T.tac.order.filter(id => T.tac.slots.includes(id));
     T.tac.slots.forEach(id => { if (id != null && !order.includes(id)) order.push(id); });
-    const outIds = new Set(T.out.filter(o => o.until > M.min).map(o => o.id).concat(T.banned));
+    const act = M.phase === "dice" ? [] : T.out.filter(o => o.until > M.min);
+    const outIds = new Set(act.map(o => o.id).concat(T.banned));
     const avail = order.filter(id => !T.banned.includes(id));
-    let f = avail.slice(0, M.nOut);
-    const nOff = T.out.filter(o => o.until > M.min).length;
+    let f = avail.filter(id => !outIds.has(id) || act.some(o => o.id === id && !o.noInf)).slice(0, M.nOut);
+    const nOff = act.filter(o => !o.noInf).length;
     f = f.filter(id => !outIds.has(id));
     // quem está fora por cartão/suspensão deixa o time com um a menos
     if (f.length > Math.max(0, M.nOut - nOff)) f = f.slice(0, Math.max(0, M.nOut - nOff));
     T.field = f;
+    T.pl = T.pl || {}; f.concat(T.tac.gk != null ? [T.tac.gk] : []).forEach(id => T.pl[id] = 1);
   });
 }
 function slotOf(T, id) { return T.tac.slots.indexOf(id); }
 let CUR_STA = null;
 function staPen(id) { const v = CUR_STA && CUR_STA[id] != null ? CUR_STA[id] : 100; return (100 - v) * 0.12; }
+function gkSave(T) { T.saves++; const g = T.tac.gk; if (g != null) { T.svs = T.svs || {}; T.svs[g] = (T.svs[g] || 0) + 1; } }
 function eff(T, id) { const p = P(id), s = slotOf(T, id); const pen = (s >= 0 ? fitPen(p, FORMS[T.tac.form][s]) : 0) + staPen(id); return { o: p.o - pen, at: p.at - pen, df: p.df - pen, p }; }
 function gkRating(T) { const g = P(T.tac.gk); return g ? (g.p === "GOL" ? g.o : g.o - 20) : 50; }
 function teamStr(M, ti) {
@@ -1224,7 +1388,7 @@ function teamStr(M, ti) {
   const df = pl.reduce((s, x) => s + x.df, 0) / pl.length * 0.55 + gkRating(T) * 0.45;
   const mid = pl.reduce((s, x) => s + x.o, 0) / pl.length;
   const bench = benchCount(T);
-  const cb = coachBuff(T);
+  const cb = coachBuff(T) * chemistry(T).mult;
   return { att: ((att - missing * 5) * st.att + Math.min(bench, 3) * 0.5) * cb, df: ((df - missing * 5) * st.def + Math.min(bench, 3) * 0.5) * cb, mid: (mid * st.poss - missing * 4) * cb, st };
 }
 function coachBuff(T) {
@@ -1235,12 +1399,14 @@ function coachBuff(T) {
   return b;
 }
 function benchCount(T) { return T.bench ? T.bench.length : 0; }
-function inWindow(m) { return (m >= 6 && m < 17) || (m >= 23 && m < 36); }
+function inWindow(m) { return (m >= 5 && m < 17) || (m >= 23 && m < 36); }
 function normalPlay(M) { return M.phase === "full" && inWindow(M.min); }
-function goalValue(M, ti, scorer) {
+function openPlay(kind) { return kind === "gol" || kind === "vazio" || kind === "falta" || kind === "penf" || kind == null; } // pênalti de falta conta; pênalti de carta não
+function goalValue(M, ti, scorer, kind) {
   if (M.phase === "mb" || M.phase === "so") return 1;
   const m = M.min, T = M.t[ti];
-  if (m >= 17 && m < 20) return 2;
+  if (m >= 17 && m < 20) return 2;              // gol dobro geral (17'-20'): todo gol vale 2
+  if (!openPlay(kind)) return 1;                // pênalti, shootout, reverso e pênalti do presidente valem 1
   if (T.dobLeft > 0 && normalPlay(M)) return 2;
   if (scorer && T.star && T.star.id === scorer.id && inWindow(m) && M.phase === "full") return 2;
   return 1;
@@ -1263,15 +1429,17 @@ const GOAL_TXT = {
   retranca: ["Na única chance, {s} marca", "Bola parada e {s} sobe mais alto", "{s} arrisca de longe e acha o gol"]
 };
 function scoreGoal(M, ti, scorer, kind, assist, forceV) {
-  const v = forceV || goalValue(M, ti, scorer);
-  const starHit = scorer && M.t[ti].star && M.t[ti].star.id === scorer.id && v === 2 && !(M.min >= 17 && M.min < 20);
+  const v = forceV || goalValue(M, ti, scorer, kind);
+  const starHit = openPlay(kind) && scorer && M.t[ti].star && M.t[ti].star.id === scorer.id && v === 2 && !(M.min >= 17 && M.min < 20) && !(M.t[ti].dobLeft > 0);
   M.score[ti] += v;
   const T = M.t[ti];
   if (scorer) T.goals[scorer.id] = (T.goals[scorer.id] || 0) + v;
+  if (assist && openPlay(kind)) { T.ast = T.ast || {}; T.ast[assist.id] = (T.ast[assist.id] || 0) + 1; }
   let text;
   const nm = scorer ? scorer.n : T.pres;
   if (kind === "gol") text = pick(GOAL_TXT[T.tac.style]).replace("{s}", nm).replace("{a}", assist ? assist.n : "um companheiro");
-  else if (kind === "pen") text = `${nm} converte o pênalti!`;
+  else if (kind === "pen" || kind === "penf") text = `${nm} converte o pênalti!`;
+  else if (kind === "falta") text = pick([`GOLAÇO DE FALTA! ${nm} coloca no ângulo`, `${nm} cobra a falta direto e a bola entra!`, `Falta perigosa, ${nm} bate por cima da barreira: GOL!`]);
   else if (kind === "pp") text = `O PRESIDENTE ${nm} bate e é GOL!`;
   else if (kind === "so") text = `${nm} vence o goleiro no shootout!`;
   else if (kind === "rev") text = `GOL do ${T.name} pelo pênalti reverso!`;
@@ -1313,8 +1481,8 @@ function startCard(M, ti, key, now) {
     M.pending = { k: "so", team: ti, shooter: sh, att: null, gk: null, until: now + 12000, card: true };
     ev(M, "info", ti, `Shootout para ${T.name}! ${P(sh).n} parte do meio-campo.`);
   } else if (key === "DOB") {
-    T.dobLeft = 2;
-    ev(M, "info", ti, `GOL DOBRO de ${T.name}: gols valem 2 pelos próximos 2 minutos de jogo normal.`);
+    T.dobLeft = 4;
+    ev(M, "info", ti, `GOL DOBRO de ${T.name}: gols de bola rolando valem 2 pelos próximos 4 minutos de jogo normal.`);
   } else if (key === "REV") {
     const opts = fieldOpts(M, 1 - ti); if (!opts.length) { ev(M, "info", ti, "Sem jogador rival em campo. Carta perdida."); return; }
     M.pending = { k: "pick", f: "rev", team: ti, opts, val: null, until: now + 12000 };
@@ -1335,10 +1503,10 @@ function resolvePick(M, now) {
   M.pending = null;
   if (p.f === "star") {
     T.star = { id: p.val };
-    ev(M, "info", ti, `STAR PLAYER: ${P(p.val).n}! O próximo gol dele vale 2 (nas janelas de carta, até o 36').`, { star: p.val });
+    ev(M, "info", ti, `STAR PLAYER: ${P(p.val).n}! O próximo gol dele de bola rolando vale 2 (até o 36').`, { star: p.val });
   } else if (p.f === "sus") {
-    O.out.push({ id: p.val, until: M.min + 2, why: "sus" }); updateField(M);
-    ev(M, "info", ti, `SUSPENSÃO! ${P(p.val).n} (${O.name}) fica 2 minutos fora. ${O.name} joga com um a menos.`, { exc: p.val });
+    O.out.push({ id: p.val, until: M.min + 4, why: "sus" }); updateField(M);
+    ev(M, "info", ti, `SUSPENSÃO! ${P(p.val).n} (${O.name}) fica 4 minutos fora. ${O.name} joga com um a menos.`, { exc: p.val });
   } else if (p.f === "rev") {
     M.pending = { k: "pen", team: 1 - ti, shooter: p.val, pres: false, rev: ti, shot: null, dive: null, until: now + 12000 };
     ev(M, "info", ti, `PÊNALTI REVERSO! ${P(p.val).n} (${O.name}) tem que bater. Se errar, é gol do ${T.name}!`);
@@ -1386,11 +1554,11 @@ function resolvePen(M) {
   if (p.rev != null) {
     if (res === "gol") ev(M, "info", ti, `${sh.n} converte e salva o ${T.name}. Nada muda.`);
     else { ev(M, "info", p.rev, `${sh.n} errou! Pelo pênalti reverso, o gol é do ${M.t[p.rev].name}!`); scoreGoal(M, p.rev, null, "rev"); }
-    if (res === "defesa") O.saves++;
+    if (res === "defesa") gkSave(O);
     return;
   }
-  if (res === "gol") scoreGoal(M, ti, p.pres ? null : sh, p.pres ? "pp" : "pen");
-  else if (res === "defesa") O.saves++;
+  if (res === "gol") scoreGoal(M, ti, p.pres ? null : sh, p.pres ? "pp" : p.foul ? "penf" : "pen");
+  else if (res === "defesa") gkSave(O);
 }
 // shootout: ataque 0 chutar de longe, 1 driblar, 2 cavadinha; goleiro 0 sair no abafa, 1 ficar na linha, 2 fechar o ângulo
 const SO_ATT = ["Chutar de longe", "Driblar o goleiro", "Cavadinha"], SO_GK = ["Sair no abafa", "Ficar na linha", "Fechar o ângulo"];
@@ -1415,7 +1583,7 @@ function resolveSO(M) {
 }
 function soDecided(so, k) {
   const [a, b] = so, [ka, kb] = k;
-  if (ka <= 3 && kb <= 3 && (ka < 3 || kb < 3)) { if (a + (3 - ka) < b) return 1; if (b + (3 - kb) < a) return 0; return -1; }
+  if (ka <= 5 && kb <= 5 && (ka < 5 || kb < 5)) { if (a + (5 - ka) < b) return 1; if (b + (5 - kb) < a) return 0; return -1; }
   if (ka === kb && a !== b) return a > b ? 0 : 1;
   return -1;
 }
@@ -1426,7 +1594,7 @@ function nextShootout(M) {
   const ti = M.soKicks[0] <= M.soKicks[1] ? 0 : 1;
   const T = M.t[ti];
   const takers = T.tac.order.filter(id => id != null);
-  const sh = takers[M.soKicks[ti] % takers.length] || T.tac.gk;
+  const sh = M.soKicks[ti] === 5 && T.tac.gk != null ? T.tac.gk : (takers[M.soKicks[ti] % takers.length] || T.tac.gk);
   M.soKicks[ti]++;
   M.pending = { k: "so", team: ti, shooter: sh, att: null, gk: null, until: Date.now() + 12000, tb: true };
 }
@@ -1477,7 +1645,7 @@ function tryResolve(M, now, auto) {
 function botDecide(M, ti, now, autoHuman) {
   const T = M.t[ti]; if (!T.cpu && !autoHuman) return;
   const m = Math.floor(M.min), losing = M.score[ti] < M.score[1 - ti];
-  const plan = s => s === "cedo" ? (m >= 6 && m <= 12 && Math.random() < 0.18) : s === "tarde" ? (m >= 24 && m <= 33 && Math.random() < 0.12) : (losing && Math.random() < 0.1);
+  const plan = s => s === "cedo" ? (m >= 5 && m <= 12 && Math.random() < 0.18) : s === "tarde" ? (m >= 24 && m <= 33 && Math.random() < 0.12) : (losing && Math.random() < 0.1);
   if (canActCard(M, ti) && (plan(T.strat.card) || (m >= 34 && Math.random() < 0.4))) return activateCard(M, ti, now);
   if (canActCard(M, ti) && T.cards.length > 1 && m >= 28 && Math.random() < 0.08) return activateCard(M, ti, now);
   if (canActPP(M, ti) && (plan(T.strat.pp) || (m >= 34 && Math.random() < 0.4))) return activatePP(M, ti, now);
@@ -1515,7 +1683,7 @@ function stepMatch(M, now, auto) {
     const T = M.t[ti], O = M.t[1 - ti];
     const poss = ti ? 1 - possA : possA;
     const edge = 1 + styleEdge(T.tac.style, O.tac.style);
-    const base = M.phase === "mb" ? 0.115 : 0.085;
+    const base = M.phase === "mb" ? 0.11 : 0.074;
     let pr = base * TICK * open * Math.pow(me.att / op.df, 2.3) * edge * Math.pow(poss * 2, 0.5);
     if (T.gkOut) pr *= 1.45;
     if (O.gkOut) pr *= 1.35;
@@ -1531,7 +1699,7 @@ function stepMatch(M, now, auto) {
       T.shots++;
       const gkN = P(O.tac.gk) ? P(O.tac.gk).n : "o goleiro";
       const r = Math.random();
-      if (r < 0.5) { O.saves++; ev(M, "chance", ti, pick([`${sc.n} bate e ${gkN} faz grande defesa`, `${gkN} espalma o chute de ${sc.n}`, `Que defesa de ${gkN}! ${sc.n} lamenta`])); }
+      if (r < 0.5) { gkSave(O); ev(M, "chance", ti, pick([`${sc.n} bate e ${gkN} faz grande defesa`, `${gkN} espalma o chute de ${sc.n}`, `Que defesa de ${gkN}! ${sc.n} lamenta`])); }
       else if (r < 0.75) ev(M, "chance", ti, pick([`${sc.n} acerta a trave!`, `${sc.n} tira tinta do travessão!`]));
       else ev(M, "chance", ti, pick([`${sc.n} finaliza por cima`, `${sc.n} chuta cruzado, raspando a trave`]));
       M.ball = { t: ti, x: 0.92, y: 0.3 + Math.random() * 0.4 };
@@ -1542,8 +1710,11 @@ function stepMatch(M, now, auto) {
   // gol dobro da carta: só corre em jogo normal
   M.t.forEach(T => { if (T.dobLeft > 0 && normalPlay(M)) { T.dobLeft = Math.max(0, Math.round((T.dobLeft - TICK) * 100) / 100); if (T.dobLeft === 0) ev(M, "info", T.side, `Acabou o gol dobro do ${T.name}.`); } });
   if (M.min >= 35.75 && M.phase === "full") M.t.forEach(T => { if (T.star) { ev(M, "info", T.side, `${P(T.star.id).n} não marcou: a carta Star Player acaba.`); T.star = null; } if (T.dobLeft > 0) T.dobLeft = 0; });
-  // faltas e cartões
+  // suspensões pausam: todas durante o dado; a da carta também no gol dobro geral
+  M.t.forEach(T => T.out.forEach(o => { if (!o.done && (M.phase === "dice" || (o.why === "sus" && M.phase === "dob"))) o.until = Math.round((o.until + TICK) * 100) / 100; }));
+  // faltas, cartões e lesões
   fouls(M);
+  injuries(M);
   // relógio
   if (M.phase !== "mb") M.min = Math.round((M.min + TICK) * 100) / 100;
   else { M.min = Math.round((M.min + TICK) * 100) / 100; if (M.min > 60) { endMatch(M, M.score[0] > M.score[1] ? 0 : 1); return true; } }
@@ -1551,27 +1722,56 @@ function stepMatch(M, now, auto) {
   if (m !== prevMin) onMinute(M, m);
   return true;
 }
+// sistema de faltas: falta comum, falta perigosa (cobrança direta), pênalti e, nas fases 1x1, shootout
+const FOUL_TXT = ["{p} chega atrasado e faz falta", "Falta de {p} para parar o contra-ataque", "{p} puxa a camisa: falta", "Entrada dura de {p}"];
+function oneVsOne(M) { return (M.phase === "dice" && M.dice === 1) || (M.phase === "mb" && M.mbStep === 3); }
 function fouls(M) {
-  if (M.phase === "so" || M.status !== "playing") return;
-  [0, 1].forEach(ti => {
-    const T = M.t[ti];
-    if (!T.field.length) return;
-    const mult = { pressao: 1.7, retranca: 1.25, contra: 1.1 }[T.tac.style] || 1;
-    if (Math.random() < 0.0032 * mult) {
-      const id = pick(T.field), p = P(id);
-      const red = Math.random() < 0.07 || T.yc[id];
-      if (red) {
-        T.out.push({ id, until: M.min + 5, why: "red" }); T.banned.push(id); T.cardsR++;
-        ev(M, "red", ti, `CARTÃO VERMELHO para ${p.n}${T.yc[id] ? " (segundo amarelo)" : ""}! ${T.name} fica 5 minutos com um a menos e ele não volta mais.`, { pid: id });
-        M.hold = 1800;
-      } else {
-        T.yc[id] = 1; T.out.push({ id, until: M.min + 2, why: "yel" }); T.cardsY++;
-        ev(M, "yellow", ti, `Cartão amarelo para ${p.n}: 2 minutos fora. ${T.name} com um a menos.`, { pid: id });
-        M.hold = 1200;
-      }
-      updateField(M);
+  if (M.phase === "so" || M.status !== "playing" || M.pending) return;
+  for (const ti of [0, 1]) {
+    const T = M.t[ti], O = 1 - ti;
+    if (!T.field.length) continue;
+    const mult = { pressao: 1.6, retranca: 1.25, contra: 1.1 }[T.tac.style] || 1;
+    if (Math.random() >= 0.028 * mult) continue;
+    const id = pick(T.field), p = P(id);
+    T.fouls = (T.fouls || 0) + 1;
+    const r = Math.random();
+    const red = r < 0.015 || (r < 0.13 && T.yc[id]);
+    const yel = !red && r < 0.13;
+    if (M.phase === "mb") { // match ball: sem inferioridade; amarelo dá shootout e vermelho dá pênalti para o rival
+      const sh = bestShooter(M, O);
+      if (red) { T.banned.push(id); T.cardsR++; (T.cl = T.cl || []).push([id, "r"]); T.out.push({ id, until: M.min + 99, why: "red", noInf: true }); ev(M, "red", ti, `CARTÃO VERMELHO para ${p.n} no match ball! Ele sai e é PÊNALTI para o ${M.t[O].name}.`, { pid: id }); M.pending = { k: "pen", team: O, shooter: sh, pres: false, foul: true, shot: null, dive: null, until: Date.now() + 12000 }; }
+      else if (yel) { T.yc[id] = 1; T.cardsY++; (T.cl = T.cl || []).push([id, "y"]); T.out.push({ id, until: M.min + 2, why: "yel", noInf: true }); ev(M, "yellow", ti, `Cartão amarelo para ${p.n} no match ball: ele é substituído e é SHOOTOUT para o ${M.t[O].name}.`, { pid: id }); M.pending = { k: "so", team: O, shooter: sh, att: null, gk: null, until: Date.now() + 12000, card: true }; }
+      else if (oneVsOne(M)) { ev(M, "foul", ti, `Falta de ${p.n} no 1x1: SHOOTOUT para o ${M.t[O].name}!`); M.pending = { k: "so", team: O, shooter: sh, att: null, gk: null, until: Date.now() + 12000, card: true }; }
+      else continue;
+      M.hold = 1800; updateField(M); return;
     }
-  });
+    if (red) {
+      T.out.push({ id, until: M.min + 5, why: "red" }); T.banned.push(id); T.cardsR++; (T.cl = T.cl || []).push([id, "r"]);
+      ev(M, "red", ti, `CARTÃO VERMELHO para ${p.n}${T.yc[id] ? " (segundo amarelo)" : ""}! ${T.name} fica 5 minutos com um a menos e ele não volta mais.`, { pid: id });
+      M.hold = 1800;
+    } else if (yel) {
+      T.yc[id] = 1; T.out.push({ id, until: M.min + 2, why: "yel" }); T.cardsY++; (T.cl = T.cl || []).push([id, "y"]);
+      ev(M, "yellow", ti, `Cartão amarelo para ${p.n}: 2 minutos fora. ${T.name} com um a menos.`, { pid: id });
+      M.hold = 1200;
+    }
+    updateField(M);
+    // onde foi a falta
+    const sh = bestShooter(M, O);
+    if (oneVsOne(M)) { ev(M, "foul", ti, `Falta de ${p.n} no 1x1 com goleiro: SHOOTOUT para o ${M.t[O].name}!`); M.pending = { k: "so", team: O, shooter: sh, att: null, gk: null, until: Date.now() + 12000, card: true }; M.hold = 1600; return; }
+    const loc = Math.random();
+    if (loc < 0.06 && sh) { // dentro da área
+      ev(M, "foul", ti, `PÊNALTI! ${p.n} derruba o adversário dentro da área.`);
+      M.pending = { k: "pen", team: O, shooter: sh, pres: false, foul: true, shot: null, dive: null, until: Date.now() + 12000 };
+      M.hold = 1600; return;
+    }
+    if (loc < 0.26 && sh) { // falta perigosa: cobrança direta
+      const kk = P(sh), gk = P(M.t[ti].tac.gk);
+      const chance = 0.1 + Math.max(0, (kk.at - (gk ? gk.o : 70)) * 0.004);
+      if (Math.random() < chance) { scoreGoal(M, O, kk, "falta"); return; }
+      ev(M, "foul", ti, pick([`Falta perigosa de ${p.n}. ${kk.n} cobra e ${gk ? gk.n : "o goleiro"} defende!`, `Falta na entrada da área: ${kk.n} bate na barreira.`, `${kk.n} cobra a falta por cima do gol.`]));
+      M.ball = { t: O, x: 0.85, y: 0.5 }; M.hold = 700;
+    } else if (!red && !yel && Math.random() < 0.3) ev(M, "foul", ti, pick(FOUL_TXT).replace("{p}", p.n));
+  }
 }
 function onMinute(M, m) {
   // fim de cartões e suspensões
@@ -1589,21 +1789,22 @@ function onMinute(M, m) {
   });
   if (M.phase === "so") { updateField(M); return; }
   if (M.phase === "mb") {
-    const k = m - 36, seqN = [6, 5, 4, 3, 2, 1, 1, 2, 3, 4, 5, 6];
+    // regulamento: 5x5 no 36', depois 4x4, 3x3, 1x1 com goleiro e, por fim, 2x2 (goleiro livre)
+    const k = m - 36, seqN = [4, 3, 2, 1, 1];
     if (k >= 1 && k < seqN.length) {
       M.nOut = seqN[k]; M.mbStep = k;
-      if (k < 6) ev(M, "phase", -1, `Match ball: sai um de cada lado. ${M.nOut}x${M.nOut}${M.nOut === 1 ? " (goleiros presos no gol)" : ""}.`, { ph: "mbn", n: M.nOut });
-      else if (k === 6) { ev(M, "phase", -1, "Match ball: 1x1 COM GOLEIRO LINHA liberado! Agora volta a entrar um por minuto.", { ph: "mbn", n: 1, gl: true }); M.hold = 1600; }
-      else ev(M, "phase", -1, `Match ball: entra mais um de cada lado. ${M.nOut === 6 ? "7x7" : M.nOut + "x" + M.nOut}.`, { ph: "mbn", n: M.nOut });
+      if (k < 3) ev(M, "phase", -1, `Match ball: sai um de cada lado. ${MB_LBL[k]}.`, { ph: "mbn", n: M.nOut });
+      else if (k === 3) ev(M, "phase", -1, "Match ball: 1x1 COM GOLEIRO (goleiro não sai do campo de defesa).", { ph: "mbn", n: 1 });
+      else { ev(M, "phase", -1, "Match ball: 2x2! O goleiro pode jogar na linha.", { ph: "mbn", n: 2, gl: true }); M.hold = 1600; }
     }
     gkDecide(M);
     autoSubs(M);
     updateField(M); return;
   }
-  if (m < 6) { M.nOut = m + 1; M.phase = "esc"; ev(M, "phase", -1, `Entra mais um de cada lado: ${m + 1}x${m + 1}.`, { ph: "esc", n: m + 1, enter: M.t.map(T => T.tac.order[m]) }); }
-  else if (m === 6) { M.nOut = 6; M.phase = "full"; ev(M, "phase", -1, "7x7 completo! Cartas secretas e pênalti do presidente liberados até o 17'.", { ph: "full", n: 7 }); M.hold = 1200; }
+  if (m < 5) { M.nOut = m + 1; M.phase = "esc"; ev(M, "phase", -1, `Entra mais um de cada lado: ${m + 1}x${m + 1}.`, { ph: "esc", n: m + 1, enter: M.t.map(T => T.tac.order[m]) }); }
+  else if (m === 5) { M.nOut = 6; M.phase = "full"; ev(M, "phase", -1, "7x7 completo! Cartas secretas e pênalti do presidente liberados até o 17'.", { ph: "full", n: 7 }); M.hold = 1200; }
   else if (m === 17) { M.phase = "dob"; ev(M, "phase", -1, "GOL DOBRO! Do 17' ao 20' todo gol vale 2.", { ph: "dob" }); M.hold = 1800; }
-  else if (m === 20) { M.dice = 1 + rnd(3); M.nOut = M.dice; M.phase = "dice"; ev(M, "dice", -1, `O DADO caiu no ${M.dice}: ${M.dice}x${M.dice} até o 23'!`, { ph: "dice", n: M.dice }); M.hold = 3200; }
+  else if (m === 20) { M.dice = 1 + rnd(3); M.nOut = M.dice === 3 ? 2 : 1; M.phase = "dice"; ev(M, "dice", -1, `O DADO caiu: ${M.dice === 1 ? "1x1 com goleiro" : M.dice + "x" + M.dice + " (goleiro pode jogar na linha)"} até o 23'! Cartões ficam pausados.`, { ph: "dice", n: M.dice }); M.hold = 3200; }
   else if (m === 23) { M.nOut = 6; M.phase = "full"; ev(M, "phase", -1, "Todo mundo de volta: 7x7! Cartas liberadas até o 36'.", { ph: "full", n: 7 }); M.hold = 1200; }
   else if (m === 36) {
     if (M.score[0] === M.score[1]) {
@@ -1611,18 +1812,20 @@ function onMinute(M, m) {
       ev(M, "phase", -1, `Empate em ${M.score[0]}x${M.score[1]}! Vamos para os SHOOTOUTS.`, { ph: "so" }); M.hold = 2500;
       nextShootout(M);
     } else {
-      M.phase = "mb"; M.target = Math.max(M.score[0], M.score[1]) + 1; M.nOut = 6;
-      ev(M, "phase", -1, `Fim do tempo normal: ${M.score[0]}x${M.score[1]}. MATCH BALL: quem chegar a ${M.target} primeiro vence! A cada minuto sai um de cada lado até o 1x1.`, { ph: "mb", target: M.target }); M.hold = 2600; M.mbStep = 0;
+      M.phase = "mb"; M.target = Math.max(M.score[0], M.score[1]) + 1; M.nOut = 4;
+      M.t.forEach(T => { T.star = null; T.dobLeft = 0; });
+      ev(M, "phase", -1, `Fim do tempo normal: ${M.score[0]}x${M.score[1]}. MATCH BALL 5x5: quem chegar a ${M.target} primeiro vence! A cada minuto o jogo diminui: 4x4, 3x3, 1x1 com goleiro e 2x2.`, { ph: "mb", target: M.target }); M.hold = 2600; M.mbStep = 0;
     }
   }
   gkDecide(M);
   autoSubs(M);
   updateField(M);
 }
+const MB_LBL = ["5x5", "4x4", "3x3", "1x1 com goleiro", "2x2"];
 function gkAllowed(M) {
   if (M.phase === "esc") return M.nOut <= 3 ? "esc" : null;
-  if (M.phase === "dice") return "dice";
-  if (M.phase === "mb" && M.mbStep >= 6 && M.nOut <= 2) return "mb";
+  if (M.phase === "dice") return M.dice > 1 ? "dice" : null;
+  if (M.phase === "mb" && M.mbStep !== 3) return "mb";
   return null;
 }
 function gkDecide(M) {
@@ -1701,8 +1904,28 @@ function matchAction(M, ti, a, now) {
   if (a.t === "mchoice") { const ok = setChoice(M, ti, a.f, a.v); if (ok) tryResolve(M, now, false); return ok; }
   return false;
 }
+function isInj(S, id) { return !!(S && S.season && S.season.inj && S.season.inj[id] > 0); }
+// química: jogadores do mesmo time da vida real jogando juntos se entendem melhor
+function chemistry(T) {
+  const c = {}; T.field.forEach(id => { const p = P(id); if (p) c[p.t] = (c[p.t] || 0) + 1; });
+  const pairs = Object.values(c).reduce((s, n) => s + n * (n - 1) / 2, 0);
+  return { pairs, mult: 1 + Math.min(0.06, pairs * 0.006) };
+}
+// lesões durante a partida: o jogador sai e fica fora das próximas rodadas
+function injuries(M) {
+  if (M.phase === "so" || M.status !== "playing" || M.pending) return;
+  for (const ti of [0, 1]) {
+    const T = M.t[ti]; if (!T.field.length || Math.random() >= 0.0017) continue;
+    const id = pick(T.field), p = P(id), r = Math.random(), rounds = r < 0.6 ? 1 : r < 0.9 ? 2 : 3;
+    (T.injR = T.injR || []).push([id, rounds]); T.banned.push(id);
+    ev(M, "inj", ti, `${p.n} sente uma lesão e sai de campo! Desfalque por ${rounds} rodada${rounds > 1 ? "s" : ""}.`, { pid: id });
+    const sub = (T.bench || []).filter(b => P(b).p !== "GOL" && !T.banned.includes(b)).sort((a, b) => (M.sta[b] || 100) - (M.sta[a] || 100) || P(b).o - P(a).o)[0];
+    if (sub && T.tac.slots.includes(id)) doSub(M, ti, id, sub, true); else updateField(M);
+    M.hold = 1400; return;
+  }
+}
 function attachRosters(S, M) {
-  M.rosters = M.t.map(T => S.managers[T.mi].roster.slice());
+  M.rosters = M.t.map(T => S.managers[T.mi].roster.filter(id => !isInj(S, id)));
   M.t.forEach((T, i) => { T.bench = M.rosters[i].filter(id => id !== T.tac.gk && !T.tac.slots.includes(id)); });
   M.rosters.forEach(r => r.forEach(id => { if (M.sta[id] == null) M.sta[id] = 100; }));
 }
@@ -1712,11 +1935,30 @@ function simMatchInstant(S, f) {
   if (M.status === "playing") endMatch(M, M.score[0] >= M.score[1] ? 0 : 1);
   return M;
 }
+// nota de cada jogador na partida (0 a 10)
+function matchNotes(M, mvp) {
+  const out = [];
+  M.t.forEach((T, ti) => {
+    const conc = M.score[1 - ti];
+    Object.keys(T.pl || {}).map(Number).forEach(id => {
+      const p = P(id); if (!p) return;
+      let n = 6 + (ti === M.w ? 0.4 : -0.2);
+      if (id === T.tac.gk || p.p === "GOL") n += ((T.svs || {})[id] || 0) * 0.3 - conc * 0.12;
+      n += ((T.goals || {})[id] || 0) * 0.8 + ((T.ast || {})[id] || 0) * 0.5;
+      (T.cl || []).forEach(([cid, c]) => { if (cid === id) n -= c === "r" ? 1.5 : 0.5; });
+      if (id === mvp) n += 1;
+      out.push([id, Math.round(Math.max(3, Math.min(10, n)) * 10) / 10]);
+    });
+  });
+  return out;
+}
 function matchResult(M) {
   const sc = M.t.map(T => Object.entries(T.goals).map(([id, g]) => [+id, g]).sort((a, b) => b[1] - a[1]));
   let mvp = null, best = -1;
   sc.forEach((l, ti) => l.forEach(([id, g]) => { const v = g + (ti === M.w ? 1 : 0) + P(id).o / 100; if (v > best) { best = v; mvp = id; } }));
-  return { s: M.score.slice(), so: M.so ? M.so.slice() : null, w: M.w, sc, mvp, shots: M.t.map(T => T.shots), saves: M.t.map(T => T.saves), cards: M.t.map(T => T.cards.map(c => c.k).join("+")), yc: M.t.map(T => T.cardsY), rc: M.t.map(T => T.cardsR) };
+  return { s: M.score.slice(), so: M.so ? M.so.slice() : null, w: M.w, sc, mvp, shots: M.t.map(T => T.shots), saves: M.t.map(T => T.saves), cards: M.t.map(T => T.cards.map(c => c.k).join("+")), yc: M.t.map(T => T.cardsY), rc: M.t.map(T => T.cardsR), fouls: M.t.map(T => T.fouls || 0),
+    ast: M.t.map(T => Object.entries(T.ast || {}).map(([id, n]) => [+id, n])), svs: M.t.map(T => Object.entries(T.svs || {}).map(([id, n]) => [+id, n])),
+    cl: M.t.map(T => (T.cl || []).slice()), pl: M.t.map(T => Object.keys(T.pl || {}).map(Number)), nt: matchNotes(M, mvp), inj: M.t.map(T => (T.injR || []).slice()) };
 }
 
 /* ================= AÇÕES ================= */
@@ -1738,6 +1980,7 @@ function applyAction(S, act, actorMi, isHost, now) {
     if (act.color && /^#[0-9a-fA-F]{6}$/.test(act.color)) m.color = act.color;
     if (act.crest) { const c = validCrest(act.crest); if (c) m.crest = c; }
     if (act.kit) { const k = validKit(act.kit); if (k) m.kit = k; }
+    if (act.kit2) { const k = validKit(act.kit2); if (k) m.kit2 = k; }
     return true;
   }
   if (t === "kick" && isHost) { if (S.phase !== "lobby") return false; S.managers.splice(act.mi, 1); return true; }
@@ -1750,8 +1993,10 @@ function applyAction(S, act, actorMi, isHost, now) {
     if (v.total) s.total = Math.max(2, Math.min(12, v.total | 0));
     if (["nao", "leilao", "sempre"].includes(v.hide)) s.hide = v.hide;
     if (["leilao", "draft"].includes(v.mode)) s.mode = v.mode;
-    if (v.wc != null && !isNaN(v.wc)) s.wc = Math.max(0, Math.min(8, v.wc | 0));
-    if (v.picks) s.picks = Math.max(2, Math.min(10, v.picks | 0));
+    if (v.wc != null && !isNaN(v.wc)) s.wc = Math.max(0, Math.min(6, v.wc | 0));
+    s.wc = Math.max(0, Math.min(6, s.wc | 0)); s.picks = 12 - s.wc; // draft: elenco sempre de 12
+    if (v.tmin) s.tmin = Math.max(1, Math.min(5, v.tmin | 0));
+    if (v.career != null) s.career = !!v.career;
     if (v.dtimer) s.dtimer = Math.max(10, Math.min(90, v.dtimer | 0));
     if (["split", "cup"].includes(v.fmt)) s.fmt = v.fmt;
     if (v.year != null) s.year = !!v.year;
@@ -1771,6 +2016,25 @@ function applyAction(S, act, actorMi, isHost, now) {
     if (S.season.rs.ready[f.id + ":" + actorMi]) return false;
     S.season.rs.ready[f.id + ":" + actorMi] = true; return true;
   }
+  if (t === "chat") {
+    if (actorMi < 0) return false;
+    const txt = String(act.txt || "").replace(/\s+/g, " ").trim().slice(0, 140); if (!txt) return false;
+    const m = S.managers[actorMi]; S.chatN = (S.chatN || 0) + 1;
+    S.chat = (S.chat || []).concat({ i: S.chatN, mi: actorMi, n: m.name, c: m.color, txt }).slice(-40);
+    return true;
+  }
+  if (t === "vote") {
+    if (!gameOver(S) || actorMi < 0 || S.managers[actorMi].cpu) return false;
+    S.votes = S.votes || {}; S.votes[actorMi] = !!act.v;
+    const humans = S.managers.map((m, i) => i).filter(i => !S.managers[i].cpu);
+    const yes = humans.filter(i => S.votes[i] === true).length;
+    if (yes * 2 > humans.length) { if (S.settings.career && act.next) nextSeason(S); else resetToLobby(S); }
+    return true;
+  }
+  if (t === "nextseason" && isHost) return S.settings.career ? nextSeason(S) : false;
+  if (t === "fasign") return actorMi >= 0 && careerSign(S, actorMi, act.id | 0);
+  if (t === "farel") return actorMi >= 0 && careerRelease(S, actorMi, act.id | 0);
+  if (t === "relobby" && isHost) { if (!gameOver(S)) return false; resetToLobby(S); return true; }
   if (t === "keep") return actorMi >= 0 && keepSubmit(S, actorMi, act.k || {});
   if (t === "keepclose" && isHost) { if (S.phase !== "keep") return false; closeKeep(S, now); return true; }
   if (t === "bid" && S.phase === "staff") return actorMi >= 0 && staffBid(S, actorMi, act.amount, now);
@@ -1797,7 +2061,7 @@ function applyAction(S, act, actorMi, isHost, now) {
   return false;
 }
 
-if (false) module.exports = { STAFF, startMarket, buildBracket, closeTrade, newGame, applyAction, auctionTick, marketTick, draftPicker, standings, topScorers, simMatchInstant, matchResult, newMatch, stepMatch, attachRosters, matchAction, autoTac, roundFixtures, advanceRound, isHumanFixture, setPlayers: (arr) => { PLAYERS = arr; PLAYER_BY_ID = {}; arr.forEach(p => PLAYER_BY_ID[p.id] = p); } };
+if (false) module.exports = { nextSeason, setPov, freeAgents, isInj, chemistry, gameOver, resetToLobby, STAFF, startMarket, buildBracket, closeTrade, newGame, applyAction, auctionTick, marketTick, draftPicker, standings, topScorers, simMatchInstant, matchResult, newMatch, stepMatch, attachRosters, matchAction, autoTac, roundFixtures, advanceRound, isHumanFixture, setPlayers: (arr) => { PLAYERS = arr; PLAYER_BY_ID = {}; arr.forEach(p => PLAYER_BY_ID[p.id] = p); } };
 
 /* ===== UI + rede (v2) ===== */
 const $ = s => document.querySelector(s);
@@ -1833,6 +2097,7 @@ function act(a) {
 }
 function hostOnly(a) { return ["quickround", "simstage", "lspeed", "lpause", "lff"].includes(a.t); }
 function commit() {
+  if (S.phase === "lobby" && Object.keys(LIVES).length) { LIVES = {}; UI.watch = null; LIVE = null; if (NET.mode === "host") writeLive(); try { renderLive(); } catch (e) { } }
   S.rev = (S.rev || 0) + 1; S.hostNow = now();
   render();
   if (NET.mode === "host") scheduleWrite();
@@ -1879,7 +2144,7 @@ function handleIntents(pid, q) {
     S.seqs[pid] = it.s; touched = true;
     const a = Object.assign({}, it.a || {});
     if (a.t === "join") a.pid = pid;
-    if (hostOnly(a) || ["settings", "start", "pause", "autofill", "kick", "wcclose", "tclose", "keepclose"].includes(a.t)) return;
+    if (hostOnly(a) || ["settings", "start", "pause", "autofill", "kick", "wcclose", "tclose", "keepclose", "relobby"].includes(a.t)) return;
     const mi = S.managers.findIndex(m => m.pid === pid);
     if (a.t === "m") { liveAct(a.a || {}, mi); touched = true; return; }
     if (applyAction(S, a, mi, false, now())) changed = true;
@@ -1898,10 +2163,11 @@ function applyRemote(data) {
   if (S && data.code === S.code && (data.rev || 0) <= (S.rev || 0) && S.phase === data.phase) { if (data.rev === S.rev) return; if ((data.rev || 0) < (S.rev || 0)) return; }
   const before = S && S.season ? S.season.fixtures.filter(f => f.res).length : 0;
   S = JSON.parse(JSON.stringify(data));
+  setPov(S.pov);
   applyLocalOverrides(); applyOptimistic();
   if (S.hostNow) NET.clockOff = S.hostNow - Date.now();
   NET.lastSync = Date.now();
-  render();
+  render(); renderChat();
 }
 function applyRemoteLive(d) {
   if (NET.mode !== "client") return;
@@ -2004,7 +2270,7 @@ async function joinOnline() {
     const data = snap.data();
     if (first) {
       clearTimeout(timer); first = false;
-      if (data.hostPid === MYPID) { S = JSON.parse(JSON.stringify(data)); NET.unsub.forEach(u => u()); NET.unsub = []; becomeHost(room); return; }
+      if (data.hostPid === MYPID) { S = JSON.parse(JSON.stringify(data)); setPov(S.pov); NET.unsub.forEach(u => u()); NET.unsub = []; becomeHost(room); return; }
       NET.mode = "client"; store("kl_last", code); UI.busy = false; UI.homeErr = "";
       NET.joinInfo = { name, team };
       (async () => {
@@ -2121,6 +2387,11 @@ function onLiveDone(M) {
 function liveAct(a, mi) {
   let M = a.fid != null ? LIVES[a.fid] : null;
   if (!M) M = Object.values(LIVES).find(x => x.status === "playing" && x.t.some(T => T.mi === mi));
+  if (M && a.t === "mreact" && REACTS.includes(a.e)) { // reação de qualquer um que esteja assistindo
+    const t = now(); M.rlast = M.rlast || {}; if (t - (M.rlast[mi] || 0) < 900) return; M.rlast[mi] = t;
+    M.rseq = (M.rseq || 0) + 1; M.reacts = (M.reacts || []).concat({ i: M.rseq, e: a.e, n: S.managers[mi] ? S.managers[mi].name : "", c: S.managers[mi] ? S.managers[mi].color : "#fff" }).slice(-8);
+    writeLive(); if (M === LIVE) renderLive(); return;
+  }
   if (!M || M.status !== "playing") return;
   let ti;
   if (NET.mode === "local" && a.ti != null) ti = a.ti; else ti = M.t.findIndex(T => T.mi === mi);
@@ -2128,6 +2399,7 @@ function liveAct(a, mi) {
   if (matchAction(M, ti, a, hostClock())) { afterStep(M, now()); }
 }
 
+const REACTS = ["🔥", "😂", "😱", "👏", "😡", "👑"];
 /* ---------- placar da rodada (jogos simultâneos) ---------- */
 function fmtClock(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
 function minLabel(M) { if (M.status === "done") return "FIM"; if (M.phase === "so") return "SO"; const m = Math.floor(M.min); return m >= 36 ? "36'+" : m + "'"; }
@@ -2269,7 +2541,11 @@ function kitSVG(k, size, num) {
     horizontais: [24, 44, 64, 84].map(y => `<rect x="0" y="${y - 5}" width="100" height="10"/>`).join(""),
     faixa: `<polygon points="20,10 36,10 84,92 68,92"/>`, metade: `<rect x="50" y="0" width="50" height="100"/>`,
     xadrez: Array.from({ length: 50 }, (_, q) => { const x = q % 10, y = Math.floor(q / 10); return (x + y) % 2 ? `<rect x="${x * 10}" y="${y * 20}" width="10" height="20"/>` : ""; }).join(""),
-    gola: `<path d="M40 4 C45 14 55 14 60 4 L58 12 C54 18 46 18 42 12 Z"/><rect x="0" y="86" width="100" height="6"/><rect x="8" y="22" width="12" height="4" transform="rotate(30 14 24)"/><rect x="80" y="22" width="12" height="4" transform="rotate(-30 86 24)"/>`
+    gola: `<path d="M40 4 C45 14 55 14 60 4 L58 12 C54 18 46 18 42 12 Z"/><rect x="0" y="86" width="100" height="6"/><rect x="8" y="22" width="12" height="4" transform="rotate(30 14 24)"/><rect x="80" y="22" width="12" height="4" transform="rotate(-30 86 24)"/>`,
+    centro: `<rect x="42" y="0" width="16" height="100"/>`,
+    ombros: `<rect x="0" y="0" width="100" height="22"/>`,
+    v: `<polygon points="20,20 50,52 80,20 80,32 50,64 20,32"/>`,
+    finas: [30, 38, 46, 54, 62, 70].map(x => `<rect x="${x - 1.2}" y="0" width="2.4" height="100"/>`).join("")
   };
   return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true"><defs><clipPath id="${id}">${body}</clipPath></defs>
     <g clip-path="url(#${id})"><rect width="100" height="100" fill="${c1}"/><g fill="${c2}">${pats[k.pat] || ""}</g></g>
@@ -2285,11 +2561,11 @@ function pcard(p) {
     <div class="nm">${esc(p.n)}</div>
     <div class="club">${esc(p.t)}${owner >= 0 ? ` · <b style="color:${S.managers[owner].color}">${esc(S.managers[owner].team)}</b>` : ""}</div>
     ${p.tags.length ? `<div class="tags">${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
-    <div class="st"><div><b>${p.pm}</b>jogos</div><div><b>${hid() ? "?" : p.at}</b>ATQ</div><div><b>${hid() ? "?" : p.df}</b>DEF</div></div>
+    <div class="st"><div><b>${p.pm}</b>jogos</div><div><b>${hid() ? "?" : p.at}</b>ATQ</div><div><b>${hid() ? "?" : p.df}</b>DEF</div><div><b>${hid() ? "?" : (p.pot || p.o)}</b>POT</div></div>
     ${hid() ? `<div class="muted" style="font-size:11px">Modo overall escondido: use as conquistas e o clube como pista.</div>` : ""}
   </div>`;
 }
-function posb(p) { return `<span class="posb ${p}">${p}</span>`; }
+function posb(p, p2) { return `<span class="posb ${p}">${p}${p2 ? `<small>/${p2}</small>` : ""}</span>`; }
 function mgrName(i) { const m = S.managers[i]; return `<span class="mcrest">${crestSVG(m.crest, 16)}</span> ${esc(m.team)}`; }
 function connStatus() {
   const w = NET.writeOk === true ? "envio por banco OK" : NET.writeOk === false ? `envio por banco bloqueado (${NET.writeErr})` : "envio por banco testando";
@@ -2311,12 +2587,12 @@ function header() {
   </div></div>`;
 }
 const RULES = [
-  ["Escalonado", "Começa 1x1 e entra um por minuto, na ordem que você escolher, até o 7x7 no 6'.", "#4cc9f0"],
-  ["Cartas secretas", "Uma por time, por jogo. Liberadas do 6' ao 17' e do 23' ao 36'.", "#b392f0"],
-  ["Pênalti presidente", "Você cobra e escolhe o canto. O rival escolhe onde pular.", "#f5c542"],
+  ["Escalonado", "Começa 1x1 e entra um por minuto, na ordem que você escolher, até o 7x7 no 5'.", "#4cc9f0"],
+  ["Cartas secretas", "Uma por time, por jogo, do baralho oficial de 10. Liberadas do 5' ao 17' e do 23' ao 36'.", "#b392f0"],
+  ["Pênalti presidente", "Você cobra e escolhe o canto; sempre vale 1 gol. Mesmas janelas das cartas.", "#f5c542"],
   ["Gol dobro", "Do 17' ao 20' todo gol vale 2.", "#ff8c42"],
-  ["Dado", "Do 20' ao 23': cai 1, 2 ou 3 e vira NxN.", "#2fd47e"],
-  ["Match ball", "Após o 36', quem chegar ao placar do líder +1 vence. Empate: shootouts.", "#ff4d61"]
+  ["Dado", "Do 20' ao 23': 3x3, 2x2 ou 1x1 com goleiro. Cartões ficam pausados.", "#2fd47e"],
+  ["Match ball", "Após o 36', quem chegar ao placar do líder +1 vence: 5x5, 4x4, 3x3, 1x1 e 2x2. Empate: shootouts (5 + alternadas).", "#ff4d61"]
 ];
 function viewHome() {
   const nm = esc(store("kl_name") || ""), tm = esc(store("kl_team") || "");
@@ -2360,7 +2636,7 @@ function howOvr() {
 }
 function poolTable(list) {
   return `<table class="tbl"><thead><tr><th>OVR</th><th>Pos</th><th>Jogador</th><th>Clube 25/26</th><th>ATQ</th><th>DEF</th><th>Valor</th><th>Dono</th></tr></thead><tbody>
-  ${list.map(p => { const ow = S ? ownerOf(S, p.id) : -1; return `<tr class="${ow >= 0 ? "gone" : ""}"><td class="o ${p.p === "GOL" ? "g" : ""}">${p.o}</td><td>${posb(p.p)}</td>
+  ${list.map(p => { const ow = S ? ownerOf(S, p.id) : -1; return `<tr class="${ow >= 0 ? "gone" : ""}"><td class="o ${p.p === "GOL" ? "g" : ""}">${p.o}</td><td>${posb(p.p, p.p2)}</td>
       <td><b>${esc(p.n)}</b>${p.tags.length ? `<div class="muted" style="font-size:11.5px">${esc(p.tags.slice(0, 3).join(" · "))}</div>` : ""}</td>
       <td class="muted">${esc(p.t)}</td><td class="num">${p.at}</td><td class="num">${p.df}</td><td class="num">${p.v}</td><td>${ow >= 0 ? mgrName(ow) : ""}</td></tr>`; }).join("")}</tbody></table>`;
 }
@@ -2384,7 +2660,6 @@ function viewLobby() {
       </div>
       ${mi >= 0 ? `<div class="row" style="align-items:flex-end">
         <label class="f" for="me-team" style="flex:1">Nome do seu time<input id="me-team" type="text" maxlength="24" value="${esc(S.managers[mi].team)}"></label>
-        <label class="f" for="me-color">Cor<select id="me-color">${COLORS.map(c => `<option value="${c}" ${S.managers[mi].color === c ? "selected" : ""}>${c}</option>`).join("")}</select></label>
         <button class="btn sm" data-a="editme">Salvar</button></div>` : NET.mode === "client" ? `<div class="flash" style="border-color:var(--gold);background:rgba(245,197,66,.06)"><b>Pedindo para entrar…</b><div class="muted" style="font-size:13px;margin-top:4px">O pedido é reenviado sozinho a cada 4 segundos. A página do anfitrião precisa estar aberta.</div><div class="muted num" style="font-size:12px;margin-top:6px">${connStatus()}</div><button class="btn sm" style="margin-top:8px" data-a="rejoin">Tentar de novo</button></div>` : ""}
     </div>
     <div class="card" style="display:grid;gap:12px;align-content:start">
@@ -2395,25 +2670,27 @@ function viewLobby() {
       </div>
       <div class="grid2" style="gap:10px">
         <label class="f" for="s-fmt">Formato do campeonato<select id="s-fmt" ${host && !st.year ? "" : "disabled"}><option value="split" ${st.fmt !== "cup" ? "selected" : ""}>Split: grupo único, top 7 no mata-mata</option><option value="cup" ${st.fmt === "cup" ? "selected" : ""}>Kings Cup: 2 grupos + jogo desafio</option></select></label>
+        <label class="f" for="s-career">Modo carreira<select id="s-career" ${host ? "" : "disabled"}><option value="0" ${!st.career ? "selected" : ""}>Não</option><option value="1" ${st.career ? "selected" : ""}>Sim: várias temporadas com o mesmo time</option></select></label>
         <label class="f" for="s-year">Temporada completa<select id="s-year" ${host ? "" : "disabled"}><option value="0" ${!st.year ? "selected" : ""}>Não, só um campeonato</option><option value="1" ${st.year ? "selected" : ""}>Sim: Split e depois Kings Cup</option></select></label>
         <label class="f" for="s-staff">Mercado de staff<select id="s-staff" ${host ? "" : "disabled"}>${[["nenhum", "Sem técnicos e presidentes"], ["tecnicos", "Só técnicos"], ["presidentes", "Só presidentes"], ["ambos", "Técnicos e presidentes"]].map(([k, v]) => `<option value="${k}" ${st.staff === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
         <label class="f" for="s-trades">Mercado de trocas<select id="s-trades" ${host ? "" : "disabled"}>${[["nenhum", "Sem trocas"], ["antes", "Antes do campeonato"], ["mata", "Antes do mata-mata"], ["ambos", "Antes do campeonato e do mata-mata"]].map(([k, v]) => `<option value="${k}" ${st.trades === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
       </div>
       <p class="muted" style="font-size:13px;margin:0">${st.year ? "Temporada completa: Split com o modo escolhido abaixo. Depois cada time mantém até 6 wild cards e até 3 jogadores, o resto volta para um draft, e começa a Kings Cup. Como a Cup tem dois grupos iguais, a temporada usa número par de times (mínimo 8): bots completam o que faltar." : st.fmt === "cup" ? "Kings Cup: dois grupos iguais. Todo time joga em toda rodada: contra o próprio grupo ou, uma única vez, o jogo desafio contra alguém do outro grupo. O desafio não vale ponto na tabela, só ponto para o grupo e uma carta secreta extra no mata-mata para quem vencer. O grupo com mais vitórias nos desafios leva 4 vagas e o 1º dele vai direto à semi; o outro grupo leva 3 vagas e o 1º joga as quartas. Precisa de número par de times (mínimo 8): bots completam o que faltar." : "Split: todos contra todos uma vez. O 1º vai direto para a semifinal e do 2º ao 7º jogam as quartas."}${st.staff !== "nenhum" ? " Antes dos jogadores tem o leilão de staff: técnicos dão bônus se o time usar a formação e o estilo favoritos deles, e o presidente é quem cobra o pênalti presidente." : ""}</p>
       <div class="grid2" style="gap:10px">
-        <label class="f" for="s-budget">${st.mode === "draft" ? "Moedas para wild cards (K$)" : "Orçamento por time (K$)"}<input id="s-budget" type="number" min="30" max="600" value="${st.budget}" ${host ? "" : "disabled"}></label>
-        ${st.mode === "draft" ? `<label class="f" for="s-wc">Wild cards por time<input id="s-wc" type="number" min="0" max="8" value="${st.wc}" ${host ? "" : "disabled"}></label>
-        <label class="f" for="s-picks">Escolhas no draft<input id="s-picks" type="number" min="2" max="10" value="${st.picks}" ${host ? "" : "disabled"}></label>
-        <label class="f" for="s-dtimer">Segundos por escolha<input id="s-dtimer" type="number" min="10" max="90" value="${st.dtimer}" ${host ? "" : "disabled"}></label>
-        <input id="s-squad" type="hidden" value="${st.squad}">` : `<label class="f" for="s-squad">Jogadores por elenco (com reservas)<input id="s-squad" type="number" min="7" max="12" value="${st.squad}" ${host ? "" : "disabled"}></label>`}
-        <label class="f" for="s-timer">Segundos por lance<input id="s-timer" type="number" min="5" max="30" value="${st.timer}" ${host ? "" : "disabled"}></label>
-        <label class="f" for="s-total">Times no campeonato<input id="s-total" type="number" min="2" max="12" value="${st.total}" ${host ? "" : "disabled"}></label>
+        ${stepper("budget", st.mode === "draft" ? "Moedas para wild cards (K$)" : "Orçamento por time (K$)", st.budget, 30, 600, 10, host)}
+        ${st.mode === "draft" ? `${stepper("wc", "Wild cards por time (máx. 6)", st.wc, 0, 6, 1, host)}
+        <div class="f"><span>Escolhas no draft</span><div class="stepper"><b class="num">${st.picks}</b><span class="muted" style="font-size:12px">sempre completa 12</span></div></div>
+        ${stepper("dtimer", "Segundos por escolha", st.dtimer, 10, 90, 5, host)}` : stepper("squad", "Jogadores por elenco (com reservas)", st.squad, 7, 12, 1, host)}
+        ${stepper("timer", "Segundos por lance", st.timer, 5, 30, 1, host)}
+        ${stepper("total", "Times no campeonato", st.total, 2, 12, 1, host)}
+        ${st.trades !== "nenhum" ? stepper("tmin", "Tempo do mercado de trocas (min)", st.tmin || 1, 1, 5, 1, host) : ""}
       </div>
       <label class="f" for="s-hide">Overall dos jogadores<select id="s-hide" ${host ? "" : "disabled"}>${[["nao", "Visível"], ["leilao", "Escondido no leilão (revela no campeonato)"], ["sempre", "Escondido o jogo todo"]].map(([k, v]) => `<option value="${k}" ${st.hide === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
       ${st.mode === "draft" ? `<p class="muted" style="font-size:13.5px;margin:0">Elenco de <b style="color:var(--ink)">${st.wc + st.picks}</b> jogadores: <b style="color:var(--ink)">${st.wc}</b> wild cards + <b style="color:var(--ink)">${st.picks}</b> do draft. 1) Cada um manda propostas secretas pelos wild cards que quer. Se só você pediu, leva pelo valor da proposta. Se dois ou mais pediram o mesmo, vira leilão entre eles. 2) Sorteio da ordem. 3) Draft em cobra (1→${Math.max(2, st.total)}, depois ${Math.max(2, st.total)}→1) com todos os jogadores que sobraram. Wild card que não fechar vira escolha extra no draft.</p>` : `<p class="muted" style="font-size:13.5px;margin:0">Vão a leilão <b class="num" style="color:var(--ink)">${pool}</b> jogadores sorteados (1,5 por vaga de cada time), aparecendo um de cada vez em ordem aleatória. Quem não quiser toca em <b>Passar</b>. Se ninguém quiser, o jogador vai para a repescagem no fim. Cada elenco precisa de pelo menos 1 goleiro.</p>`}
-      ${host ? `<div class="row"><button class="btn sm" data-a="savesettings">Aplicar regras</button><span class="spacer"></span><button class="btn gold big" data-a="start">${st.mode === "draft" ? "Começar wild cards" : "Começar leilão"}</button></div>` : `<p class="muted" style="margin:0">Só o anfitrião muda as regras e começa o leilão.</p>`}
+      ${host ? `<div class="row"><span class="spacer"></span><button class="btn gold big" data-a="start">${st.mode === "draft" ? "Começar wild cards" : "Começar leilão"}</button></div>` : `<p class="muted" style="margin:0">Só o anfitrião muda as regras e começa o leilão.</p>`}
     </div>
   </div>
+  ${hallView()}
   ${crestBox}`;
 }
 
@@ -2444,18 +2721,25 @@ function crestEditor() {
     </div>
     <p class="muted" style="font-size:12.5px;margin:8px 0 0">Os escudos oficiais dos times da Kings League são marcas registradas, então os prontos aqui são originais. Dá pra recriar as cores do seu time do coração no editor.</p>
   </div>
-  <div class="sec-title"><h2>Uniforme</h2><span class="muted">aparece no campo e na torcida</span></div>
-  <div class="card crested"><div class="crestgrid">
-    <div class="crestprev">${kitSVG(m.kit, 130, 10)}<b>${esc(m.team)}</b></div>
+  <div class="sec-title"><h2>Uniformes</h2><span class="muted">principal no campo e na torcida; o reserva entra quando as cores batem com o do rival</span></div>
+  ${kitEditor(mi, m)}`;
+}
+const KIT_NAMES = ["Lisa", "Listras verticais", "Listras horizontais", "Faixa diagonal", "Metade", "Xadrez", "Gola e punhos", "Faixa central", "Ombros", "V no peito", "Listras finas"];
+function kitEditor(mi, m) {
+  const which = UI.kitTab === 2 ? 2 : 1, key = which === 2 ? "kit2" : "kit";
+  const k = m[key] || (which === 2 ? awayKit(m.kit) : {}) || {};
+  return `<div class="card crested"><div class="row" style="margin-bottom:10px;gap:6px"><button class="btn sm ${which === 1 ? "gold" : ""}" data-a="kittab" data-v="1">Principal</button><button class="btn sm ${which === 2 ? "gold" : ""}" data-a="kittab" data-v="2">Reserva</button></div>
+  <div class="crestgrid">
+    <div class="crestprev"><div class="row" style="gap:6px;justify-content:center">${kitSVG(m.kit, which === 1 ? 120 : 70, 10)}${kitSVG(m.kit2 || awayKit(m.kit), which === 2 ? 120 : 70, 10)}</div><b>${esc(m.team)}</b><span class="muted" style="font-size:12px">${which === 1 ? "Principal (casa)" : "Reserva (fora, se as cores baterem)"}</span></div>
     <div class="grid3" style="gap:8px;align-content:start">
-      <label class="f" for="k-c1">Cor da camisa<input id="k-c1" type="color" data-mi="${mi}" value="${(m.kit && m.kit.c1) || "#f5c542"}"></label>
-      <label class="f" for="k-c2">Cor do detalhe<input id="k-c2" type="color" data-mi="${mi}" value="${(m.kit && m.kit.c2) || "#111111"}"></label>
-      <label class="f" for="k-num">Cor do número<input id="k-num" type="color" data-mi="${mi}" value="${(m.kit && m.kit.num) || "#ffffff"}"></label>
-      <label class="f" for="k-pat">Modelo<select id="k-pat" data-mi="${mi}">${KIT_PATS.map((k, i) => `<option value="${k}" ${(m.kit && m.kit.pat) === k ? "selected" : ""}>${["Lisa", "Listras verticais", "Listras horizontais", "Faixa diagonal", "Metade", "Xadrez", "Gola e punhos"][i]}</option>`).join("")}</select></label>
-      <div class="row" style="gap:6px;align-items:flex-end"><button class="btn sm" data-a="kitfromcrest" data-mi="${mi}">Usar cores do escudo</button></div>
+      <label class="f" for="k-c1">Cor da camisa<input id="k-c1" type="color" data-mi="${mi}" value="${k.c1 || "#f5c542"}"></label>
+      <label class="f" for="k-c2">Cor do detalhe<input id="k-c2" type="color" data-mi="${mi}" value="${k.c2 || "#111111"}"></label>
+      <label class="f" for="k-num">Cor do número<input id="k-num" type="color" data-mi="${mi}" value="${k.num || "#ffffff"}"></label>
+      <label class="f" for="k-pat">Modelo<select id="k-pat" data-mi="${mi}">${KIT_PATS.map((p, i) => `<option value="${p}" ${k.pat === p ? "selected" : ""}>${KIT_NAMES[i] || p}</option>`).join("")}</select></label>
+      <div class="row" style="gap:6px;align-items:flex-end;grid-column:span 2"><button class="btn sm" data-a="kitfromcrest" data-mi="${mi}">Usar cores do escudo</button>${which === 2 ? `<button class="btn sm ghost" data-a="kitinvert" data-mi="${mi}">Inverter o principal</button>` : ""}</div>
     </div></div></div>`;
 }
-function setKit(mi, patch) { const m = S.managers[mi]; const k = Object.assign({}, m.kit || {}, patch); if (NET.mode === "client") { m.kit = k; setLocal(mi, "kit", k); render(true); } act({ t: "editme", kit: k, mi }); }
+function setKit(mi, patch) { const m = S.managers[mi], key = UI.kitTab === 2 ? "kit2" : "kit"; const k = Object.assign({}, m[key] || (key === "kit2" ? awayKit(m.kit) : {}), patch); if (NET.mode === "client") { m[key] = k; setLocal(mi, key, k); render(true); } act({ t: "editme", [key]: k, mi }); }
 function setCrest(mi, patch) { const m = S.managers[mi]; const c = Object.assign({}, m.crest || {}, patch); if (NET.mode === "client") { m.crest = c; setLocal(mi, "crest", c); render(true); } act({ t: "editme", crest: c, mi }); }
 function viewAuction() {
   const a = S.auction, mi = myMi();
@@ -2526,7 +2810,7 @@ function viewTrade() {
   const me = UI.tr.from, others = S.managers.map((m, i) => i).filter(i => i !== me);
   if (UI.tr.to == null || UI.tr.to === me) UI.tr.to = others[0];
   const F = me != null ? S.managers[me] : null, T = S.managers[UI.tr.to];
-  const prow = (id, list, side) => { const p = P(id), on = UI.tr[side].includes(id); return `<button class="trow ${on ? "on" : ""}" data-a="ttog" data-side="${side}" data-id="${id}">${posb(p.p)} <span style="flex:1;text-align:left">${esc(p.n)}</span><b class="num">${O(p)}</b></button>`; };
+  const prow = (id, list, side) => { const p = P(id), on = UI.tr[side].includes(id); return `<button class="trow ${on ? "on" : ""}" data-a="ttog" data-side="${side}" data-id="${id}">${posb(p.p, p.p2)} <span style="flex:1;text-align:left">${esc(p.n)}</span><b class="num">${O(p)}</b></button>`; };
   const [mn, mx] = sqLimits(S);
   const builder = F ? `<div class="card" style="display:grid;gap:10px">
     ${mis.length > 1 ? `<div class="row"><span class="muted">Propondo como:</span>${mis.map(i => `<button class="btn sm ${i === me ? "gold" : ""}" data-a="tfrom" data-mi="${i}">${esc(S.managers[i].team)}</button>`).join("")}</div>` : ""}
@@ -2544,11 +2828,26 @@ function viewTrade() {
   const stl = { pend: "pendente", ok: "aceita", no: "recusada", cancel: "cancelada", fail: "inválida" };
   const offers = tr.offers.map(o => `<div class="row" style="justify-content:space-between;border-bottom:1px solid #1b212c;padding:8px 0;gap:8px"><div style="flex:1;min-width:240px">${desc(o)}${o.err ? ` <span class="err">${esc(o.err)}</span>` : ""}</div>
     <div class="row" style="gap:6px"><span class="pill ${o.st === "ok" ? "you" : ""}">${stl[o.st]}</span>${o.st === "pend" && mis.includes(o.to) ? `<button class="btn sm gold" data-a="tresp" data-id="${o.id}" data-ok="1" data-mi="${o.to}">Aceitar</button><button class="btn sm" data-a="tresp" data-id="${o.id}" data-ok="0" data-mi="${o.to}">Recusar</button>` : ""}${o.st === "pend" && mis.includes(o.from) ? `<button class="btn sm ghost" data-a="tcancel" data-id="${o.id}" data-mi="${o.from}">Cancelar</button>` : ""}</div></div>`).join("");
-  return `<div class="sec-title"><h2>Mercado de trocas</h2><span class="phase">${tr.when === "antes" ? "antes do campeonato" : "antes do mata-mata"}</span>${tr.deadline ? `<span class="pill">fecha em <b class="num" data-dl="${tr.deadline}">1:00</b></span>` : ""}</div>
+  return `${tr.when === "carreira" ? careerWindow(me) : ""}<div class="sec-title"><h2>Mercado de trocas</h2><span class="phase">${tr.when === "carreira" ? `temporada ${S.career.year}` : tr.when === "antes" ? "antes do campeonato" : "antes do mata-mata"}</span>${tr.deadline ? `<span class="pill">fecha em <b class="num" data-dl="${tr.deadline}">1:00</b></span>` : ""}</div>
   ${isHost() ? `<div class="row" style="margin-bottom:10px"><span class="muted" style="font-size:13px">Anfitrião:</span><button class="btn gold sm" data-a="tclose">Fechar mercado e seguir</button></div>` : `<p class="muted">O anfitrião fecha o mercado quando todo mundo terminar.</p>`}
   ${builder}
   <div class="sec-title"><h2>Propostas</h2></div><div class="card">${offers || '<p class="muted" style="margin:0">Nenhuma proposta ainda.</p>'}</div>
   <div class="sec-title"><h2>Elencos</h2></div><div class="mgrs">${S.managers.map((m, i) => mgrBox(m, i)).join("")}</div>`;
+}
+// modo carreira: evolução, agentes livres e dispensas
+function careerWindow(me) {
+  const C = S.career, m = me != null ? S.managers[me] : null;
+  const evo = (C.lastEvo || []).map(([id, a, b]) => `<span class="pill ${b > a ? "you" : ""}">${esc(shortName(P(id).n))} ${a}→<b>${b}</b></span>`).join("");
+  const fa = freeAgents(S).map(P).sort((a, b) => b.o - a.o).slice(0, 24);
+  const [mn, mx] = sqLimits(S);
+  return `<div class="sec-title"><h2>Temporada ${C.year}</h2><span class="phase">janela de transferências</span></div>
+  <div class="card" style="display:grid;gap:10px">
+    ${evo ? `<div><div class="muted" style="font-size:12px;margin-bottom:4px">QUEM EVOLUIU NA TEMPORADA PASSADA</div><div class="row" style="gap:6px">${evo}</div></div>` : ""}
+    ${S.trade.lastErr && m && S.trade.lastErr.mi === me && Date.now() - S.trade.lastErr.at < 8000 ? `<p class="err" style="margin:0">${esc(S.trade.lastErr.err)}</p>` : ""}
+    ${m ? `<div class="muted" style="font-size:13px">Saldo do ${esc(m.team)}: <b style="color:var(--gold)">${m.budget} K$</b> · elenco ${m.roster.length} (entre ${mn} e ${mx}). Contratar custa o valor do jogador; dispensar devolve metade.</div>
+    <div class="grid2"><div><div class="muted" style="font-size:12px;margin-bottom:6px">SEU ELENCO (dispensar)</div><div class="tlist">${m.roster.map(P).sort((a, b) => POS_ORDER[a.p] - POS_ORDER[b.p] || b.o - a.o).map(p => `<div class="trow">${posb(p.p, p.p2)} <span style="flex:1">${esc(p.n)} <span class="muted">pot ${p.pot || p.o}</span></span><b class="num">${O(p)}</b><button class="btn sm ghost" data-a="farel" data-id="${p.id}" data-mi="${me}">Dispensar +${Math.floor(p.v / 2)}</button></div>`).join("")}</div></div>
+    <div><div class="muted" style="font-size:12px;margin-bottom:6px">AGENTES LIVRES (contratar)</div><div class="tlist">${fa.map(p => `<div class="trow">${posb(p.p, p.p2)} <span style="flex:1">${esc(p.n)} <span class="muted">${esc(p.t)} · pot ${p.pot || p.o}</span></span><b class="num">${O(p)}</b><button class="btn sm ${m.budget >= p.v ? "gold" : ""}" data-a="fasign" data-id="${p.id}" data-mi="${me}" ${m.budget >= p.v && m.roster.length < mx ? "" : "disabled"}>${p.v} K$</button></div>`).join("") || '<p class="muted">Nenhum agente livre.</p>'}</div></div></div>` : ""}
+  </div>`;
 }
 /* ---------- Kings Cup: manter wild cards e jogadores ---------- */
 function viewKeep() {
@@ -2564,7 +2863,7 @@ function viewKeep() {
       ${mis.length > 1 ? `<div class="row"><span class="muted">Escolhendo:</span>${mis.map(i => `<button class="btn sm ${i === mi ? "gold" : ""}" data-a="kpmi" data-mi="${i}">${esc(S.managers[i].team)}</button>`).join("")}</div>` : ""}
       <div class="row" style="justify-content:space-between"><h3 style="font-size:22px">${esc(m.team)}: quem fica para a Kings Cup</h3><span class="muted">wild cards ${d.wc.length}/${k.maxWC} · mantidos ${d.keep.length}/${k.maxKeep}</span></div>
       ${sent ? `<div class="flash">Escolhas enviadas! Esperando os outros presidentes.</div>` : `
-      <div class="tlist">${m.roster.map(id => { const p = P(id), w = d.wc.includes(id), kk = d.keep.includes(id); return `<div class="row" style="gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px 10px">${posb(p.p)}<b style="flex:1">${esc(p.n)}</b><span class="num" style="color:var(--gold)">${O(p)}</span>
+      <div class="tlist">${m.roster.map(id => { const p = P(id), w = d.wc.includes(id), kk = d.keep.includes(id); return `<div class="row" style="gap:8px;border:1px solid var(--line);border-radius:10px;padding:6px 10px">${posb(p.p, p.p2)}<b style="flex:1">${esc(p.n)}</b><span class="num" style="color:var(--gold)">${O(p)}</span>
         <button class="btn sm ${w ? "gold" : ""}" data-a="kptog" data-kind="wc" data-id="${id}" data-mi="${mi}">Wild card</button><button class="btn sm ${kk ? "gold" : ""}" data-a="kptog" data-kind="keep" data-id="${id}" data-mi="${mi}">Manter</button></div>`; }).join("")}</div>
       <div class="row" style="justify-content:space-between"><span class="muted" style="font-size:13px">Quem não for escolhido volta para o draft da Kings Cup.</span><button class="btn gold" data-a="kpsend" data-mi="${mi}">Confirmar elenco</button></div>`}
     </div>`;
@@ -2586,7 +2885,7 @@ function marketPool(clickA, selId, mi) {
     <select id="mpos" style="max-width:150px">${["ALL", "GOL", "DEF", "MEI", "ATA"].map(p => `<option value="${p}" ${pos === p ? "selected" : ""}>${p === "ALL" ? "Todas posições" : p}</option>`).join("")}</select>
     <span class="muted" style="font-size:13px">${list.length} disponíveis</span></div>
   <div class="scroll"><table class="tbl"><thead><tr><th>OVR</th><th>Pos</th><th>Jogador</th><th>Clube 25/26</th>${h ? "" : "<th>ATQ</th><th>DEF</th><th>Valor</th>"}<th></th></tr></thead><tbody>
-  ${list.map(p => `<tr class="${selId === p.id ? "sel" : ""}"><td class="o ${p.p === "GOL" ? "g" : ""}">${O(p)}</td><td>${posb(p.p)}</td><td><b>${esc(p.n)}</b>${p.tags.length ? `<div class="muted" style="font-size:11.5px">${esc(p.tags.slice(0, 3).join(" · "))}</div>` : ""}</td><td class="muted">${esc(p.t)}</td>${h ? "" : `<td class="num">${p.at}</td><td class="num">${p.df}</td><td class="num">${p.v}</td>`}
+  ${list.map(p => `<tr class="${selId === p.id ? "sel" : ""}"><td class="o ${p.p === "GOL" ? "g" : ""}">${O(p)}</td><td>${posb(p.p, p.p2)}</td><td><b>${esc(p.n)}</b>${p.tags.length ? `<div class="muted" style="font-size:11.5px">${esc(p.tags.slice(0, 3).join(" · "))}</div>` : ""}</td><td class="muted">${esc(p.t)}</td>${h ? "" : `<td class="num">${p.at}</td><td class="num">${p.df}</td><td class="num">${p.v}</td>`}
     <td>${clickA ? `<button class="btn sm" data-a="${clickA}" data-id="${p.id}" data-mi="${mi}">${clickA === "wcadd" ? "Quero" : "Escolher"}</button>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
 }
 function viewWC() {
@@ -2693,9 +2992,9 @@ function viewSeason() {
   const champ = se.champion != null ? S.managers[se.champion] : null;
   const stageName = { league: se.fmt === "cup" ? "Fase de grupos" : "Fase de liga", playin: "Play-in", quarters: "Quartas de final", semis: "Semifinais", final: "Final", done: "Encerrado" }[se.stage];
   const next = roundFixtures(S).filter(f => !f.res);
-  const tabs = [["time", "Meu time"], ["tabela", "Classificação"], ["jogos", "Jogos"], ["elencos", "Elencos"], ["artilharia", "Artilharia"]];
-  return `${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(champ.crest, 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
-  <div class="sec-title"><h2>${se.fmt === "cup" ? "Kings Cup" : "Split"}</h2><span class="phase">${stageName}</span>${se.koInfo ? `<span class="muted" style="font-size:13px">${esc(se.koInfo)}</span>` : ""}</div>
+  const tabs = [["time", "Meu time"], ["tabela", "Classificação"], ["jogos", "Jogos"], ["elencos", "Elencos"], ["artilharia", "Estatísticas"]];
+  return `${gameOver(S) ? voteCard() + hallView() : ""}${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(champ.crest, 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
+  <div class="sec-title"><h2>${se.fmt === "cup" ? "Kings Cup" : "Split"}</h2>${S.career ? `<span class="pill you">Carreira · temporada ${S.career.year}</span>` : ""}<span class="phase">${stageName}</span>${se.koInfo ? `<span class="muted" style="font-size:13px">${esc(se.koInfo)}</span>` : ""}</div>
   ${se.fmt === "cup" ? `<div class="row" style="margin-bottom:10px;gap:8px"><span class="pill">Desafios: Grupo A <b class="num">${se.desafio[0]}</b> x <b class="num">${se.desafio[1]}</b> Grupo B</span>${Object.keys(se.dwin).length ? `<span class="muted" style="font-size:13px">Carta extra no mata-mata: ${Object.keys(se.dwin).map(i => esc(S.managers[+i].team)).join(", ")}</span>` : ""}</div>` : ""}
   ${!champ ? `<div class="card" style="display:grid;gap:10px">
     <div class="row" style="justify-content:space-between"><div class="muted" style="font-size:13px">${se.stage === "league" ? `RODADA ${se.round + 1} DE ${se.leagueRounds}` : stageName.toUpperCase()} · JOGOS SIMULTÂNEOS</div>
@@ -2704,7 +3003,29 @@ function viewSeason() {
     <p class="muted" style="margin:0;font-size:13px">Todos os jogos da rodada rolam ao mesmo tempo. Cada técnico ajusta as táticas e toca em <b>Pronto!</b>; quando os dois lados estão prontos, o jogo começa na hora. Se der 1 minuto, o jogo arruma o que faltar e começa sozinho. Jogos só de bots já começam direto.</p>
   </div>` : ""}
   <div class="tabs">${tabs.map(([k, l]) => `<button class="${UI.tab === k ? "on" : ""}" data-a="tab" data-tab="${k}">${l}</button>`).join("")}</div>
-  ${UI.tab === "time" ? teamView() : UI.tab === "tabela" ? (se.fmt === "cup" ? `<div class="grid2">${[0, 1].map(g => `<div><h3 style="font-size:20px;margin-bottom:6px">Grupo ${"AB"[g]}</h3>${tableView(standings(S, g), g)}</div>`).join("")}</div>` : tableView(tb)) + bracketView() : UI.tab === "jogos" ? fixturesView() : UI.tab === "elencos" ? rostersView() : scorersView()}`;
+  ${UI.tab === "time" ? teamView() : UI.tab === "tabela" ? (se.fmt === "cup" ? `<div class="grid2">${[0, 1].map(g => `<div><h3 style="font-size:20px;margin-bottom:6px">Grupo ${"AB"[g]}</h3>${tableView(standings(S, g), g)}</div>`).join("")}</div>` : tableView(tb)) + bracketView() : UI.tab === "jogos" ? fixturesView() : UI.tab === "elencos" ? rostersView() : statsView()}`;
+}
+function hallView() {
+  const H = S.hall; if (!H || (!H.titles.length && !Object.keys(H.h2h).length)) return "";
+  const tot = {}; H.titles.forEach(t => { const k = t.pid ? t.name : "Bots"; tot[k] = (tot[k] || 0) + 1; });
+  const rk = Object.entries(tot).sort((a, b) => b[1] - a[1]);
+  const h2h = Object.values(H.h2h).sort((a, b) => (b.wa + b.wb) - (a.wa + a.wb));
+  return `<div class="card" style="display:grid;gap:8px;margin-top:16px"><h3 style="font-size:22px">Histórico da sala</h3>
+    <div class="row" style="gap:10px;flex-wrap:wrap">${rk.map(([n, c], k) => `<span class="pill ${k === 0 ? "you" : ""}">${k === 0 ? "👑 " : ""}${esc(n)}: <b>${c}</b> título${c > 1 ? "s" : ""}</span>`).join("")}</div>
+    <div class="muted" style="font-size:13px">Últimos campeões: ${H.titles.slice(-6).reverse().map(t => `<b style="color:var(--ink)">${esc(t.team)}</b> (${t.comp}${t.season ? " " + t.season : ""}, ${t.pid ? esc(t.name) : "bot"})`).join(" · ")}</div>
+    ${h2h.length ? `<div style="display:grid;gap:4px"><div class="muted" style="font-size:12px">CONFRONTO DIRETO ENTRE AMIGOS</div>${h2h.slice(0, 8).map(r => `<div class="row" style="gap:8px"><b>${esc(r.na)}</b><span class="num" style="color:var(--gold);font-weight:800">${r.wa} x ${r.wb}</span><b>${esc(r.nb)}</b></div>`).join("")}</div>` : ""}
+  </div>`;
+}
+function voteCard() {
+  const hum = S.managers.map((m, i) => i).filter(i => !S.managers[i].cpu), v = S.votes || {};
+  const yes = hum.filter(i => v[i] === true).length, no = hum.filter(i => v[i] === false).length, need = Math.floor(hum.length / 2) + 1;
+  const mis = NET.mode === "local" ? hum : myMi() >= 0 ? [myMi()] : [];
+  return `<div class="card votecard" style="margin-top:16px;display:grid;gap:10px">
+    <div class="row" style="justify-content:space-between"><h3 style="font-size:24px">${S.settings.career ? `Fim da temporada ${S.career ? S.career.year : 1}: seguir para a próxima?` : "Revanche na mesma sala?"}</h3><span class="pill">${yes} sim · ${no} não · precisa de ${need}</span></div>
+    <p class="muted" style="margin:0">${S.settings.career ? "Modo carreira: se a maioria votar sim, começa a próxima temporada com os mesmos elencos. Os jogadores evoluem rumo ao potencial (quem jogou bem evolui mais), cada time recebe premiação pela campanha e abre a janela de transferências." : "Se a maioria votar sim, todo mundo volta pro vestiário desta sala com os mesmos escudos e uniformes. Dá pra trocar o modo e as regras antes de começar."}</p>
+    ${mis.map(mi => `<div class="row" style="gap:8px">${mis.length > 1 ? `<b>${esc(S.managers[mi].team)}:</b>` : ""}<button class="btn ${v[mi] === true ? "gold" : ""}" data-a="vote" data-v="1" data-mi="${mi}">${v[mi] === true ? "Votei sim ✓" : S.settings.career ? "Sim, próxima temporada" : "Sim, bora de novo"}</button><button class="btn ghost ${v[mi] === false ? "on" : ""}" data-a="vote" data-v="0" data-mi="${mi}">${v[mi] === false ? "Votei não" : "Não"}</button></div>`).join("")}
+    ${isHost() ? `<div class="row"><span class="muted" style="font-size:13px">Anfitrião:</span>${S.settings.career ? `<button class="btn sm gold" data-a="nextseason">Próxima temporada agora</button>` : ""}<button class="btn sm" data-a="relobby">Voltar ao vestiário${S.settings.career ? " (encerra a carreira)" : ""}</button></div>` : ""}
+  </div>`;
 }
 function cardNames(s) { return String(s || "").split("+").map(k => CARDS[k] ? CARDS[k].name : k).join(" + "); }
 function yearView() {
@@ -2717,6 +3038,16 @@ function bracketView() {
   const lv = [0, 1, 2, 3].filter(l => se.bracket.some(x => x.lvl === l));
   const nm = o => { if (o.t != null) return mgrName(o.t); const f = se.fixtures.find(x => x.id === o.w); const w = f && f.res ? (f.res.w === 0 ? f.h : f.a) : null; return w != null ? mgrName(w) : `<span class="muted">vencedor ${o.w.toUpperCase()}</span>`; };
   return `<div class="sec-title"><h2>Mata-mata</h2></div><div class="bracket">${lv.map(l => `<div class="bcol"><div class="muted" style="font-size:12px;text-transform:uppercase">${KO_NAMES[l]}</div>${se.bracket.filter(x => x.lvl === l).map(x => { const f = se.fixtures.find(y => y.id === x.id); return `<div class="bmatch"><div>${nm(x.a)} ${f && f.res ? `<b class="num">${f.res.s[0]}</b>` : ""}</div><div>${nm(x.b)} ${f && f.res ? `<b class="num">${f.res.s[1]}</b>` : ""}</div>${f && f.res && f.res.so ? `<div class="muted" style="font-size:11px">shootouts ${f.res.so[0]}-${f.res.so[1]}</div>` : ""}</div>`; }).join("")}</div>`).join("")}</div>`;
+}
+// seleção do campeonato: goleiro da melhor defesa + 2 por posição (gols, MVPs e overall)
+function teamOfTournament(gk, mv) {
+  const goals = {}; topScorers(S).forEach(x => goals[x.id] = x.n);
+  const owned = S.managers.flatMap((m, mi) => m.roster.map(id => ({ id, mi })));
+  const score = id => (goals[id] || 0) + (mv[id] || 0) * 3 + P(id).o / 25;
+  const pickPos = (pos, n) => owned.filter(x => P(x.id).p === pos).sort((a, b) => score(b.id) - score(a.id)).slice(0, n);
+  const line = [...(gk ? [{ id: gk.id, mi: ownerOf(S, gk.id) }] : pickPos("GOL", 1)), ...pickPos("DEF", 2), ...pickPos("MEI", 2), ...pickPos("ATA", 2)];
+  if (line.length < 4) return "";
+  return `<div class="sec-title"><h2>Seleção do campeonato</h2></div><div class="toty">${line.map(x => { const p = P(x.id), m = S.managers[x.mi]; return `<div class="totyc" style="--c:${m ? m.color : "#888"}">${posb(p.p, p.p2)}<b>${esc(p.n)}</b><span class="muted">${m ? esc(m.team) : ""}${goals[x.id] ? ` · ${goals[x.id]} gols` : ""}${mv[x.id] ? ` · ${mv[x.id]} MVP` : ""}</span></div>`; }).join("")}</div>`;
 }
 function awardsView() {
   const ts = topScorers(S)[0];
@@ -2732,9 +3063,51 @@ function awardsView() {
     ${mvp ? card("REI DOS MVPS", esc(P(+mvp[0]).n), `${mvp[1]} vezes melhor em campo`) : ""}
     ${gk ? card("LUVA DE OURO", esc(gk.n), `defesa do ${esc(S.managers[bestDef.i].team)}: ${(bestDef.gc / Math.max(1, bestDef.pj)).toFixed(1)} gols sofridos por jogo`) : ""}
     ${bestAtt ? card("ATAQUE MAIS FORTE", esc(S.managers[bestAtt.i].team), `${bestAtt.gf} gols na fase de liga`) : ""}
-  </div>`;
+  </div>${teamOfTournament(gk, mv)}`;
 }
 function editableMis() { return NET.mode === "local" ? humansIdx() : myMi() >= 0 ? [myMi()] : []; }
+/* ---------- escalação visual: toque num jogador e depois em outro para trocar ---------- */
+function fitOf(p, slot) { if (!p) return ""; if (slot === "GOL") return p.p === "GOL" ? "ok" : "bad"; if (p.p === slot) return "ok"; if (p.p2 === slot) return "mid"; return "bad"; }
+function luChip(mi, key, id, slot, extra) {
+  const p = id != null ? P(id) : null, sel = UI.lsel && UI.lsel.mi === mi && UI.lsel.k === key;
+  const fit = slot ? fitOf(p, slot) : "";
+  return `<button class="luchip ${fit} ${sel ? "sel" : ""}" data-a="lu" data-mi="${mi}" data-k="${key}" ${extra || ""} aria-label="${p ? esc(p.n) : "vaga"}">
+    ${slot ? `<span class="lupos">${slot}</span>` : ""}<span class="luo num">${p ? O(p) : "–"}</span><span class="lun">${p ? esc(shortName(p.n)) : "vaga"}${p && isInj(S, id) ? " 🩹" : ""}</span>${p ? `<span class="lup">${p.p}${p.p2 ? "/" + p.p2 : ""}</span>` : ""}</button>`;
+}
+function lineupBoard(mi, m, tac) {
+  const slots = FORMS[tac.form], xy = FORM_XY[tac.form];
+  const used = new Set([tac.gk].concat(tac.slots));
+  const bench = m.roster.filter(id => !used.has(id)).sort((a, b) => POS_ORDER[P(a).p] - POS_ORDER[P(b).p] || P(b).o - P(a).o);
+  const ord = tac.order.filter(id => tac.slots.includes(id));
+  const bad = slots.filter((sl, i) => tac.slots[i] != null && fitOf(P(tac.slots[i]), sl) === "bad").length + (P(tac.gk) && P(tac.gk).p !== "GOL" ? 1 : 0);
+  const chem = chemistry({ field: tac.slots.filter(x => x != null).concat(tac.gk != null ? [tac.gk] : []) });
+  const injd = [tac.gk].concat(tac.slots).filter(id => isInj(S, id));
+  return `<div class="lubox">
+    <div class="lupitch">
+      <div class="luline mid"></div><div class="luline box"></div><div class="luline box top"></div>
+      ${slots.map((sl, i) => { const [x, y] = xy[i]; const n = ord.indexOf(tac.slots[i]); return `<div class="luslot" style="left:${y * 100}%;top:${(1 - x) * 82 + 4}%">${luChip(mi, "s" + i, tac.slots[i], sl, "")}${n >= 0 ? `<span class="luord" title="Ordem no escalonado">${n + 1}º</span>` : ""}</div>`; }).join("")}
+      <div class="luslot" style="left:50%;top:91%">${luChip(mi, "gk", tac.gk, "GOL", "")}</div>
+    </div>
+    <div class="muted" style="font-size:12.5px">${UI.lsel && UI.lsel.mi === mi ? "<b style='color:var(--gold)'>Agora toque em quem vai trocar de lugar com ele.</b>" : "Toque num jogador e depois em outro (no campo ou no banco) para trocar."} Verde: posição dele · amarelo: posição secundária · vermelho: fora de posição.${bad ? ` <b style="color:var(--red)">${bad} fora de posição.</b>` : ""}</div>
+    <div class="row" style="gap:6px"><span class="pill ${chem.pairs ? "you" : ""}">Química: ${chem.pairs} dupla${chem.pairs === 1 ? "" : "s"} do mesmo clube${chem.pairs ? ` (+${Math.round((chem.mult - 1) * 100)}%)` : ""}</span>${injd.length ? `<span class="pill" style="color:var(--red)">🩹 ${injd.map(id => esc(shortName(P(id).n)) + " fora " + S.season.inj[id] + " rod.").join(", ")} — o jogo troca na hora</span>` : ""}</div>
+    <div class="lubench"><span class="muted" style="font-size:12px">BANCO</span>${bench.map(id => luChip(mi, "b" + id, id, null, "")).join("") || '<span class="muted">sem reservas</span>'}</div>
+  </div>`;
+}
+function luTap(mi, k) {
+  const cur = UI.lsel;
+  if (!cur || cur.mi !== mi) { UI.lsel = { mi, k }; return render(true); }
+  if (cur.k === k) { UI.lsel = null; return render(true); }
+  if (cur.k[0] === "b" && k[0] === "b") { UI.lsel = { mi, k }; return render(true); }
+  const a = cur.k, b = k; UI.lsel = null;
+  tacChange(mi, tac => {
+    const get = key => key === "gk" ? tac.gk : key[0] === "s" ? tac.slots[+key.slice(1)] : +key.slice(1);
+    const set = (key, id) => { if (key === "gk") tac.gk = id; else if (key[0] === "s") tac.slots[+key.slice(1)] = id; };
+    const ia = get(a), ib = get(b);
+    if (a[0] === "b") { set(b, ia); const oi = tac.order.indexOf(ib); if (oi >= 0 && b[0] === "s") tac.order[oi] = ia; }
+    else if (b[0] === "b") { set(a, ib); const oi = tac.order.indexOf(ia); if (oi >= 0 && a[0] === "s") tac.order[oi] = ib; }
+    else { set(a, ib); set(b, ia); }
+  });
+}
 function teamView() {
   const mis = editableMis();
   if (!mis.length) return `<p class="muted">Você está assistindo esta sala.</p>`;
@@ -2755,9 +3128,7 @@ function teamView() {
         <label class="f" for="t-form">Formação<select id="t-form" data-mi="${mi}">${Object.keys(FORMS).map(f => `<option ${f === tac.form ? "selected" : ""}>${f}</option>`).join("")}</select></label>
         <label class="f" for="t-style">Estilo de jogo<select id="t-style" data-mi="${mi}">${Object.entries(STYLES).map(([k, v]) => `<option value="${k}" ${k === tac.style ? "selected" : ""}>${v.n}</option>`).join("")}</select></label>
       </div>
-      <label class="f" for="t-gk">Goleiro<select id="t-gk" data-mi="${mi}">${opt(tac.gk, m.roster)}</select></label>
-      ${slots.map((s, i) => { const id = tac.slots[i], p = id != null ? P(id) : null, pen = p ? fitPen(p, s) : 0; return `<label class="f" for="t-s${i}">${s}${pen ? ` <span style="color:var(--red)">· fora de posição${hid() ? "" : ` (-${pen})`}</span>` : ""}<select id="t-s${i}" data-mi="${mi}" data-slot="${i}">${id == null ? '<option value="">—</option>' : ""}${opt(id, m.roster.filter(x => x !== tac.gk))}</select></label>`; }).join("")}
-      <div class="muted" style="font-size:13px">Reservas: ${bench.map(id => esc(P(id).n)).join(", ") || "—"}</div>
+      ${lineupBoard(mi, m, tac)}
       <label class="row" for="t-auto" style="gap:8px;font-size:14px"><input id="t-auto" type="checkbox" data-mi="${mi}" ${tac.autoSub !== false ? "checked" : ""}> Substituições automáticas (ilimitadas: quem cansa sai e pode voltar)</label>
       <label class="f" for="t-gkm">Goleiro linha<select id="t-gkm" data-mi="${mi}">${[["auto", "Automático (escalonado até 3x3, dado às vezes, match ball 2x2/1x1)"], ["sempre", "Sempre que der"], ["nunca", "Nunca"]].map(([k, v]) => `<option value="${k}" ${(tac.gkMode || "auto") === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
     </div>
@@ -2818,18 +3189,61 @@ function fixturesView() {
 function rostersView() {
   return `<div class="mgrs">${S.managers.map((m, i) => {
     const tac = m.tac; if (!tac) return "";
-    const row = (id, tag) => { const p = P(id); return `<div class="row" style="gap:6px;font-size:13.5px"><span class="num" style="color:${p.p === "GOL" ? "var(--blue)" : "var(--gold)"};width:24px">${O(p)}</span>${posb(p.p)} ${esc(p.n)} ${tag ? `<span class="pill">${tag}</span>` : ""}</div>`; };
+    const row = (id, tag) => { const p = P(id); return `<div class="row" style="gap:6px;font-size:13.5px"><span class="num" style="color:${p.p === "GOL" ? "var(--blue)" : "var(--gold)"};width:24px">${O(p)}</span>${posb(p.p, p.p2)} ${esc(p.n)} ${tag ? `<span class="pill">${tag}</span>` : ""}</div>`; };
     const used = new Set([tac.gk].concat(tac.slots));
     return `<div class="mgr" style="--c:${m.color}"><div class="t"><span>${esc(m.team)}</span>${m.cpu ? '<span class="pill cpu">bot</span>' : ""}</div>
       <div class="muted" style="font-size:12px">${tac.form} · ${STYLES[tac.style].n} · sobrou ${m.budget} K$</div>
       ${row(tac.gk)}${tac.slots.filter(x => x != null).map(id => row(id)).join("")}${m.roster.filter(id => !used.has(id)).map(id => row(id, "reserva")).join("")}</div>`;
   }).join("")}</div>`;
 }
+// rankings do campeonato a partir dos resultados das partidas
+function seasonStats() {
+  const P2 = {}, T2 = {};
+  const pl = id => P2[id] = P2[id] || { id, j: 0, g: 0, a: 0, mvp: 0, sv: 0, gc: 0, y: 0, r: 0, ns: 0, nc: 0 };
+  S.season.fixtures.forEach(f => {
+    const r = f.res; if (!r) return;
+    [f.h, f.a].forEach((mi, ti) => {
+      const t = T2[mi] = T2[mi] || { mi, j: 0, gf: 0, gc: 0, fouls: 0, y: 0, r: 0 };
+      t.j++; t.gf += r.s[ti]; t.gc += r.s[1 - ti]; t.fouls += (r.fouls || [0, 0])[ti]; t.y += (r.yc || [0, 0])[ti]; t.r += (r.rc || [0, 0])[ti];
+      (r.pl ? r.pl[ti] : []).forEach(id => { pl(id).j++; if (P(id) && P(id).p === "GOL") pl(id).gc += r.s[1 - ti]; });
+      (r.sc ? r.sc[ti] : []).forEach(([id, n]) => pl(id).g += n);
+      (r.ast ? r.ast[ti] : []).forEach(([id, n]) => pl(id).a += n);
+      (r.svs ? r.svs[ti] : []).forEach(([id, n]) => pl(id).sv += n);
+      (r.cl ? r.cl[ti] : []).forEach(([id, c]) => { if (c === "r") pl(id).r++; else pl(id).y++; });
+    });
+    if (r.mvp) pl(r.mvp).mvp++;
+    (r.nt || []).forEach(([id, n]) => { pl(id).ns += n; pl(id).nc++; });
+  });
+  return { P: Object.values(P2).filter(x => P(x.id)), T: Object.values(T2) };
+}
+function statsView() {
+  const st = seasonStats();
+  if (!st.P.length) return `<p class="muted">As estatísticas aparecem depois dos primeiros jogos.</p>`;
+  const who = x => { const p = P(x.id), ow = ownerOf(S, x.id); return `${posb(p.p, p.p2)} <b>${esc(p.n)}</b> <span class="muted" style="font-size:12px">${ow >= 0 ? esc(S.managers[ow].team) : ""}</span>`; };
+  const box = (title, list, val, unit) => `<div class="card rank"><h4>${title}</h4>${list.length ? list.slice(0, 6).map((x, k) => `<div class="rrow"><span class="num rk">${k + 1}</span><span class="rn">${who(x)}</span><b class="num">${val(x)}</b>${unit ? `<small class="muted">${unit}</small>` : ""}</div>`).join("") : '<p class="muted">—</p>'}</div>`;
+  const tbox = (title, list, val, unit) => `<div class="card rank"><h4>${title}</h4>${list.slice(0, 6).map((x, k) => `<div class="rrow"><span class="num rk">${k + 1}</span><span class="rn">${mgrName(x.mi)}</span><b class="num">${val(x)}</b>${unit ? `<small class="muted">${unit}</small>` : ""}</div>`).join("")}</div>`;
+  const by = (f, filt) => st.P.filter(filt || (x => f(x) > 0)).sort((a, b) => f(b) - f(a) || P(b.id).o - P(a.id).o);
+  const minJ = Math.max(1, Math.floor(Math.max(...st.P.map(x => x.j)) / 2));
+  return `<div class="ranks">
+    ${box("Artilharia", by(x => x.g), x => x.g, "gols")}
+    ${box("Assistências", by(x => x.a), x => x.a, "assist.")}
+    ${box("Participações em gol", by(x => x.g + x.a), x => x.g + x.a, "G+A")}
+    ${box("Rei dos MVPs", by(x => x.mvp), x => x.mvp, "MVP")}
+    ${box("Melhor média", by(x => x.ns / x.nc, x => x.nc >= minJ), x => (x.ns / x.nc).toFixed(1), "nota")}
+    ${box("Goleiros: mais defesas", by(x => x.sv, x => P(x.id).p === "GOL" && x.sv > 0), x => x.sv, "defesas")}
+    ${box("Goleiros: menos gols por jogo", by(x => -x.gc / x.j, x => P(x.id).p === "GOL" && x.j >= minJ), x => (x.gc / x.j).toFixed(1), "sofridos/jogo")}
+    ${box("Cartões", by(x => x.y + x.r * 3), x => `${x.y ? "🟨" + x.y : ""} ${x.r ? "🟥" + x.r : ""}`, "")}
+    ${tbox("Melhor ataque", st.T.slice().sort((a, b) => b.gf / b.j - a.gf / a.j), x => (x.gf / x.j).toFixed(1), "gols/jogo")}
+    ${tbox("Melhor defesa", st.T.slice().sort((a, b) => a.gc / a.j - b.gc / b.j), x => (x.gc / x.j).toFixed(1), "sofridos/jogo")}
+    ${tbox("Mais faltas", st.T.slice().sort((a, b) => b.fouls - a.fouls), x => x.fouls, "faltas")}
+    ${tbox("Fair play", st.T.slice().sort((a, b) => (a.y + a.r * 3) - (b.y + b.r * 3)), x => x.y + x.r * 3, "pts de cartão")}
+  </div>`;
+}
 function scorersView() {
   const ts = topScorers(S).slice(0, 20);
   if (!ts.length) return `<p class="muted">Ainda sem gols.</p>`;
   return `<div class="scroll" style="max-height:none"><table class="tbl"><thead><tr><th>#</th><th>Jogador</th><th>Time</th><th>Gols</th></tr></thead><tbody>
-  ${ts.map((x, k) => { const p = P(x.id), ow = ownerOf(S, x.id); return `<tr><td class="num">${k + 1}</td><td>${posb(p.p)} <b>${esc(p.n)}</b></td><td>${ow >= 0 ? mgrName(ow) : ""}</td><td class="num" style="font-size:20px;color:var(--gold)">${x.n}</td></tr>`; }).join("")}
+  ${ts.map((x, k) => { const p = P(x.id), ow = ownerOf(S, x.id); return `<tr><td class="num">${k + 1}</td><td>${posb(p.p, p.p2)} <b>${esc(p.n)}</b></td><td>${ow >= 0 ? mgrName(ow) : ""}</td><td class="num" style="font-size:20px;color:var(--gold)">${x.n}</td></tr>`; }).join("")}
   </tbody></table></div>`;
 }
 
@@ -2839,7 +3253,7 @@ async function openReplay(fid) {
   let evs = EVS[fid];
   if (!evs && NET.db) { try { const d = await NET.db.doc(`mev/${NET.code}-${fid}`).get(); if (d.exists) evs = d.data().ev; EVS[fid] = evs; } catch (e) { } }
   const H = S.managers[f.h], A = S.managers[f.a];
-  const icon = e => ({ goal: "⚽", card: "🃏", pp: "👔", penres: "🥅", sores: "🥅", chance: "↗", so: e.ok ? "⚽" : "✖", end: "🏁", phase: "⏱", dice: "🎲", sub: "⇄", tac: "📋", info: "•" }[e.type] || "•");
+  const icon = e => ({ goal: "⚽", card: "🃏", pp: "👔", penres: "🥅", sores: "🥅", chance: "↗", so: e.ok ? "⚽" : "✖", end: "🏁", phase: "⏱", dice: "🎲", foul: "🦶", inj: "🩹", yellow: "🟨", red: "🟥", sub: "⇄", tac: "📋", info: "•" }[e.type] || "•");
   $("#viewer").innerHTML = `<div class="vbox">
     <div class="row" style="justify-content:space-between;margin-bottom:10px"><span class="phase">${esc(f.stage === "Liga" ? `Rodada ${f.round + 1}` : f.stage)}</span><button class="btn sm" data-a="vclose">Fechar</button></div>
     <div class="board"><div class="tn" style="color:${H.color}">${esc(H.team)}<small>pres. ${esc(H.name)}</small></div>
@@ -2852,9 +3266,12 @@ async function openReplay(fid) {
 function closeReplay() { $("#viewer").classList.remove("on"); document.body.style.overflow = ""; }
 
 /* ---------- render principal ---------- */
+function stepper(k, label, v, min, max, step, on) {
+  return `<div class="f"><span>${label}</span><div class="stepper"><button class="btn sm" data-a="stp" data-k="${k}" data-d="${-step}" data-min="${min}" data-max="${max}" ${on && v > min ? "" : "disabled"} aria-label="Diminuir">−</button><b class="num">${v}</b><button class="btn sm" data-a="stp" data-k="${k}" data-d="${step}" data-min="${min}" data-max="${max}" ${on && v < max ? "" : "disabled"} aria-label="Aumentar">+</button></div></div>`;
+}
 function readSettings() {
-  const val = id => { const el = $(id); return el ? +el.value : undefined; }, sv = id => { const el = $(id); return el ? el.value : undefined; };
-  return { t: "settings", v: { budget: val("#s-budget"), squad: val("#s-squad"), timer: val("#s-timer"), total: val("#s-total"), hide: sv("#s-hide"), wc: val("#s-wc"), picks: val("#s-picks"), dtimer: val("#s-dtimer"), fmt: sv("#s-fmt"), year: sv("#s-year") === "1", staff: sv("#s-staff"), trades: sv("#s-trades") } };
+  const sv = id => { const el = $(id); return el ? el.value : undefined; };
+  return { t: "settings", v: { hide: sv("#s-hide"), fmt: sv("#s-fmt"), year: sv("#s-year") === "1", staff: sv("#s-staff"), trades: sv("#s-trades"), career: sv("#s-career") === "1" } };
 }
 function editing(box) {
   const ae = document.activeElement;
@@ -2893,8 +3310,31 @@ function render(force) {
   else body = viewSeason();
   $("#app").innerHTML = header() + `<main class="wrap">${body}</main>`;
   if (aid) { const el = document.getElementById(aid); if (el) { if (keepVal != null) el.value = keepVal; el.focus(); try { if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, ss); } catch (e) { } } }
-  tickClocks();
+  tickClocks(); renderChat();
 }
+/* ---------- chat da sala ---------- */
+const QUICK = ["Boa!", "Que golaço!", "Roubado!", "Bora!", "Sem chance 😂", "GG"];
+function chatMi() { return NET.mode === "local" ? (humansIdx()[0] != null ? humansIdx()[0] : -1) : myMi(); }
+function renderChat() {
+  let box = document.getElementById("chat");
+  if (!S || NET.mode === "local") { if (box) box.style.display = "none"; return; }
+  if (!box) { box = document.createElement("div"); box.id = "chat"; box.className = "chat"; document.body.appendChild(box);
+    box.innerHTML = `<button class="chatbtn" data-a="chattog" aria-label="Chat da sala">💬<span id="chatn" class="chatn"></span></button><div class="chatpanel" id="chatpanel"><div class="chatlist" id="chatlist" aria-live="polite"></div>
+      <div class="chatq">${QUICK.map(q => `<button class="btn sm ghost" data-a="chatq" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+      <form id="chatform" class="row" style="gap:6px;flex-wrap:nowrap"><input id="chat-in" type="text" maxlength="140" placeholder="Mensagem para a sala…" autocomplete="off" style="flex:1"><button class="btn sm gold" type="submit">Enviar</button></form></div>`;
+    box.querySelector("#chatform").addEventListener("submit", ev => { ev.preventDefault(); const i = $("#chat-in"); const v = i.value.trim(); if (v) { sendChat(v); i.value = ""; } });
+  }
+  box.style.display = "";
+  const msgs = S.chat || [], last = msgs.length ? msgs[msgs.length - 1].i : 0;
+  box.classList.toggle("open", !!UI.chatOpen);
+  if (UI.chatOpen) UI.chatSeen = last;
+  const unread = Math.max(0, msgs.filter(m => m.i > (UI.chatSeen || 0)).length);
+  $("#chatn").textContent = unread ? unread : ""; $("#chatn").style.display = unread ? "" : "none";
+  const sig = last + ":" + msgs.length;
+  if (UI.chatSig !== sig) { UI.chatSig = sig; const l = $("#chatlist"); l.innerHTML = msgs.map(m => `<div class="cmsg"><b style="color:${m.c}">${esc(m.n)}</b> ${esc(m.txt)}</div>`).join("") || '<p class="muted" style="margin:0">Ninguém falou nada ainda.</p>'; l.scrollTop = l.scrollHeight;
+    const nw = msgs.filter(m => m.i > (UI.chatToast || 0) && m.mi !== myMi()); if (UI.chatToast != null && nw.length && !UI.chatOpen) toast(`💬 ${nw[nw.length - 1].n}: ${nw[nw.length - 1].txt}`); UI.chatToast = last; }
+}
+function sendChat(txt) { const mi = chatMi(); if (mi < 0) return; if (NET.mode === "client") { S.chat = (S.chat || []).concat({ i: (S.chatN || 0) + 0.5, mi, n: S.managers[mi].name, c: S.managers[mi].color, txt }); UI.chatSig = null; renderChat(); } act({ t: "chat", txt, mi }); }
 
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-a]"); if (!b) return;
@@ -2907,10 +3347,10 @@ document.addEventListener("click", e => {
   if (a === "copyinvite") { const url = location.origin + location.pathname + "?sala=" + S.code; try { navigator.clipboard.writeText(url).then(() => toast("Link copiado!"), () => prompt("Copie o link:", url)); } catch (e) { prompt("Copie o link:", url); } return; }
   if (a === "rejoin") { if (NET.joinInfo) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team }); toast("Pedido reenviado."); render(); } return; }
   if (a === "kick") return act({ t: "kick", mi: +b.dataset.mi });
-  if (a === "editme") return act({ t: "editme", team: $("#me-team").value.trim(), color: $("#me-color").value });
+  if (a === "editme") return act({ t: "editme", team: $("#me-team").value.trim() });
   const val = id => { const el = $(id); return el ? +el.value : undefined; };
   const sv = id => { const el = $(id); return el ? el.value : undefined; };
-  const settings = () => ({ t: "settings", v: { budget: val("#s-budget"), squad: val("#s-squad"), timer: val("#s-timer"), total: val("#s-total"), hide: $("#s-hide").value, wc: val("#s-wc"), picks: val("#s-picks"), dtimer: val("#s-dtimer"), fmt: sv("#s-fmt"), year: sv("#s-year") === "1", staff: sv("#s-staff"), trades: sv("#s-trades") } });
+  const settings = () => readSettings();
   if (a === "setmode") { act(settings()); return act({ t: "settings", v: { mode: b.dataset.v } }); }
   if (a === "wcadd") { const mi = +b.dataset.mi, id = +b.dataset.id; const d = UI.wcd[mi] = UI.wcd[mi] || {}; const need = wcLeft(S, S.managers[mi]); if (Object.keys(d).length >= need) { toast(`Você só tem ${need} vaga${need > 1 ? "s" : ""} de wild card.`); return; } d[id] = Math.max(1, hid() ? 5 : Math.round(P(id).v)); return render(); }
   if (a === "wcdel") { const d = UI.wcd[+b.dataset.mi] || {}; delete d[+b.dataset.id]; return render(); }
@@ -2931,15 +3371,27 @@ document.addEventListener("click", e => {
   if (a === "dsel") { UI.dsel = +b.dataset.id; return render(); }
   if (a === "dpick") { const mi = NET.mode === "local" ? draftPicker(S) : myMi(); const pid = UI.dsel; UI.dsel = null; return act({ t: "dpick", pid, mi }); }
   if (a === "savesettings") return act(settings());
+  if (a === "stp") { const k = b.dataset.k, cur = +(S.settings[k] != null ? S.settings[k] : (k === "tmin" ? 1 : 0)); const nv = Math.max(+b.dataset.min, Math.min(+b.dataset.max, cur + +b.dataset.d)); if (nv === cur) return; return act({ t: "settings", v: { [k]: nv } }); }
   if (a === "start") { act(settings()); return act({ t: "start" }); }
   if (a === "bid") { optimistic("bid", +b.dataset.mi, +b.dataset.amt); return act({ t: "bid", amount: +b.dataset.amt, mi: +b.dataset.mi }); }
   if (a === "pass") { optimistic("pass", +b.dataset.mi); return act({ t: "pass", mi: +b.dataset.mi }); }
   if (a === "pause" || a === "autofill" || a === "quickround" || a === "simstage") return act({ t: a });
   if (a === "ready") { const mi = +b.dataset.mi, fid = b.dataset.fid; if (NET.mode === "client" && S.season && S.season.rs) { S.season.rs.ready[fid + ":" + mi] = true; UI.optReady = { k: fid + ":" + mi, until: Date.now() + 6000 }; } act({ t: "ready", fid, mi }); b.disabled = true; b.textContent = "Pronto ✓"; return updateRoundBoard(); }
   if (a === "watch2") return setWatch(b.dataset.fid);
+  if (a === "react") { const t = Date.now(); if (t - (UI.lastReact || 0) < 900) return; UI.lastReact = t; return act({ t: "m", a: { t: "mreact", e: b.dataset.e }, mi: NET.mode === "local" ? humansIdx()[0] : myMi() }); }
   if (a === "tab") { UI.tab = b.dataset.tab; return render(); }
   if (a === "editmi") { UI.editMi = +b.dataset.mi; return render(); }
   if (a === "crestmi") { UI.crestMi = +b.dataset.mi; return render(); }
+  if (a === "vote") { const mi = +b.dataset.mi, v = b.dataset.v === "1"; if (NET.mode === "client") { S.votes = S.votes || {}; S.votes[mi] = v; render(true); } return act({ t: "vote", v, mi, next: !!S.settings.career }); }
+  if (a === "relobby") return act({ t: "relobby" });
+  if (a === "lu") return luTap(+b.dataset.mi, b.dataset.k);
+  if (a === "chattog") { UI.chatOpen = !UI.chatOpen; renderChat(); if (UI.chatOpen) setTimeout(() => { const i = $("#chat-in"); if (i) i.focus(); }, 50); return; }
+  if (a === "chatq") return sendChat(b.dataset.q);
+  if (a === "fasign" || a === "farel") return act({ t: a, id: +b.dataset.id, mi: +b.dataset.mi });
+  if (a === "nextseason") return act({ t: "nextseason" });
+  if (a === "replay") { if (LV.lastGoal) { LV.replay = { frames: LV.lastGoal.frames, i: 0 }; } return; }
+  if (a === "kittab") { UI.kitTab = +b.dataset.v; return render(true); }
+  if (a === "kitinvert") { const m = S.managers[+b.dataset.mi]; const k = m.kit || {}; return setKit(+b.dataset.mi, { c1: k.c2 || "#111111", c2: k.c1 || "#f5c542", pat: k.pat || "liso", num: k.c1 || "#ffffff" }); }
   if (a === "kitfromcrest") { const m = S.managers[+b.dataset.mi]; const c = m.crest || {}; return setKit(+b.dataset.mi, { c1: c.c1 || "#f5c542", c2: c.c2 || "#111111" }); }
   if (a === "crestpre") { const p = CREST_PRESETS[+b.dataset.k]; return setCrest(+b.dataset.mi, { shape: p.shape, c1: p.c1, c2: p.c2, pat: p.pat, icon: p.icon }); }
   if (a === "ord") { const mi = +b.dataset.mi, k = +b.dataset.k, d = +b.dataset.d; return tacChange(mi, tac => { const o = tac.order.filter(id => tac.slots.includes(id)); const j = k + d; if (j < 0 || j >= o.length) return; [o[k], o[j]] = [o[j], o[k]]; tac.order = o; }); }
@@ -2951,6 +3403,7 @@ document.addEventListener("click", e => {
   if (a === "lcard") return act({ t: "m", a: { t: "mcard", ti: +b.dataset.ti, idx: +b.dataset.idx }, mi: liveMi(+b.dataset.ti) });
   if (a === "lpp") return act({ t: "m", a: { t: "mpp", ti: +b.dataset.ti }, mi: liveMi(+b.dataset.ti) });
   if (a === "lstyle") return act({ t: "m", a: { t: "mstyle", style: b.dataset.v, ti: +b.dataset.ti }, mi: liveMi(+b.dataset.ti) });
+  if (a === "lsubpick") { const ti = +b.dataset.ti, id = +b.dataset.id; LV.subSel = LV.subSel || {}; if (b.dataset.side === "f") { LV.subSel[ti] = LV.subSel[ti] === id ? null : id; return renderCtrl(true); } const o = LV.subSel[ti]; if (!o) { toast("Primeiro toque em quem sai."); return; } LV.subSel[ti] = null; act({ t: "m", a: { t: "msub", out: o, in: id, ti }, mi: liveMi(ti) }); return renderCtrl(true); }
   if (a === "lsub") { const ti = +b.dataset.ti; const o = +$("#sub-out-" + ti).value, i = +$("#sub-in-" + ti).value; if (!o || !i) return; return act({ t: "m", a: { t: "msub", out: o, in: i, ti }, mi: liveMi(ti) }); }
   if (a === "lchoice") { UI.gate = null; return act({ t: "m", a: { t: "mchoice", f: b.dataset.f, v: b.dataset.f === "val" ? b.dataset.v : +b.dataset.v, ti: +b.dataset.ti }, mi: liveMi(+b.dataset.ti) }); }
   if (a === "lgate") { UI.gate = b.dataset.k; return renderLive(true); }
@@ -2967,7 +3420,7 @@ document.addEventListener("change", e => {
   const el = e.target, id = el.id;
   if (id === "mpos") { UI.mpos = el.value; return render(); }
   if (id && id.startsWith("st-")) { const mi = +el.dataset.mi; if (NET.mode === "client" && S.managers[mi]) { const st = Object.assign({}, S.managers[mi].strat, { [el.dataset.k]: el.value }); S.managers[mi].strat = st; setLocal(mi, "strat", st); } return act({ t: "strat", [el.dataset.k]: el.value, mi }); }
-  if (["s-fmt", "s-year", "s-staff", "s-trades", "s-hide"].includes(id) && isHost()) return act(readSettings());
+  if (["s-fmt", "s-year", "s-staff", "s-trades", "s-hide", "s-career"].includes(id) && isHost()) return act(readSettings());
   if (id === "c-stars") return setCrest(+el.dataset.mi, { stars: +el.value });
   if (id === "k-c1" || id === "k-c2" || id === "k-num" || id === "k-pat") return setKit(+el.dataset.mi, { [id.slice(2)]: el.value });
   if (id === "c-shape" || id === "c-pat" || id === "c-icon" || id === "c-c1" || id === "c-c2" || id === "c-c3" || id === "c-tc" || id === "c-txt") return setCrest(+el.dataset.mi, { [id.slice(2) === "shape" ? "shape" : id.slice(2)]: id === "c-txt" ? el.value.toUpperCase().slice(0, 3) : el.value });
@@ -2983,7 +3436,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#viewer
 function boot(saved) {
   try {
     const raw = saved && saved.S ? saved.S : JSON.parse(sessionStorage.getItem("kl_local2") || "null");
-    if (raw && raw.mode === "local" && raw.v === 2) { S = raw; NET.mode = "local"; NET.code = "LOCL"; startLoop(); }
+    if (raw && raw.mode === "local" && raw.v === 2) { S = raw; setPov(S.pov); NET.mode = "local"; NET.code = "LOCL"; startLoop(); }
   } catch (e) { }
   render(); initLive();
 }
@@ -3004,6 +3457,7 @@ function initLive() {
     <div class="row" style="justify-content:space-between;gap:8px"><span class="phase" id="l-stage"></span><div class="row" id="l-host" style="gap:6px"></div></div>
     <div class="sbstrip" id="l-sb"></div>
     <div class="board" id="l-board"></div>
+    <div class="reacts" id="l-reacts">${REACTS.map(e => `<button class="rbtn" data-a="react" data-e="${e}" aria-label="Reagir ${e}">${e}</button>`).join("")}</div>
     <div class="pitchwrap"><canvas id="pitch" width="900" height="520" aria-label="Campo da partida"></canvas><div id="ovl" class="ovl"></div></div>
     <div class="timeline" id="l-tl" aria-hidden="true"></div>
     <div id="l-prompt"></div>
@@ -3018,7 +3472,7 @@ function renderLive(force) {
   const root = $("#live");
   if (!LIVE || !LIVE.status || LIVE.status === "none") { const was = LV.fid != null || root.classList.contains("on"); root.classList.remove("on"); document.body.style.overflow = ""; LV.fid = null; if (was && S) render(); return; }
   if (LV.fid !== LIVE.fid) {
-    LV.fid = LIVE.fid; LV.rp = {}; LV.queue = []; LV.parts = []; UI.hideLive = false; UI.gate = null;
+    LV.fid = LIVE.fid; LV.rp = {}; LV.queue = []; LV.parts = []; UI.hideLive = false; UI.gate = null; LV.hist = []; LV.lastGoal = null; LV.replay = null;
     LV.animSeq = LIVE.seq > 4 ? LIVE.seq : 0; LV.sigCtrl = ""; LV.sigPrompt = ""; LV.sigFeed = -1;
     if (S) render();
   }
@@ -3030,6 +3484,7 @@ function renderLive(force) {
   const host = isHost();
   $("#l-host").innerHTML = (host && M.status === "playing" ? `${[1, 2, 4].map(s => `<button class="btn sm ${(M.speed || 1) === s ? "gold" : ""}" data-a="lspeed" data-v="${s}">${s}x</button>`).join("")}
     <button class="btn sm" data-a="lpause">${M.paused ? "Continuar" : "Pausar"}</button><button class="btn sm ghost" data-a="lff">Simular até o fim</button>` : "")
+    + (LV.lastGoal ? `<button class="btn sm" data-a="replay" title="Rever o último gol">▶ Replay: ${esc(shortName(LV.lastGoal.who || "gol"))}</button>` : "")
     + `<button class="btn sm ghost" data-a="hidelive">${M.status === "done" ? "Fechar" : "Minimizar"}</button>`;
   const ph = phaseLabel(M);
   const mm = Math.floor(M.min), ss = Math.round((M.min - mm) * 60);
@@ -3041,7 +3496,7 @@ function renderLive(force) {
     <div class="tn" style="text-align:right;color:${A.color}"><span class="bcrest">${crestSVG(S && S.managers[A.mi] ? S.managers[A.mi].crest : null, 34)}</span>${esc(A.name)}<small>pres. ${esc(A.pres)} · ${A.tac.form} · ${STYLES[A.tac.style].n}</small></div>`;
   const zone = (a, b, c) => `<div class="z" style="left:${a / 40 * 100}%;width:${(b - a) / 40 * 100}%;background:${c}"></div>`;
   $("#l-tl").innerHTML = zone(0, 6, "rgba(76,201,240,.35)") + zone(6, 17, "rgba(179,146,240,.25)") + zone(17, 20, "rgba(245,197,66,.6)") + zone(20, 23, "rgba(47,212,126,.45)") + zone(23, 36, "rgba(179,146,240,.25)") + zone(36, 40, "rgba(255,77,97,.5)") + `<div class="cur" style="left:${Math.min(39.6, M.min) / 40 * 100}%"></div>`;
-  renderPrompt(force); renderCtrl(force); renderFeed();
+  renderPrompt(force); renderCtrl(force); renderFeed(); showReacts(M);
   queueAnims();
 }
 function phaseLabel(M) {
@@ -3049,7 +3504,7 @@ function phaseLabel(M) {
   const n = M.nOut;
   return {
     esc: { k: "", t: `Escalonado ${n}x${n}` }, full: { k: "", t: inWindow(M.min) ? "7x7 · cartas liberadas" : "7x7" }, dob: { k: "dob", t: "Gol dobro (17'-20')" },
-    dice: { k: "dice", t: `Dado: ${M.dice}x${M.dice}` }, mb: { k: "mb", t: `Match ball ${M.nOut === 6 ? "7x7" : M.nOut + "x" + M.nOut}${M.mbStep >= 6 ? " (goleiro linha liberado)" : ""} · primeiro a ${M.target}` }, so: { k: "mb", t: "Shootouts" }
+    dice: { k: "dice", t: M.dice === 1 ? "Dado: 1x1 com goleiro" : `Dado: ${M.dice}x${M.dice}` }, mb: { k: "mb", t: `Match ball ${MB_LBL[Math.max(0, Math.min(4, M.mbStep))]} · primeiro a ${M.target}` }, so: { k: "mb", t: "Shootouts" }
   }[M.phase] || { k: "", t: "" };
 }
 function myTeams(M) { // índices de times que este aparelho controla
@@ -3117,12 +3572,13 @@ function renderCtrl(force) {
     const host = isHost(), r = matchResult(M);
     el.innerHTML = `<div class="prompt" style="text-align:center"><h3 style="font-size:30px;color:${M.t[M.w].color}">${esc(M.t[M.w].name)} vence!</h3>
       <p class="muted">${M.so ? `Shootouts ${M.so[0]}-${M.so[1]} · ` : ""}Finalizações ${M.t[0].shots} x ${M.t[1].shots} · Defesas ${M.t[0].saves} x ${M.t[1].saves}${r.mvp ? ` · MVP: <b style="color:var(--ink)">${esc(P(r.mvp).n)}</b>` : ""}</p>
-      <p class="muted">Cartas: ${esc(M.t[0].name)} tinha <b>${cardNames(M.t[0].cards.map(c => c.k).join("+"))}</b>, ${esc(M.t[1].name)} tinha <b>${cardNames(M.t[1].cards.map(c => c.k).join("+"))}</b>. Cartões: 🟨 ${M.t[0].cardsY}x${M.t[1].cardsY} · 🟥 ${M.t[0].cardsR}x${M.t[1].cardsR}.</p>
+      ${r.nt && r.nt.length ? `<p class="muted">Notas: ${r.nt.slice().sort((x, y) => y[1] - x[1]).slice(0, 4).map(([id, n]) => `<b style="color:var(--ink)">${esc(shortName(P(id).n))}</b> ${n.toFixed(1)}`).join(" · ")}</p>` : ""}
+      <p class="muted">Cartas: ${esc(M.t[0].name)} tinha <b>${cardNames(M.t[0].cards.map(c => c.k).join("+"))}</b>, ${esc(M.t[1].name)} tinha <b>${cardNames(M.t[1].cards.map(c => c.k).join("+"))}</b>. Faltas ${M.t[0].fouls || 0}x${M.t[1].fouls || 0} · Cartões: 🟨 ${M.t[0].cardsY}x${M.t[1].cardsY} · 🟥 ${M.t[0].cardsR}x${M.t[1].cardsR}.</p>
       <button class="btn gold big" data-a="closelive">Voltar ao campeonato</button>${Object.values(LIVES).some(x => x.status === "playing") ? `<p class="muted" style="margin-top:8px">Outros jogos da rodada ainda estão rolando: toque no placar lá em cima pra assistir.</p>` : ""}</div>`;
     return;
   }
   if (!mine.length) { el.innerHTML = `<p class="muted" style="text-align:center">Você está assistindo. Os técnicos dos dois times controlam cartas, pênaltis e táticas.</p>`; return; }
-  const win = M.min < 6 ? "Cartas liberadas no 6'." : M.min < 17 ? "Liberadas até o 17'." : M.min < 23 ? "Bloqueadas até o 23'." : M.min < 36 ? "Liberadas até o 36'." : "Encerradas.";
+  const win = M.min < 5 ? "Cartas liberadas no 5'." : M.min < 17 ? "Liberadas até o 17'." : M.min < 23 ? "Bloqueadas até o 23'." : M.min < 36 ? "Liberadas até o 36'." : "Encerradas.";
   el.innerHTML = mine.map(ti => {
     const T = M.t[ti], cc = canActCard(M, ti), cp = canActPP(M, ti);
     const fieldSlots = T.tac.slots.filter(x => x != null);
@@ -3137,17 +3593,18 @@ function renderCtrl(force) {
       </div>
       <div class="muted" style="font-size:12px;margin-top:4px">ESTILO</div>
       <div class="row" style="gap:6px">${Object.entries(STYLES).map(([k, v]) => `<button class="btn sm ${T.tac.style === k ? "gold" : ""}" data-a="lstyle" data-v="${k}" data-ti="${ti}">${v.n}</button>`).join("")}</div>
-      <div class="row" style="align-items:flex-end;margin-top:6px">
+      <div class="row" style="align-items:flex-end;margin-top:6px;gap:10px">
         <label class="f" for="l-form-${ti}">Formação<select id="l-form-${ti}" data-ti="${ti}" class="lform">${Object.keys(FORMS).map(f => `<option ${f === T.tac.form ? "selected" : ""}>${f}</option>`).join("")}</select></label>
-        <label class="f" for="sub-out-${ti}">Sai<select id="sub-out-${ti}">${fieldSlots.map(id => `<option value="${id}">${O(P(id))} ${esc(P(id).n)} · ${Math.round(M.sta[id] || 100)}%</option>`).join("")}</select></label>
-        <label class="f" for="sub-in-${ti}">Entra<select id="sub-in-${ti}">${(T.bench || []).map(id => `<option value="${id}">${O(P(id))} ${P(id).p} ${esc(P(id).n)} · ${Math.round(M.sta[id] || 100)}%</option>`).join("") || '<option value="">sem reservas</option>'}</select></label>
-        <button class="btn sm" data-a="lsub" data-ti="${ti}" ${(T.bench || []).length ? "" : "disabled"}>Substituir</button>
+        <span class="muted" style="font-size:12.5px;flex:1">${LV.subSel && LV.subSel[ti] ? `<b style="color:var(--gold)">Sai ${esc(shortName(P(LV.subSel[ti]).n))}.</b> Agora toque em quem entra (banco).` : "Substituição: toque em quem sai (em campo) e depois em quem entra (banco)."}</span>
+      </div>
+      <div class="subgrid">
+        <div><div class="muted" style="font-size:11px;margin-bottom:4px">EM CAMPO</div><div class="subrow">${fieldSlots.map(id => subChip(M, ti, id, "f")).join("")}</div></div>
+        <div><div class="muted" style="font-size:11px;margin-bottom:4px">BANCO</div><div class="subrow">${(T.bench || []).map(id => subChip(M, ti, id, "b")).join("") || '<span class="muted">sem reservas</span>'}</div></div>
       </div>
       <div class="row" style="gap:14px;align-items:flex-end">
         <label class="row" for="l-auto-${ti}" style="gap:6px;font-size:13.5px"><input id="l-auto-${ti}" class="lauto" data-ti="${ti}" type="checkbox" ${T.autoSub ? "checked" : ""}> Substituições automáticas</label>
         <label class="f" for="l-gk-${ti}">Goleiro linha ${T.gkOut ? '<b style="color:var(--gold)">· NA LINHA AGORA</b>' : ""}<select id="l-gk-${ti}" class="lgk" data-ti="${ti}">${[["auto", "Automático"], ["sempre", "Sempre que der"], ["nunca", "Nunca"]].map(([k, v]) => `<option value="${k}" ${T.gkMode === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
       </div>
-      <div class="stam">${fieldSlots.map(id => { const v = Math.round(M.sta[id] || 100); return `<div title="${esc(P(id).n)}"><span>${esc(shortName(P(id).n))}</span><i style="width:${v}%;background:${v > 70 ? "var(--pitch)" : v > 50 ? "var(--gold)" : "var(--red)"}"></i></div>`; }).join("")}</div>
       </div>`;
   }).join("");
 }
@@ -3158,14 +3615,34 @@ document.addEventListener("change", e => {
 });
 function renderFeed() {
   const M = LIVE; if (LV.sigFeed === M.seq) return; LV.sigFeed = M.seq;
-  const icon = e => ({ goal: "⚽", card: "🃏", pp: "👔", penres: "🥅", sores: "🥅", chance: "↗", so: e.ok ? "⚽" : "✖", end: "🏁", phase: "⏱", dice: "🎲", sub: "⇄", tac: "📋", gkl: "🧤", info: "•" }[e.type] || "•");
+  const icon = e => ({ goal: "⚽", card: "🃏", pp: "👔", penres: "🥅", sores: "🥅", chance: "↗", so: e.ok ? "⚽" : "✖", end: "🏁", phase: "⏱", dice: "🎲", foul: "🦶", inj: "🩹", yellow: "🟨", red: "🟥", sub: "⇄", tac: "📋", gkl: "🧤", info: "•" }[e.type] || "•");
   $("#l-feed").innerHTML = M.ev.filter(e => e.text).slice(-14).reverse().map(e => `<div class="ev k-${e.type}" style="--c:${e.team === 0 ? M.t[0].color : e.team === 1 ? M.t[1].color : "#555"}"><div class="m num">${e.type === "so" ? "SO" : Math.floor(e.m) + "'"}</div><div class="ic">${icon(e)}</div><div class="t">${esc(e.text)}${e.type === "goal" ? ` <span class="muted num">${e.s[0]}-${e.s[1]}</span>` : ""}</div></div>`).join("");
 }
 
+function subChip(M, ti, id, side) {
+  const T = M.t[ti], p = P(id), v = Math.round(M.sta[id] || 100), sel = side === "f" && LV.subSel && LV.subSel[ti] === id;
+  const out = T.out.some(o => o.id === id && o.until > M.min) || T.banned.includes(id);
+  const slot = side === "f" ? FORMS[T.tac.form][T.tac.slots.indexOf(id)] : null, fit = slot ? fitOf(p, slot) : "";
+  return `<button class="subchip ${fit} ${sel ? "sel" : ""} ${out ? "off" : ""}" data-a="lsubpick" data-ti="${ti}" data-id="${id}" data-side="${side}" ${side === "b" && T.banned.includes(id) ? "disabled" : ""}>
+    <span class="lup">${slot || p.p}</span><b>${esc(shortName(p.n))}${T.banned.includes(id) && (T.injR || []).some(x => x[0] === id) ? " 🩹" : ""}</b><span class="num muted">${O(p)}</span>
+    <i class="stbar"><i style="width:${v}%;background:${v > 70 ? "var(--pitch)" : v > 50 ? "var(--gold)" : "var(--red)"}"></i></i></button>`;
+}
+/* ---------- reações dos amigos ---------- */
+function showReacts(M) {
+  const rs = M.reacts || []; if (LV.rfid !== M.fid) { LV.rfid = M.fid; LV.rseen = rs.length ? rs[rs.length - 1].i : 0; return; }
+  rs.filter(r => r.i > (LV.rseen || 0)).forEach(r => {
+    const el = document.createElement("div"); el.className = "rfloat"; el.style.left = (10 + Math.random() * 80) + "%";
+    el.innerHTML = `<span>${r.e}</span><small style="color:${r.c}">${esc(r.n)}</small>`;
+    const ov = $("#ovl"); if (ov) { ov.appendChild(el); setTimeout(() => el.remove(), 2600); }
+  });
+  if (rs.length) LV.rseen = Math.max(LV.rseen || 0, rs[rs.length - 1].i);
+}
 /* ---------- animações em sobreposição ---------- */
 function queueAnims() {
   const M = LIVE;
   const fresh = M.ev.filter(e => e.i > LV.animSeq && ["goal", "card", "pp", "dice", "penres", "sores", "phase", "so", "end", "gkl", "yellow", "red"].includes(e.type));
+  const g = fresh.filter(e => e.type === "goal").pop();
+  if (g && M.status !== "done") setTimeout(() => { if (LV.hist && LV.hist.length > 10) { LV.lastGoal = { frames: LV.hist.slice(-48), who: g.who, team: g.team }; LV.sigCtrl = ""; renderLive(true); } }, 1300);
   if (M.ev.length) LV.animSeq = Math.max(LV.animSeq, M.ev[M.ev.length - 1].i);
   if (M.status === "done" && fresh.length > 3) { LV.queue = fresh.filter(e => e.type === "end"); }
   else fresh.forEach(e => LV.queue.push(e));
@@ -3293,6 +3770,15 @@ function frame(ts) {
     if (best) bt = { x: best.x + (M.ball.t === 0 ? 0.012 : -0.012), y: best.y + 0.01 };
   }
   LV.ball.x += (bt.x - LV.ball.x) * 0.09; LV.ball.y += (bt.y - LV.ball.y) * 0.09;
+  // replay do gol: grava as últimas posições e, quando pedido, reproduz em câmera lenta
+  if (!LV.replay) {
+    if (!LV.recT || ts - LV.recT > 90) { LV.recT = ts; LV.hist = LV.hist || []; const rp = {}; Object.entries(LV.rp).forEach(([id, r]) => { rp[id] = { x: r.x, y: r.y, gk: r.gk, bench: r.bench, out: r.out, ti: r.ti }; }); LV.hist.push({ rp, b: { x: LV.ball.x, y: LV.ball.y } }); if (LV.hist.length > 70) LV.hist.shift(); }
+  } else {
+    const fr = LV.replay.frames[Math.min(LV.replay.frames.length - 1, Math.floor(LV.replay.i))];
+    Object.entries(fr.rp).forEach(([id, r]) => { if (LV.rp[id]) Object.assign(LV.rp[id], r); });
+    LV.ball.x = fr.b.x; LV.ball.y = fr.b.y; LV.replay.i += 0.4;
+    if (LV.replay.i >= LV.replay.frames.length + 8) LV.replay = null;
+  }
   // jogadores
   const rad = Math.max(8, Math.min(13, W / 70));
   const kits = teamKits(M);
@@ -3319,14 +3805,22 @@ function frame(ts) {
   if (M.phase === "dob") { c.fillStyle = "rgba(245,197,66,.13)"; c.fillRect(0, SH, W, H); }
   if (M.phase === "mb") { c.fillStyle = "rgba(255,77,97,.10)"; c.fillRect(0, SH, W, H); }
   M.t.forEach((T, ti) => { if (T.dobLeft > 0 && M.phase === "full") { c.fillStyle = T.color; c.globalAlpha = .2; c.fillRect(ti === 0 ? W / 2 : 0, SH, W / 2, H); c.globalAlpha = 1; } });
+  if (LV.replay) { c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(0, SH, W, H); c.fillStyle = "#ff4d61"; c.font = `900 ${Math.round(H * 0.07)}px "Big Shoulders Display", sans-serif`; c.textAlign = "left"; c.fillText("● REPLAY", fx(0) + 8, fy(0) + H * 0.09); c.textAlign = "center"; }
   c.restore();
 }
 /* ---------- uniformes, torcida e mosaico ---------- */
 function hex2rgb(h) { const n = parseInt((h || "#888888").slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 function cdist(a, b) { const x = hex2rgb(a), y = hex2rgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); }
-function teamKits(M) {
-  const k = M.t.map(T => Object.assign({ c1: T.color, c2: "#111111", pat: "liso", num: "#0b0d12" }, T.kit || {}));
-  if (cdist(k[0].c1, k[1].c1) < 90) k[1] = Object.assign({}, k[1], { c1: k[1].c2, c2: k[1].c1, num: cdist(k[1].c2, "#ffffff") < 200 ? "#111111" : "#ffffff" });
+// uniforme de cada time em campo: se as camisas forem parecidas, o visitante usa o reserva
+function teamKits(M, raw) {
+  const base = T => Object.assign({ c1: T.color, c2: "#111111", pat: "liso", num: "#0b0d12" }, T.kit || {});
+  const k = M.t.map(base);
+  if (raw) return k;
+  if (cdist(k[0].c1, k[1].c1) < 90) {
+    const alt = M.t[1].kit2 ? Object.assign({ c2: "#111111", pat: "liso", num: "#ffffff" }, M.t[1].kit2) : null;
+    if (alt && cdist(k[0].c1, alt.c1) >= 90) k[1] = alt;
+    else k[1] = Object.assign({}, k[1], { c1: k[1].c2, c2: k[1].c1, num: cdist(k[1].c2, "#ffffff") < 200 ? "#111111" : "#ffffff" });
+  }
   return k;
 }
 function drawKit(c, X, Y, r, k, gk) {
@@ -3340,6 +3834,10 @@ function drawKit(c, X, Y, r, k, gk) {
     else if (k.pat === "horizontais") for (let i = -2; i <= 2; i += 2) c.fillRect(X - r, Y + i * r * 0.38 - r * 0.16, 2 * r, r * 0.32);
     else if (k.pat === "faixa") { c.beginPath(); c.moveTo(X - r, Y - r * 0.6); c.lineTo(X - r * 0.4, Y - r); c.lineTo(X + r, Y + r * 0.6); c.lineTo(X + r * 0.4, Y + r); c.closePath(); c.fill(); }
     else if (k.pat === "metade") c.fillRect(X, Y - r, r, 2 * r);
+    else if (k.pat === "centro") c.fillRect(X - r * 0.22, Y - r, r * 0.44, 2 * r);
+    else if (k.pat === "ombros") c.fillRect(X - r, Y - r, 2 * r, r * 0.65);
+    else if (k.pat === "v") { c.beginPath(); c.moveTo(X - r, Y - r * 0.5); c.lineTo(X, Y + r * 0.3); c.lineTo(X + r, Y - r * 0.5); c.lineTo(X + r, Y - r * 0.15); c.lineTo(X, Y + r * 0.65); c.lineTo(X - r, Y - r * 0.15); c.closePath(); c.fill(); }
+    else if (k.pat === "finas") for (let i = -3; i <= 3; i++) c.fillRect(X + i * r * 0.28 - r * 0.05, Y - r, r * 0.1, 2 * r);
     else if (k.pat === "xadrez") { c.fillRect(X - r, Y - r, r, r); c.fillRect(X, Y, r, r); }
     else if (k.pat === "gola") { c.beginPath(); c.arc(X, Y - r * 0.9, r * 0.55, 0, Math.PI); c.fill(); }
   } else { c.fillRect(X - r, Y - r * 0.25, 2 * r, r * 0.5); }
@@ -3367,7 +3865,7 @@ function mosaicFor(M, ti) {
   return null;
 }
 function drawStands(c, M, W, HT, SH, t) {
-  const kits = teamKits(M);
+  const kits = teamKits(M, true);
   [0, 1].forEach(ti => {
     const y0 = ti === 0 ? 0 : HT - SH;
     // concreto da arquibancada
