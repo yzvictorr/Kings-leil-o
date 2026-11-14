@@ -63,29 +63,32 @@ const STAFF = [
   { id: "c9", k: "tec", n: "Dabá", club: "Nyvelados FC", form: "3-2-1", style: "retranca", r: 3, v: 4 },
   { id: "c11", k: "tec", n: "Gustavo da Silva", club: "Podpah Funkbol", form: "2-2-2", style: "longa", r: 3, v: 4 },
   { id: "c12", k: "tec", n: "Preto", club: "Dendele FC (auxiliar)", form: "3-1-2", style: "retranca", r: 2, v: 2 },
-  { id: "p1", k: "pres", n: "Neymar", club: "Furia FC", pen: 95, v: 12 },
-  { id: "p2", k: "pres", n: "Cris Guedes", club: "Furia FC", pen: 64, v: 3 },
-  { id: "p3", k: "pres", n: "Gaules", club: "G3X FC", pen: 64, v: 5 },
-  { id: "p5", k: "pres", n: "Jon Vlogs", club: "Capim FC", pen: 62, v: 4 },
-  { id: "p6", k: "pres", n: "Luva de Pedreiro", club: "Capim FC", pen: 70, v: 5 },
-  { id: "p7", k: "pres", n: "Racha", club: "Capim FC", pen: 63, v: 2 },
-  { id: "p8", k: "pres", n: "Paulinho o Loko", club: "Dendele FC", pen: 57, v: 3 },
-  { id: "p9", k: "pres", n: "LuquEt4", club: "Dendele FC", pen: 72, v: 3 },
-  { id: "p10", k: "pres", n: "Renato Vicente", club: "DesimpaiN", pen: 66, v: 4 },
-  { id: "p11", k: "pres", n: "Allan Stag", club: "Dibrados FC", pen: 56, v: 2 },
-  { id: "p12", k: "pres", n: "Lucas Tylty", club: "Dibrados FC", pen: 55, v: 2 },
-  { id: "p13", k: "pres", n: "Cerol", club: "Fluxo FC", pen: 66, v: 3 },
-  { id: "p14", k: "pres", n: "Nobru", club: "Fluxo FC", pen: 60, v: 3 },
-  { id: "p15", k: "pres", n: "Toguro", club: "Fluxo FC", pen: 63, v: 3 },
-  { id: "p16", k: "pres", n: "Coringa", club: "LOUD SC", pen: 61, v: 3 },
-  { id: "p17", k: "pres", n: "Brabox", club: "LOUD SC", pen: 63, v: 2 },
-  { id: "p18", k: "pres", n: "Nyvi Estephan", club: "Nyvelados FC", pen: 62, v: 4 },
-  { id: "p19", k: "pres", n: "Falcão", club: "Nyvelados FC", pen: 90, v: 9 },
-  { id: "p20", k: "pres", n: "Igão", club: "Podpah Funkbol", pen: 57, v: 3 },
-  { id: "p21", k: "pres", n: "Michel Elias", club: "Podpah Funkbol", pen: 55, v: 2 },
-  { id: "p22", k: "pres", n: "MC Hariel", club: "Podpah Funkbol", pen: 58, v: 3 },
-  { id: "p23", k: "pres", n: "Benjamin Back", club: "Fluxo FC", pen: 54, v: 2 }
+  { id: "p1", k: "pres", n: "Neymar", club: "Furia FC", ph: [2, 1], p0: 0.8 },
+  { id: "p2", k: "pres", n: "Cris Guedes", club: "Furia FC", ph: [40, 22] },
+  { id: "p3", k: "pres", n: "Gaules", club: "G3X FC", ph: [33, 16] },
+  { id: "p5", k: "pres", n: "Jon Vlogs", club: "Capim FC", ph: [11, 4] },
+  { id: "p6", k: "pres", n: "Luva de Pedreiro", club: "Capim FC", ph: [9, 5] },
+  { id: "p7", k: "pres", n: "Racha", club: "Capim FC", ph: [3, 2] },
+  { id: "p8", k: "pres", n: "Paulinho o Loko", club: "Dendele FC", ph: [9, 5] },
+  { id: "p9", k: "pres", n: "LuquEt4", club: "Dendele FC", ph: [29, 19] },
+  { id: "p10", k: "pres", n: "Renato Vicente", club: "DesimpaiN", ph: [18, 11] },
+  { id: "p11", k: "pres", n: "Allan Stag", club: "Dibrados FC", ph: [15, 10] },
+  { id: "p12", k: "pres", n: "Lucas Tylty", club: "Dibrados FC", ph: [7, 5] },
+  { id: "p13", k: "pres", n: "Cerol", club: "Fluxo FC", ph: [16, 12] },
+  { id: "p14", k: "pres", n: "Nobru", club: "Fluxo FC", ph: [11, 4] },
+  { id: "p15", k: "pres", n: "Toguro", club: "Fluxo FC", ph: [15, 7] },
+  { id: "p16", k: "pres", n: "Coringa", club: "LOUD SC", ph: [14, 7] },
+  { id: "p17", k: "pres", n: "Brabox", club: "LOUD SC", ph: [13, 8] },
+  { id: "p18", k: "pres", n: "Nyvi Estephan", club: "Nyvelados FC", ph: [6, 1] },
+  { id: "p19", k: "pres", n: "Falcão", club: "Nyvelados FC", ph: [9, 7], p0: 0.7 },
+  { id: "p20", k: "pres", n: "Igão", club: "Podpah Funkbol", ph: [4, 2] },
+  { id: "p21", k: "pres", n: "Michel Elias", club: "Podpah Funkbol", ph: [13, 6] },
+  { id: "p22", k: "pres", n: "MC Hariel", club: "Podpah Funkbol", ph: [10, 4] },
+  { id: "p23", k: "pres", n: "Benjamin Back", club: "Fluxo FC", ph: [1, 0] }
 ];
+// nota de pênalti do presidente: aproveitamento real (gols/cobranças) puxado para a média quando há poucas cobranças
+STAFF.forEach(x => { if (x.k !== "pres") return; const [a, g] = x.ph || [0, 0], k = 6, conv = (g + (x.p0 || 0.55) * k) / (a + k);
+  x.pen = Math.round(Math.max(35, Math.min(95, 55 + (conv - 0.45) * 140))); x.v = Math.max(1, Math.round((x.pen - 40) / 5)); });
 const STAFF_BY_ID = {}; STAFF.forEach(x => STAFF_BY_ID[x.id] = x);
 // evolução no modo carreira: S.pov guarda o overall atual de quem evoluiu
 let POVC = {};
@@ -209,8 +212,8 @@ function staffBid(S, mi, amount, now) {
   const a = S.staffA; if (!a || !a.lot) return false;
   const lot = a.lot, m = S.managers[mi], x = STAFF_BY_ID[lot.sid];
   amount = Math.floor(amount);
-  if (!staffNeed(S, m, x) || lot.bidder === mi || amount <= lot.bid || amount < 1 || amount > staffMax(S, m)) return false;
-  lot.bid = amount; lot.bidder = mi; lot.last = now; lot.passed = lot.passed.filter(i => i !== mi);
+  if (!staffNeed(S, m, x) || lot.passed.includes(mi) || lot.bidder === mi || amount <= lot.bid || amount < 1 || amount > staffMax(S, m)) return false;
+  lot.bid = amount; lot.bidder = mi; lot.last = now;
   lot.deadline = Math.max(lot.deadline, now + S.settings.timer * 1000);
   return true;
 }
@@ -296,9 +299,9 @@ function placeBid(S, mi, amount, now) {
   const lot = a.lot, m = S.managers[mi], pl = P(lot.pid);
   amount = Math.floor(amount);
   if (lot.only && !lot.only.includes(mi)) return false;
+  if (lot.passed.includes(mi)) return false; // passou: está fora deste jogador
   if (lot.bidder === mi || amount <= lot.bid || amount < 1 || amount > maxBid(S, m) || !canBidOn(S, m, pl)) return false;
   lot.bid = amount; lot.bidder = mi; lot.last = now;
-  lot.passed = lot.passed.filter(x => x !== mi);
   lot.deadline = Math.max(lot.deadline, now + S.settings.timer * 1000);
   return true;
 }
@@ -409,7 +412,7 @@ function finishAuction(S) {
     const style = c ? c.style : m.cpu ? pick(["equilibrado", "posse", "contra", "longa", "pressao"]) : "equilibrado";
     m.tac = autoTac(S, i, form, style);
   });
-  S.season = buildSeason(S);
+  S.season = buildSeason(S); setGoals(S);
   if (["antes", "ambos"].includes(S.settings.trades)) openTrade(S, "antes");
   addLog(S, "Leilão encerrado! Ajuste seu time na aba Meu time e bora pro campeonato.");
 }
@@ -680,6 +683,9 @@ function nextSeason(S) {
   // premiação pela campanha
   const tb = standings(S).map(r => r.i), ch = S.season && S.season.champion;
   S.managers.forEach((m, i) => { const pos = tb.indexOf(i); m.budget += 15 + (i === ch ? 40 : 0) + Math.max(0, 25 - pos * 3); });
+  careerSeasonEnd(S);
+  C.lastGoals = null;
+  if (C.goals && C.goals.res) { C.lastGoals = { year: C.year, res: C.goals.res }; Object.entries(C.goals.res).forEach(([i, r]) => { const m = S.managers[i]; if (m) m.budget = Math.max(0, m.budget + r.money); }); }
   C.lastEvo = evo.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10);
   C.year++;
   ["season", "history", "yearDone", "keep", "votes"].forEach(k => delete S[k]);
@@ -689,6 +695,41 @@ function nextSeason(S) {
   S.phase = "trade"; S.trade = { when: "carreira", offers: [], n: 0, deadline: Date.now() + Math.max(2, S.settings.tmin || 1) * 60000 };
   return true;
 }
+/* ---- metas da diretoria e ficha de carreira ---- */
+const META_TXT = { 5: "Ser campeão", 4: "Chegar à final", 3: "Chegar à semifinal", 1: "Chegar ao mata-mata" };
+function teamPower(S, mi) { const l = S.managers[mi].roster.map(P).filter(Boolean).map(p => p.o).sort((a, b) => b - a).slice(0, 7); return l.length ? l.reduce((s, x) => s + x, 0) / l.length : 0; }
+function setGoals(S) {
+  if (!S.settings.career) return;
+  const C = S.career = S.career || { year: 1 }; if (C.goals && C.goals.year === C.year) return;
+  const n = S.managers.length, ord = S.managers.map((m, i) => [i, teamPower(S, i)]).sort((a, b) => b[1] - a[1]).map(x => x[0]), lv = {};
+  ord.forEach((mi, r) => { lv[mi] = r === 0 ? 5 : r < Math.ceil(n * 0.3) ? 4 : r < Math.ceil(n * 0.6) ? 3 : 1; });
+  C.goals = { year: C.year, lv, res: null };
+}
+// até onde o time chegou: 5 campeão, 4 final, 3 semi, 2 quartas, 1 play-in, 0 não passou da fase de grupos
+function reachLv(S, mi) {
+  const se = S.season; if (!se) return 0; if (se.champion === mi) return 5;
+  let lv = 0; se.fixtures.forEach(f => { if (f.h === mi || f.a === mi) { const k = KO_NAMES.indexOf(f.stage); if (k >= 0) lv = Math.max(lv, k + 1); } }); return lv;
+}
+function careerSeasonEnd(S) {
+  const se = S.season; if (!S.settings.career || !se || se.logged) return; se.logged = true;
+  const C = S.career = S.career || { year: 1 }; C.log = C.log || {};
+  const st = {};
+  se.fixtures.forEach(f => { const r = f.res; if (!r) return; [f.h, f.a].forEach((mi, ti) => {
+    const x = id => st[id] = st[id] || { mi, j: 0, g: 0, a: 0, ns: 0, nc: 0 };
+    (r.pl ? r.pl[ti] : []).forEach(id => { x(id).j++; x(id).mi = mi; });
+    (r.sc ? r.sc[ti] : []).forEach(([id, n]) => x(id).g += n);
+    (r.ast ? r.ast[ti] : []).forEach(([id, n]) => x(id).a += n);
+  }); (r.nt || []).forEach(([id, n]) => { if (st[id]) { st[id].ns += n; st[id].nc++; } }); });
+  const comp = se.fmt === "cup" ? "Kings Cup" : "Split";
+  Object.entries(st).forEach(([id, x]) => { if (!x.j) return; const l = C.log[id] = C.log[id] || [];
+    l.push({ y: C.year, c: comp, t: S.managers[x.mi] ? S.managers[x.mi].team : "", o: P(+id) ? P(+id).o : 0, j: x.j, g: x.g, a: x.a, n: x.nc ? Math.round(x.ns / x.nc * 10) / 10 : null, ch: se.champion === x.mi });
+    if (l.length > 24) l.shift(); });
+  if (C.goals && C.goals.year === C.year && !C.goals.res && (!S.settings.year || (S.history || []).length >= 2)) {
+    const res = {}; S.managers.forEach((m, i) => { const lv = C.goals.lv[i]; if (lv == null) return; const got = reachLv(S, i), ok = got >= lv;
+      res[i] = { lv, got, ok, money: ok ? 20 + 5 * Math.min(3, got - lv) : -10 }; });
+    C.goals.res = res;
+  }
+}
 function startCareerSeason(S) {
   // bots completam o elenco com agentes livres
   S.managers.forEach((m, i) => {
@@ -696,7 +737,7 @@ function startCareerSeason(S) {
     let g = 0; while (m.roster.length < S.settings.squad && g++ < 12) { const fa = freeAgents(S).map(P).filter(p => p.v <= m.budget).sort((a, b) => b.o - a.o)[0]; if (!fa) break; careerSign(S, i, fa.id); }
   });
   S.managers.forEach((m, i) => { if (!validTac(S, i, m.tac)) m.tac = autoTac(S, i, m.tac ? m.tac.form : "2-3-1", m.tac ? m.tac.style : "equilibrado"); });
-  S.season = buildSeason(S); S.phase = "season";
+  S.season = buildSeason(S); S.phase = "season"; setGoals(S);
 }
 
 /* ================= HISTÓRICO DA SALA (títulos e confronto direto entre amigos) ================= */
@@ -961,6 +1002,7 @@ function advanceRound(S) {
     addLog(S, `${S.managers[se.champion].team} é CAMPEÃO!`);
     hallTitle(S, se.champion, se.fmt === "cup" ? "Kings Cup" : "Split");
     if (S.settings.year) yearAfterComp(S);
+    careerSeasonEnd(S);
     return true;
   }
   openKOLevel(S);
@@ -1183,10 +1225,10 @@ function resolvePen(M) {
   const skill = sh ? sh.at : 55;
   const gk = gkRating(O);
   let res;
-  const missP = (top ? 0.16 : 0.05) + (p.pres ? 0.1 - (T.presPen - 60) * 0.004 : 0) - (p.pres ? 0 : (skill - 70) * 0.003);
+  const missP = (top ? 0.16 : 0.05) + (p.pres ? 0.18 - (T.presPen - 40) * 0.0045 : 0) - (p.pres ? 0 : (skill - 70) * 0.003);
   if (Math.random() < Math.max(0.02, missP)) res = "fora";
   else if (col === p.dive) {
-    const saveP = (top ? 0.55 : col === 1 ? 0.85 : 0.75) + (gk - 78) * 0.006;
+    const saveP = (top ? 0.55 : col === 1 ? 0.85 : 0.75) + (gk - 78) * 0.006 - (p.pres ? (T.presPen - 65) * 0.007 : 0);
     res = Math.random() < saveP ? "defesa" : "gol";
   } else res = "gol";
   M.pending = null;

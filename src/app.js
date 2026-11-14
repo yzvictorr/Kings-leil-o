@@ -391,7 +391,7 @@ function applyOptimistic() {
   const o = UI.opt; if (!o) return;
   if (Date.now() > o.until) { UI.opt = null; return; }
   const l = lotOf(); if (!l || lotKey(l) !== o.key) { UI.opt = null; return; }
-  if (o.kind === "bid") { if (l.bid < o.amt) { l.bid = o.amt; l.bidder = o.mi; l.passed = (l.passed || []).filter(x => x !== o.mi); l.optimistic = true; } else UI.opt = null; }
+  if (o.kind === "bid") { if (l.bid < o.amt && !(l.passed || []).includes(o.mi)) { l.bid = o.amt; l.bidder = o.mi; l.passed = (l.passed || []).filter(x => x !== o.mi); l.optimistic = true; } else UI.opt = null; }
   else { l.passed = l.passed || []; if (!l.passed.includes(o.mi)) { l.passed.push(o.mi); l.optimistic = true; } else UI.opt = null; }
 }
 function passStamp(lot) { const f = UI.passFx; return f && f.key === lotKey(lot) && Date.now() - f.at < 1700 ? `<div class="stampfx" aria-hidden="true">${NET.mode === "local" ? esc(S.managers[f.mi].team) + "<br>" : ""}PASSOU</div>` : ""; }
@@ -729,9 +729,9 @@ function viewStaff() {
       <div class="row" style="justify-content:space-between"><span class="phase">Staff ${lot.n} de ${a.total}</span></div>
       <div class="bidnow"><div class="amt num ${bidPop(lot)}">${lot.bid || "–"}</div><div class="who"><div class="muted" style="font-size:12px">${lot.bidder >= 0 ? "LANCE ATUAL" : "SEM LANCES · comece com 1"}</div>${lot.bidder >= 0 ? mgrName(lot.bidder) : ""}</div><div class="spacer"></div><div class="clock num" id="sclock">–</div></div>
       <div class="bar"><i id="sclockbar" style="width:100%"></i></div>
-      <p class="muted" style="margin:0;font-size:13px">${x.k === "tec" ? `Bônus quando o time joga no ${x.form} e/ou no estilo ${STYLES[x.style].n}.` : `Ele cobra o pênalti presidente do seu time. Quanto maior a nota, mais chance de gol.`}</p>
+      <p class="muted" style="margin:0;font-size:13px">${x.k === "tec" ? `Bônus quando o time joga no ${x.form} e/ou no estilo ${STYLES[x.style].n}.` : `Ele cobra o pênalti presidente do seu time. ${penHist(x)} Nota de pênalti <b>${x.pen}</b>: ${penInfo(x.pen)}`}</p>
       ${bidders.map(bi => { const m = S.managers[bi], mx = staffMax(S, m), lead = lot.bidder === bi, ps = lot.passed.includes(bi); return `<div style="display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px"><div>${mgrName(bi)} <span class="muted">· saldo ${m.budget} · máx ${mx}</span></div>
-        <div class="bidbtns">${[1, 2, 5].filter(s => lot.bid + s <= mx).map(s => `<button class="btn ${s === 1 ? "gold" : ""}" data-a="bid" data-mi="${bi}" data-amt="${lot.bid + s}" ${lead ? "disabled" : ""}>+${s} <span class="num">(${lot.bid + s})</span></button>`).join("")}<button class="btn ghost" data-a="pass" data-mi="${bi}" ${lead || ps ? "disabled" : ""}>Passar</button></div></div>`; }).join("")}
+        <div class="bidbtns">${[1, 2, 5].filter(s => lot.bid + s <= mx).map(s => `<button class="btn ${s === 1 ? "gold" : ""}" data-a="bid" data-mi="${bi}" data-amt="${lot.bid + s}" ${lead || ps ? "disabled" : ""}>+${s} <span class="num">(${lot.bid + s})</span></button>`).join("")}<button class="btn ghost" data-a="pass" data-mi="${bi}" ${lead || ps ? "disabled" : ""}>Passar</button></div></div>`; }).join("")}
     </div></div>`;
   } else stage = `<div style="display:grid;place-items:center;min-height:200px;text-align:center">${a.last && a.last.mi >= 0 ? `<div class="sold-anim"><div class="muted">CONTRATADO</div><h2 style="font-size:40px">${esc(STAFF_BY_ID[a.last.sid].n)}</h2><div>${mgrName(a.last.mi)} · <b class="num" style="color:var(--gold)">${a.last.price} K$</b></div></div>` : `<h2 style="font-size:32px">Próximo nome saindo do pote…</h2>`}</div>`;
   return `<div class="sec-title"><h2>Mercado de staff</h2><span class="muted">técnicos e presidentes da Kings League Brasil</span></div><div class="card">${stage}</div>
@@ -770,6 +770,37 @@ function viewTrade() {
   <div class="sec-title"><h2>Elencos</h2></div><div class="mgrs">${S.managers.map((m, i) => mgrBox(m, i)).join("")}</div>`;
 }
 // modo carreira: evolução, agentes livres e dispensas
+function penInfo(pen) {
+  const pct = x => Math.round(Math.min(0.98, Math.max(0.02, x)) * 100) + "%";
+  const miss = (pen - 40) * 0.0045, sv = (pen - 65) * 0.007;
+  const gLow = (1 - Math.max(0.02, 0.23 - miss)) * (1 - (0.75 - sv) / 3);
+  return `chutando baixo erra o gol ${pct(0.23 - miss)} das vezes (no alto ${pct(0.34 - miss)}); se o goleiro acertar o canto baixo, defende ${pct(0.75 - sv)}. No geral, faz gol em uns ${pct(gLow)} das cobranças.`;
+}
+function penHist(x) { const [a, g] = x.ph || [0, 0]; return a ? `Na Kings: ${g} gols em ${a} cobranças (${Math.round(g / a * 100)}%).` : "Ainda sem cobranças oficiais."; }
+const LV_TXT = { 5: "campeão", 4: "final", 3: "semifinal", 2: "quartas", 1: "mata-mata", 0: "fase de grupos" };
+function goalsView() {
+  const G = S.career && S.career.goals; if (!G || !S.season) return "";
+  const rows = S.managers.map((m, i) => { const lv = G.lv[i]; if (lv == null) return ""; const r = G.res && G.res[i], got = r ? r.got : reachLvUI(i);
+    const st = r ? (r.ok ? `<span class="pill you">cumprida · +${r.money} K$</span>` : `<span class="pill">não cumprida · ${r.money} K$</span>`) : got >= lv ? `<span class="pill you">cumprida</span>` : `<span class="pill">em andamento</span>`;
+    return `<div class="trow"><span style="flex:1">${mgrName(i)}</span><span class="muted" style="font-size:13px">${META_TXT[lv]}</span>${st}</div>`; }).join("");
+  return `<div class="card" style="display:grid;gap:8px;margin-bottom:14px"><h3 style="margin:0;font-size:20px">Metas da diretoria</h3><p class="muted" style="margin:0;font-size:13px">Cada time recebe uma meta pela força do elenco. Cumprir paga 20 K$ (mais 5 K$ por fase além da meta, até +15). Falhar tira 10 K$. Vale no fim da temporada.</p><div class="tlist">${rows}</div></div>`;
+}
+function reachLvUI(mi) { const se = S.season; if (se.champion === mi) return 5; let lv = 0; se.fixtures.forEach(f => { if (f.h === mi || f.a === mi) { const k = ["Play-in", "Quartas", "Semifinal", "Final"].indexOf(f.stage); if (k >= 0) lv = Math.max(lv, k + 1); } }); return lv; }
+function lastGoalsView() {
+  const L = S.career && S.career.lastGoals; if (!L) return "";
+  return `<div><div class="muted" style="font-size:12px;margin-bottom:4px">METAS DA TEMPORADA ${L.year}</div><div class="row" style="gap:6px">${Object.entries(L.res).map(([i, r]) => S.managers[i] ? `<span class="pill ${r.ok ? "you" : ""}">${esc(S.managers[i].team)}: ${META_TXT[r.lv].toLowerCase()} → ${LV_TXT[r.got]} ${r.ok ? "✓" : "✗"} <b>${r.money > 0 ? "+" : ""}${r.money} K$</b></span>` : "").join("")}</div></div>`;
+}
+function fichaView(mi) {
+  const C = S.career || {}, em = editableMis(), me = mi != null ? mi : UI.editMi != null && em.includes(UI.editMi) ? UI.editMi : em.length ? em[0] : -1;
+  const ids = UI.fichaAll ? PLAYERS.map(p => p.id).filter(id => (C.log || {})[id]) : (me >= 0 ? S.managers[me].roster.slice() : []);
+  const rows = ids.map(P).filter(Boolean).sort((a, b) => b.o - a.o).map(p => {
+    const l = (C.log || {})[p.id] || [], T = l.reduce((t, x) => ({ j: t.j + x.j, g: t.g + x.g, a: t.a + x.a, ch: t.ch + (x.ch ? 1 : 0) }), { j: 0, g: 0, a: 0, ch: 0 });
+    const open = UI.ficha === p.id;
+    return `<div class="ficha ${open ? "on" : ""}"><button class="trow fbtn" data-a="ficha" data-id="${p.id}">${posb(p.p, p.p2)} <span style="flex:1;text-align:left">${esc(p.n)} <span class="muted">${esc(p.t)} · pot ${p.pot || p.o}</span></span><span class="muted num" style="font-size:12.5px">${T.j} J · ${T.g} G · ${T.a} A${T.ch ? ` · ${T.ch}🏆` : ""}</span><b class="num">${O(p)}</b></button>
+      ${open ? (l.length ? `<table class="ftab"><thead><tr><th>Temp.</th><th>Comp.</th><th>Time</th><th>OVR</th><th>J</th><th>G</th><th>A</th><th>Nota</th></tr></thead><tbody>${l.map(x => `<tr><td class="num">${x.y}</td><td>${x.c}${x.ch ? " 🏆" : ""}</td><td>${esc(x.t)}</td><td class="num">${x.o}</td><td class="num">${x.j}</td><td class="num">${x.g}</td><td class="num">${x.a}</td><td class="num">${x.n != null ? x.n.toFixed(1) : "–"}</td></tr>`).join("")}</tbody></table>` : `<p class="muted" style="margin:6px 0 0;font-size:13px">Ainda sem jogos na carreira. A ficha enche no fim de cada temporada.</p>`) : ""}</div>`;
+  }).join("");
+  return `<div class="card" style="display:grid;gap:8px"><div class="row" style="justify-content:space-between"><h3 style="margin:0;font-size:20px">Ficha de carreira</h3><button class="btn sm ghost" data-a="fichaall">${UI.fichaAll ? "Só o meu elenco" : "Todos com histórico"}</button></div><p class="muted" style="margin:0;font-size:13px">Toque num jogador para ver jogos, gols, assistências e nota de cada temporada.</p><div class="tlist">${rows || '<p class="muted">Ninguém por aqui ainda.</p>'}</div></div>`;
+}
 function careerWindow(me) {
   const C = S.career, m = me != null ? S.managers[me] : null;
   const evo = (C.lastEvo || []).map(([id, a, b]) => `<span class="pill ${b > a ? "you" : ""}">${esc(shortName(P(id).n))} ${a}→<b>${b}</b></span>`).join("");
@@ -777,7 +808,9 @@ function careerWindow(me) {
   const [mn, mx] = sqLimits(S);
   return `<div class="sec-title"><h2>Temporada ${C.year}</h2><span class="phase">janela de transferências</span></div>
   <div class="card" style="display:grid;gap:10px">
+    ${lastGoalsView()}
     ${evo ? `<div><div class="muted" style="font-size:12px;margin-bottom:4px">QUEM EVOLUIU NA TEMPORADA PASSADA</div><div class="row" style="gap:6px">${evo}</div></div>` : ""}
+    ${m && S.career.log ? `<details><summary class="muted" style="cursor:pointer;font-size:13px">Ver ficha de carreira do elenco</summary>${fichaView(me)}</details>` : ""}
     ${S.trade.lastErr && m && S.trade.lastErr.mi === me && Date.now() - S.trade.lastErr.at < 8000 ? `<p class="err" style="margin:0">${esc(S.trade.lastErr.err)}</p>` : ""}
     ${m ? `<div class="muted" style="font-size:13px">Saldo do ${esc(m.team)}: <b style="color:var(--gold)">${m.budget} K$</b> · elenco ${m.roster.length} (entre ${mn} e ${mx}). Contratar custa o valor do jogador; dispensar devolve metade.</div>
     <div class="grid2"><div><div class="muted" style="font-size:12px;margin-bottom:6px">SEU ELENCO (dispensar)</div><div class="tlist">${m.roster.map(P).sort((a, b) => POS_ORDER[a.p] - POS_ORDER[b.p] || b.o - a.o).map(p => `<div class="trow">${posb(p.p, p.p2)} <span style="flex:1">${esc(p.n)} <span class="muted">pot ${p.pot || p.o}</span></span><b class="num">${O(p)}</b><button class="btn sm ghost" data-a="farel" data-id="${p.id}" data-mi="${me}">Dispensar +${Math.floor(p.v / 2)}</button></div>`).join("")}</div></div>
@@ -899,14 +932,14 @@ function bidControls(bi, lot, pl) {
   if (slotsLeft(S, m) <= 0) why = "Elenco completo.";
   else if (!can) why = "Sua última vaga tem que ser goleiro.";
   else if (mx <= lot.bid) why = `Seu lance máximo é ${mx}.`;
-  const dis = leading || !!why || S.auction.paused;
+  const dis = leading || passed || !!why || S.auction.paused;
   const steps = [1, 2, 5, 10].filter(s => lot.bid + s <= mx);
   return `<div style="display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px">
     <div class="row" style="justify-content:space-between"><span>${mgrName(bi)} <span class="muted">· saldo ${m.budget} · máx ${Math.max(0, mx)} · ${m.roster.length}/${S.settings.squad}</span></span>${leading ? '<span class="pill you">na frente</span>' : passed ? '<span class="pill">passou</span>' : ""}</div>
     <div class="bidbtns">${steps.map(s => `<button class="btn ${s === 1 ? "gold" : ""}" data-a="bid" data-mi="${bi}" data-amt="${lot.bid + s}" ${dis ? "disabled" : ""}>+${s} <span class="num">(${lot.bid + s})</span></button>`).join("")}
       ${!dis && mx > lot.bid + 10 ? `<button class="btn ghost" data-a="bid" data-mi="${bi}" data-amt="${mx}">Tudo (${mx})</button>` : ""}
       <button class="btn ghost" data-a="pass" data-mi="${bi}" ${leading || passed || why ? "disabled" : ""}>Passar</button></div>
-    ${why ? `<div class="muted" style="font-size:13px">${why}</div>` : ""}
+    ${why ? `<div class="muted" style="font-size:13px">${why}</div>` : passed && !leading ? `<div class="muted" style="font-size:13px">Você passou: está fora deste jogador.</div>` : ""}
   </div>`;
 }
 function mgrBox(m, i) {
@@ -927,7 +960,7 @@ function viewSeason() {
   const champ = se.champion != null ? S.managers[se.champion] : null;
   const stageName = { league: se.fmt === "cup" ? "Fase de grupos" : "Fase de liga", playin: "Play-in", quarters: "Quartas de final", semis: "Semifinais", final: "Final", done: "Encerrado" }[se.stage];
   const next = roundFixtures(S).filter(f => !f.res);
-  const tabs = [["time", "Meu time"], ["tabela", "Classificação"], ["jogos", "Jogos"], ["elencos", "Elencos"], ["artilharia", "Estatísticas"]];
+  const tabs = [["time", "Meu time"], ["tabela", "Classificação"], ["jogos", "Jogos"], ["elencos", "Elencos"], ["artilharia", "Estatísticas"]].concat(S.settings.career ? [["carreira", "Carreira"]] : []);
   return `${gameOver(S) ? voteCard() + hallView() : ""}${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(champ.crest, 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
   <div class="sec-title"><h2>${se.fmt === "cup" ? "Kings Cup" : "Split"}</h2>${S.career ? `<span class="pill you">Carreira · temporada ${S.career.year}</span>` : ""}<span class="phase">${stageName}</span>${se.koInfo ? `<span class="muted" style="font-size:13px">${esc(se.koInfo)}</span>` : ""}</div>
   ${se.fmt === "cup" ? `<div class="row" style="margin-bottom:10px;gap:8px"><span class="pill">Desafios: Grupo A <b class="num">${se.desafio[0]}</b> x <b class="num">${se.desafio[1]}</b> Grupo B</span>${Object.keys(se.dwin).length ? `<span class="muted" style="font-size:13px">Carta extra no mata-mata: ${Object.keys(se.dwin).map(i => esc(S.managers[+i].team)).join(", ")}</span>` : ""}</div>` : ""}
@@ -938,7 +971,7 @@ function viewSeason() {
     <p class="muted" style="margin:0;font-size:13px">Todos os jogos da rodada rolam ao mesmo tempo. Cada técnico ajusta as táticas e toca em <b>Pronto!</b>; quando os dois lados estão prontos, o jogo começa na hora. Se der 1 minuto, o jogo arruma o que faltar e começa sozinho. Jogos só de bots já começam direto.</p>
   </div>` : ""}
   <div class="tabs">${tabs.map(([k, l]) => `<button class="${UI.tab === k ? "on" : ""}" data-a="tab" data-tab="${k}">${l}</button>`).join("")}</div>
-  ${UI.tab === "time" ? teamView() : UI.tab === "tabela" ? (se.fmt === "cup" ? `<div class="grid2">${[0, 1].map(g => `<div><h3 style="font-size:20px;margin-bottom:6px">Grupo ${"AB"[g]}</h3>${tableView(standings(S, g), g)}</div>`).join("")}</div>` : tableView(tb)) + bracketView() : UI.tab === "jogos" ? fixturesView() : UI.tab === "elencos" ? rostersView() : statsView()}`;
+  ${UI.tab === "time" ? teamView() : UI.tab === "tabela" ? (se.fmt === "cup" ? `<div class="grid2">${[0, 1].map(g => `<div><h3 style="font-size:20px;margin-bottom:6px">Grupo ${"AB"[g]}</h3>${tableView(standings(S, g), g)}</div>`).join("")}</div>` : tableView(tb)) + bracketView() : UI.tab === "jogos" ? fixturesView() : UI.tab === "elencos" ? rostersView() : UI.tab === "carreira" ? goalsView() + fichaView() : statsView()}`;
 }
 function hallView() {
   const H = S.hall; if (!H || (!H.titles.length && !Object.keys(H.h2h).length)) return "";
@@ -1154,7 +1187,7 @@ function seasonStats() {
 function statsView() {
   const st = seasonStats();
   if (!st.P.length) return `<p class="muted">As estatísticas aparecem depois dos primeiros jogos.</p>`;
-  const who = x => { const p = P(x.id), ow = ownerOf(S, x.id); return `${posb(p.p, p.p2)} <b>${esc(p.n)}</b> <span class="muted" style="font-size:12px">${ow >= 0 ? esc(S.managers[ow].team) : ""}</span>`; };
+  const who = x => { const p = P(x.id), ow = ownerOf(S, x.id); return `<span class="rnl">${posb(p.p, p.p2)} <b>${esc(p.n)}</b></span><span class="rnt muted">${ow >= 0 ? esc(S.managers[ow].team) : ""}</span>`; };
   const box = (title, list, val, unit) => `<div class="card rank"><h4>${title}</h4>${list.length ? list.slice(0, 6).map((x, k) => `<div class="rrow"><span class="num rk">${k + 1}</span><span class="rn">${who(x)}</span><b class="num">${val(x)}</b>${unit ? `<small class="muted">${unit}</small>` : ""}</div>`).join("") : '<p class="muted">—</p>'}</div>`;
   const tbox = (title, list, val, unit) => `<div class="card rank"><h4>${title}</h4>${list.slice(0, 6).map((x, k) => `<div class="rrow"><span class="num rk">${k + 1}</span><span class="rn">${mgrName(x.mi)}</span><b class="num">${val(x)}</b>${unit ? `<small class="muted">${unit}</small>` : ""}</div>`).join("")}</div>`;
   const by = (f, filt) => st.P.filter(filt || (x => f(x) > 0)).sort((a, b) => f(b) - f(a) || P(b.id).o - P(a.id).o);
@@ -1322,6 +1355,8 @@ document.addEventListener("click", e => {
   if (a === "lu") return luTap(+b.dataset.mi, b.dataset.k);
   if (a === "chattog") { UI.chatOpen = !UI.chatOpen; renderChat(); if (UI.chatOpen) setTimeout(() => { const i = $("#chat-in"); if (i) i.focus(); }, 50); return; }
   if (a === "chatq") return sendChat(b.dataset.q);
+  if (a === "ficha") { UI.ficha = UI.ficha === +b.dataset.id ? null : +b.dataset.id; return render(true); }
+  if (a === "fichaall") { UI.fichaAll = !UI.fichaAll; return render(true); }
   if (a === "fasign" || a === "farel") return act({ t: a, id: +b.dataset.id, mi: +b.dataset.mi });
   if (a === "nextseason") return act({ t: "nextseason" });
   if (a === "replay") { if (LV.lastGoal) { LV.replay = { frames: LV.lastGoal.frames, i: 0 }; } return; }

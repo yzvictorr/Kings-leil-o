@@ -54,11 +54,10 @@ def career(h, P):
     return perf, den, tot
 
 out = []
-for (team, name, pos, med, fis, due, chu, dfe, pas, hab, mvp, g, a, j, gc) in cur:
-    P = POS[pos]; h = hist.get(norm(name)); o_old = old.get(norm(name)); g = g or 0; a = a or 0; j = j or 0
+def rate(team, name, P, med, fis, due, chu, dfe, pas, hab, g, a, j, h, fz, xtags=()):
+    o_old = old.get(norm(name)); g = g or 0; a = a or 0; j = j or 0
     inj = False  # lesões agora acontecem durante os jogos
     perf, games, tot = career(h, P)
-    fz = fantasy_for(TEAM[team], name, g, j)
     fan = None
     if fz:
         fv = (fz[4] + fz[5]) / 2000
@@ -101,11 +100,41 @@ for (team, name, pos, med, fis, due, chu, dfe, pas, hab, mvp, g, a, j, gc) in cu
     comps = [NAMES[s] for s in ["49", "64", "28", "37"] if h and s in h[7]]
     if comps and not any("Nations" in t or "Mundial" in t for t in tags): tags.append(comps[0])
     if tot.get("mvp", 0) >= 5: tags.append(f"{tot['mvp']} MVPs na carreira")
+    tags = list(xtags) + [t for t in tags if t not in xtags]
     v = max(1, round(1.25 * math.exp((o - 64) * 0.13)))
-    out.append(dict(n=name, t=TEAM[team], p=P, p2=p2, o=o, at=int(clamp(at, 30, 95)), df=int(clamp(df, 30, 95)), v=v,
+    out.append(dict(n=name, t=team, p=P, p2=p2, o=o, at=int(clamp(at, 30, 95)), df=int(clamp(df, 30, 95)), v=v,
                     pot=pot, pm=tot.get("pg", j), g=tot.get("g", g) if P != "GOL" else tot.get("g", 0), a=tot.get("a", a), tags=tags[:4]))
+for (team, name, pos, med, fis, due, chu, dfe, pas, hab, mvp, g, a, j, gc) in cur:
+    rate(TEAM[team], name, POS[pos], med, fis, due, chu, dfe, pas, hab, g, a, j, hist.get(norm(name)), fantasy_for(TEAM[team], name, g or 0, j or 0))
+
+# ---- todos que já jogaram a Kings League Brasil (data/all_klb.json, site oficial) ----
+# entra só quem teve rodagem de verdade: 6+ jogos na KLB, ou 4+ jogos com 4+ participações em gol
+ROLE = {"goalkeeper": "GOL", "defender": "DEF", "midfielder": "MEI", "forward": "ATA"}
+KLB = ["33", "43", "61", "69"]
+have = {norm(x['n']) for x in out}
+for pid, name, role, seas, meta, st, bd in json.load(open('data/all_klb.json', encoding='utf-8')):
+    if norm(name) in have or role not in ROLE: continue
+    gk = sum(st.get(s, [0])[0] for s in KLB); ga = sum(st[s][1] + st[s][2] for s in KLB if s in st)
+    if not (gk >= 6 or (gk >= 4 and ga >= 4)): continue
+    last = max(seas, key=int); team = {"Podpah Funkbol Clube": "Podpah Funkbol"}.get(seas[last], seas[last])
+    I = lambda k: int(meta[k]) if meta.get(k) else None
+    med = I('average'); chu, hab, fis, dfe, due, pas = I('shooting'), I('skills'), I('physical'), I('defence'), I('duels'), I('passing')
+    if med and not chu: med = None if ROLE[role] != "GOL" else med
+    xt = [] if (last == "69" or meta.get('injury') == "true") else ["Ex-Kings"]
+    g = sum(st[s][1] for s in st); a = sum(st[s][2] for s in st)
+    rate(team, name, ROLE[role], med, fis, due, chu, dfe, pas, hab, g, a, gk, [name, team, '', 0, med, '', None, st], None, xt)
+
+# ids estáveis: quem já existia mantém o id (salas e carreiras salvas continuam valendo)
+prev = {}
+try: prev = {norm(p['n']): p['id'] for p in json.load(open('players.json', encoding='utf-8'))}
+except Exception: pass
 out.sort(key=lambda x: (-x['o'], x['n']))
-out = [dict(id=i + 1, **x) for i, x in enumerate(out)]
+nid = max(prev.values(), default=0)
+for x in out:
+    k = norm(x['n'])
+    if k in prev: x['id'] = prev[k]
+    else: nid += 1; x['id'] = nid
+out = [dict(id=x.pop('id'), **x) for x in out]
 json.dump(out, open('players.json', 'w', encoding='utf-8'), ensure_ascii=False)
 if __name__ == '__main__':
     for x in out[:12]: print(x['o'], 'pot', x['pot'], x['p'], x['n'], x['t'])

@@ -13,3 +13,10 @@ for (let y=1;y<=3;y++){
   const fa = E.freeAgents(S)[0]; E.applyAction(S,{t:'fasign',id:fa},0,false,now); E.applyAction(S,{t:'farel',id:S.managers[0].roster[0]},0,false,now);
   E.applyAction(S,{t:'tclose'},0,true,now);
 }
+console.log('metas', JSON.stringify(S.career.lastGoals), '\nficha exemplo', JSON.stringify(Object.entries(S.career.log).find(([id,l])=>l.length>=3)));
+// passou = fora do lote
+const S2=E.newGame('PASS','h1','V','F','online'); E.applyAction(S2,{t:'join',pid:'p2',name:'A',team:'B'},-1,true,now);
+E.applyAction(S2,{t:'settings',v:{total:4,squad:8}},0,true,now); E.applyAction(S2,{t:'start'},0,true,now);
+let k=0; while(!(S2.auction&&S2.auction.lot)&&k++<200){now+=400;E.marketTick(S2,now);}
+const ph=S2.phase, ok1=E.applyAction(S2,{t:'pass'},1,true,now), ok2=E.applyAction(S2,{t:'bid',amount:(S2.auction.lot.bid||0)+1},1,true,now);
+console.log('fase',ph,'passou',ok1,'lance depois de passar aceito?',ok2);

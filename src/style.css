@@ -346,3 +346,15 @@ input[type=color]{width:100%;height:40px;padding:2px;border-radius:10px;border:1
 .cmsg{line-height:1.3}
 .chatq{display:flex;flex-wrap:wrap;gap:4px}
 .chat input{min-width:0}
+
+.ficha{border-radius:10px}.ficha.on{background:rgba(255,255,255,.03)}
+.fbtn{width:100%;background:none;border:0;color:inherit;font:inherit;cursor:pointer}
+.ftab{width:100%;border-collapse:collapse;font-size:12.5px;margin:4px 0 8px}.ftab th{color:var(--muted);font-weight:600;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}.ftab td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.04)}
+
+/* rankings: o número nunca sai do card */
+.rrow .rn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .rnl,.rrow .rnt{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .rnt{font-size:11.5px}
+.rrow>b,.rrow>small,.rrow>span:not(.rn){flex-shrink:0}
+.rrow small{max-width:none}
+.ranks{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))}
