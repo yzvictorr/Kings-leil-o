@@ -23,6 +23,15 @@ async function onUser(u) {
   }
   render();
 }
+const PROF_MI = -9; // editor do perfil usa este "time" fictício
+function localProf() { try { return Object.assign({ name: store("kl_name") || "", team: store("kl_team") || "", crest: null, kit: null, kit2: null, titles: [], seasons: [] }, JSON.parse(store("kl_prof") || "{}")); } catch (e) { return { name: store("kl_name") || "", team: store("kl_team") || "" }; } }
+function getProf() { if (ACC.user) return ACC.prof || (ACC.prof = { name: "", team: "", titles: [], seasons: [], rooms: [] }); return UI.lprof || (UI.lprof = localProf()); }
+function putProf(patch) {
+  const P0 = getProf(); Object.assign(P0, patch);
+  if (patch.name != null) store("kl_name", P0.name); if (patch.team != null) store("kl_team", P0.team);
+  if (ACC.user) profSave(); else { try { store("kl_prof", JSON.stringify(P0)); } catch (e) { } }
+}
+function mgrOf(mi) { if (mi === PROF_MI) { const P0 = getProf(); if (!P0.crest) P0.crest = randCrest("#f5c542", P0.team || "Meu Time"); if (!P0.kit) P0.kit = randKit((P0.crest && P0.crest.c1) || "#f5c542"); return P0; } return S.managers[mi]; }
 function profSave(now) {
   if (!ACC.user || !ACC.prof) return;
   clearTimeout(ACC.saveT);
@@ -30,8 +39,8 @@ function profSave(now) {
 }
 // acompanha a sala: aplica o escudo/uniformes do perfil ao entrar e guarda o que você muda, títulos e temporadas
 function profSync() {
-  if (!ACC.user || !ACC.prof || !S || NET.mode === "local") return;
-  const mi = myMi(); if (mi < 0) return; const m = S.managers[mi], P0 = ACC.prof;
+  if (!S || NET.mode === "local") return;
+  const mi = myMi(); if (mi < 0) return; const m = S.managers[mi], P0 = getProf();
   UI.profApplied = UI.profApplied || {};
   if (!UI.profApplied[S.code]) {
     UI.profApplied[S.code] = true;
@@ -43,18 +52,68 @@ function profSync() {
   P0.rooms = P0.rooms || []; if (!P0.rooms.length || P0.rooms[0].c !== S.code) { P0.rooms = [{ c: S.code, at: Date.now(), t: m.team }].concat(P0.rooms.filter(r => r.c !== S.code)).slice(0, 5); ch = true; }
   ((S.hall && S.hall.titles) || []).forEach(t => { if (t.pid !== MYPID) return; const key = S.code + "-" + t.at; P0.titles = P0.titles || []; if (!P0.titles.some(x => x.k === key)) { P0.titles.push({ k: key, comp: t.comp, team: t.team, season: t.season || null, code: S.code, at: t.at }); ch = true; } });
   if (S.phase === "done" && S.season) { const key = S.code + "-" + (S.games || 0) + "-" + (S.career ? S.career.year : 0) + "-" + S.season.fmt; P0.seasons = P0.seasons || []; if (!P0.seasons.some(x => x.k === key)) { P0.seasons.push({ k: key, team: m.team, comp: S.season.fmt === "cup" ? "Kings Cup" : "Split", champ: S.season.champion === mi, at: Date.now() }); if (P0.seasons.length > 60) P0.seasons.shift(); ch = true; } }
-  if (ch) profSave();
+  if (ch) { if (ACC.user) profSave(); else { try { store("kl_prof", JSON.stringify(P0)); } catch (e) { } } }
 }
 function accountChip() {
-  if (!window.klAuth) return "";
-  if (!ACC.user) return S ? "" : `<button class="btn sm" data-a="login"><span class="g-ico">G</span> Entrar com Google</button>`;
-  return `<span class="chip acc">${ACC.user.photo ? `<img src="${esc(ACC.user.photo)}" alt="" referrerpolicy="no-referrer">` : ""}${esc((ACC.prof && ACC.prof.name) || ACC.user.name || "Conta")}</span>${S ? "" : `<button class="btn sm ghost" data-a="logout">Sair da conta</button>`}`;
+  const P0 = getProf(), me = S && S.managers ? S.managers[myMi()] : null;
+  const pbtn = `<button class="btn sm ghost" data-a="profile" title="Seu escudo, uniformes, nome e conta">${ACC.user && ACC.user.photo ? `<img class="avatar" src="${esc(ACC.user.photo)}" alt="" referrerpolicy="no-referrer">` : `<span class="mcrest">${crestSVG(mgrOf(PROF_MI).crest, 16)}</span>`} Perfil</button>`;
+  if (!window.klAuth || ACC.user || S) return pbtn;
+  return pbtn + `<button class="btn sm" data-a="login">Entrar</button>`;
+}
+const AUTH_ERR = { "auth/invalid-email": "E-mail inválido.", "auth/missing-password": "Digite a senha.", "auth/weak-password": "A senha precisa de pelo menos 6 caracteres.", "auth/email-already-in-use": "Já existe uma conta com esse e-mail. Use Entrar.", "auth/invalid-credential": "E-mail ou senha incorretos.", "auth/wrong-password": "E-mail ou senha incorretos.", "auth/user-not-found": "Não achei conta com esse e-mail. Use Criar conta.", "auth/too-many-requests": "Muitas tentativas. Espere um pouco e tente de novo.", "auth/popup-closed-by-user": "A janela do Google foi fechada antes de terminar.", "auth/cancelled-popup-request": "A janela do Google foi fechada antes de terminar.", "auth/unauthorized-domain": "Este endereço do site ainda não está liberado para login.", "auth/network-request-failed": "Sem conexão. Confira a internet.", "auth/operation-not-allowed": "Esse tipo de login ainda não está ativado no Firebase.", "auth/web-storage-unsupported": "Seu navegador está bloqueando o login (modo privado ou navegador de app). Tente pelo Safari/Chrome normal ou use e-mail e senha." };
+function authErr(e) { return AUTH_ERR[e && e.code] || "Não deu certo (" + ((e && e.code) || "erro") + "). Tente de novo ou use e-mail e senha."; }
+function inAppBrowser() { return /Instagram|FBAN|FBAV|WhatsApp|Line\/|Twitter|TikTok|Snapchat/i.test(navigator.userAgent || ""); }
+function loginModal() {
+  if (!UI.loginOpen || !window.klAuth || ACC.user) return "";
+  const L = UI.lg = UI.lg || { mode: "in", msg: "", busy: false };
+  const iOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || "") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return `<div class="modal-bg" data-a="loginclose"></div><div class="modal login" role="dialog" aria-modal="true" aria-label="Entrar">
+    <button class="btn sm ghost mclose" data-a="loginclose" aria-label="Fechar">✕</button>
+    <div class="login-hd">${CROWN}<div><h2>The Kings Game</h2><span class="muted">Entre para guardar seu escudo, uniformes, salas e títulos em qualquer aparelho.</span></div></div>
+    ${inAppBrowser() ? `<div class="unhbox">Você abriu pelo navegador de um app (Instagram, WhatsApp...). O Google não deixa entrar por aqui: abra o link no Safari ou no Chrome, ou use e-mail e senha.</div>` : ""}
+    <button class="btn gbtn big" data-a="logingoogle" ${L.busy ? "disabled" : ""}><span class="g-ico">G</span> Continuar com Google</button>
+    <div class="orline"><span>ou com e-mail</span></div>
+    <div class="tabs2"><button class="${L.mode === "in" ? "on" : ""}" data-a="lgmode" data-v="in">Entrar</button><button class="${L.mode === "up" ? "on" : ""}" data-a="lgmode" data-v="up">Criar conta</button></div>
+    <form id="lgform" class="lgform" autocomplete="on">
+      ${L.mode === "up" ? `<label class="f" for="lg-name">Nome de presidente<input id="lg-name" type="text" maxlength="18" autocomplete="nickname" value="${esc(getProf().name || "")}"></label>` : ""}
+      <label class="f" for="lg-email">E-mail<input id="lg-email" type="email" autocomplete="email" inputmode="email" value="${esc(L.email || "")}"></label>
+      <label class="f" for="lg-pass">Senha${L.mode === "up" ? " (mínimo 6 caracteres)" : ""}<input id="lg-pass" type="password" autocomplete="${L.mode === "up" ? "new-password" : "current-password"}"></label>
+      <button class="btn gold big" type="submit" ${L.busy ? "disabled" : ""}>${L.busy ? "Aguarde…" : L.mode === "up" ? "Criar conta" : "Entrar"}</button>
+      ${L.mode === "in" ? `<button class="btn sm ghost" type="button" data-a="lgreset">Esqueci a senha</button>` : ""}
+    </form>
+    ${L.msg ? `<p class="${L.ok ? "okmsg" : "err"}" role="status" style="margin:0">${esc(L.msg)}</p>` : ""}
+    ${iOS ? `<p class="muted" style="font-size:12px;margin:0">No iPhone: se a janela do Google não abrir ou voltar sem entrar, use e-mail e senha, que funciona em qualquer aparelho.</p>` : ""}
+    <button class="btn ghost" data-a="loginclose">Continuar sem conta</button>
+  </div>`;
+}
+async function emailSubmit() {
+  const L = UI.lg = UI.lg || { mode: "in" }; const email = ($("#lg-email") || {}).value || "", pass = ($("#lg-pass") || {}).value || "", name = (($("#lg-name") || {}).value || "").trim();
+  L.email = email.trim(); L.busy = true; L.msg = ""; L.ok = false; render(true);
+  try { if (L.mode === "up") { await window.klAuth.emailUp(L.email, pass, name); if (name) putProf({ name }); } else await window.klAuth.emailIn(L.email, pass); UI.loginOpen = false; toast("Bem-vindo, " + (name || getProf().name || "presidente") + "!"); }
+  catch (e) { L.msg = authErr(e); }
+  L.busy = false; render(true);
+}
+function viewProfile() {
+  const P0 = getProf(), mp = mgrOf(PROF_MI), me = S && S.managers ? myMi() : -1;
+  const t = (P0.titles || []), se = (P0.seasons || []);
+  const acc = !window.klAuth ? `<p class="muted" style="margin:0">Neste modo o perfil fica salvo só neste aparelho.</p>`
+    : ACC.user ? `<div class="row" style="gap:10px">${ACC.user.photo ? `<img class="avatar lg" src="${esc(ACC.user.photo)}" alt="" referrerpolicy="no-referrer">` : ""}<div style="flex:1"><b>${esc(ACC.user.name || P0.name || "Conta")}</b><div class="muted" style="font-size:13px">${esc(ACC.user.email || "")} · tudo salvo na sua conta</div></div>${S ? "" : `<button class="btn sm ghost" data-a="logout">Sair da conta</button>`}</div>`
+    : `<div class="row" style="gap:10px"><div style="flex:1"><b>Você está sem conta</b><div class="muted" style="font-size:13px">O perfil fica salvo só neste navegador. Entre para levar para qualquer aparelho.</div></div><button class="btn gold" data-a="login">Entrar ou criar conta</button></div>`;
+  return `<div class="sec-title"><h2>Meu perfil</h2><button class="btn sm ghost" data-a="profileclose">← Voltar ${S ? "para o jogo" : ""}</button></div>
+  <div class="card" style="display:grid;gap:12px">${acc}
+    <div class="grid2" style="gap:10px">
+      <label class="f" for="pf-name">Nome de presidente<input id="pf-name" type="text" maxlength="18" value="${esc(P0.name || "")}"></label>
+      <label class="f" for="pf-team">Nome do time<input id="pf-team" type="text" maxlength="24" value="${esc(P0.team || "")}"></label>
+    </div>
+    <div class="row" style="gap:8px;font-size:13px"><span class="pill ${t.length ? "you" : ""}">🏆 ${t.length} título${t.length === 1 ? "" : "s"}</span><span class="pill">${se.length} competiç${se.length === 1 ? "ão" : "ões"} jogada${se.length === 1 ? "" : "s"}</span>${t.slice(-4).reverse().map(x => `<span class="pill">${esc(x.comp)} · ${esc(x.team)}</span>`).join("")}</div>
+    ${S && me >= 0 && NET.mode !== "local" ? `<div class="row" style="gap:8px"><button class="btn sm gold" data-a="profapply">Usar este escudo e uniformes no meu time desta sala</button><span class="muted" style="font-size:12.5px">${S.phase === "lobby" ? "O nome do time também muda." : "O nome do time só muda no vestiário."}</span></div>` : ""}
+    <p class="muted" style="font-size:12.5px;margin:0">O escudo e os uniformes do perfil entram sozinhos quando você cria ou entra numa sala nova.</p>
+  </div>
+  ${crestEditor(PROF_MI)}`;
 }
 function profileCard() {
-  if (!window.klAuth) return "";
-  if (!ACC.user) return `<div class="card acccard"><div><b>Entre com o Google para guardar seu perfil</b><div class="muted" style="font-size:13px">Seu escudo, uniformes, nome do time, salas e títulos ficam salvos na sua conta, e você é o mesmo presidente no celular, no PC ou em qualquer navegador. Sem login também dá pra jogar normalmente.</div></div><button class="btn gold" data-a="login"><span class="g-ico">G</span> Entrar com Google</button></div>`;
-  const P0 = ACC.prof || {}, t = (P0.titles || []).length, se = (P0.seasons || []).length;
-  return `<div class="card acccard">${P0.crest ? crestSVG(P0.crest, 54) : ""}<div style="flex:1"><b>${esc(P0.name || ACC.user.name)}${P0.team ? ` · ${esc(P0.team)}` : ""}</b><div class="muted" style="font-size:13px">${t} título${t === 1 ? "" : "s"} · ${se} competiç${se === 1 ? "ão" : "ões"} jogada${se === 1 ? "" : "s"}${(P0.titles || []).length ? " · último: " + esc(P0.titles[P0.titles.length - 1].comp) + " com o " + esc(P0.titles[P0.titles.length - 1].team) : ""}</div><div class="muted" style="font-size:12px">Seu escudo e uniformes entram sozinhos nas salas novas. O que você mudar no vestiário fica salvo na conta.</div></div></div>`;
+  if (!window.klAuth || ACC.user) return "";
+  return `<div class="card acccard"><div style="flex:1"><b>Entre para guardar seu perfil</b><div class="muted" style="font-size:13px">Escudo, uniformes, nome do time, salas e títulos salvos na sua conta, em qualquer aparelho. Sem conta também dá pra jogar normalmente.</div></div><button class="btn gold" data-a="login">Entrar ou criar conta</button></div>`;
 }
 
 const NET = { mode: "none", code: null, db: null, rjoin: null, docRef: null, liveRef: null, unsub: [], busy: false, pending: false, lastWrite: 0, lbusy: false, lpending: false, llast: 0, seq: Date.now(), queue: [], clockOff: 0, canWriteIn: true };
@@ -794,10 +853,10 @@ function viewLobby() {
   ${crestBox}`;
 }
 
-function crestEditor() {
-  const mis = editableMis(); if (!mis.length) return "";
-  if (UI.crestMi == null || !mis.includes(UI.crestMi)) UI.crestMi = mis[0];
-  const mi = UI.crestMi, m = S.managers[mi], c = m.crest || {};
+function crestEditor(force) {
+  const mis = force != null ? [force] : editableMis(); if (!mis.length) return "";
+  if (force == null && (UI.crestMi == null || !mis.includes(UI.crestMi))) UI.crestMi = mis[0];
+  const mi = force != null ? force : UI.crestMi, m = mgrOf(mi), c = m.crest || {};
   const sel = (id, list, val, labels) => `<select id="${id}" data-mi="${mi}">${list.map((k, i) => `<option value="${k}" ${k === val ? "selected" : ""}>${labels ? labels[i] : k}</option>`).join("")}</select>`;
   return `<div class="sec-title"><h2>Escudo</h2><span class="muted">escolha um pronto ou monte o seu</span></div>
   <div class="card crested">
@@ -843,8 +902,8 @@ function kitEditor(mi, m) {
       <div class="row" style="gap:6px;align-items:flex-end;grid-column:span 2"><button class="btn sm" data-a="kitfromcrest" data-mi="${mi}">Usar cores do escudo</button>${which === 2 ? `<button class="btn sm ghost" data-a="kitinvert" data-mi="${mi}">Inverter o principal</button>` : ""}</div>
     </div></div></div>`;
 }
-function setKit(mi, patch) { const m = S.managers[mi], key = UI.kitTab === 2 ? "kit2" : "kit"; const k = Object.assign({}, m[key] || (key === "kit2" ? awayKit(m.kit) : {}), patch); if (NET.mode === "client") { m[key] = k; setLocal(mi, key, k); render(true); } act({ t: "editme", [key]: k, mi }); }
-function setCrest(mi, patch) { const m = S.managers[mi]; const c = Object.assign({}, m.crest || {}, patch); if (NET.mode === "client") { m.crest = c; setLocal(mi, "crest", c); render(true); } act({ t: "editme", crest: c, mi }); }
+function setKit(mi, patch) { if (mi === PROF_MI) { const m = mgrOf(mi), key = UI.kitTab === 2 ? "kit2" : "kit"; putProf({ [key]: Object.assign({}, m[key] || (key === "kit2" ? awayKit(m.kit) : {}), patch) }); return render(true); } const m = S.managers[mi], key = UI.kitTab === 2 ? "kit2" : "kit"; const k = Object.assign({}, m[key] || (key === "kit2" ? awayKit(m.kit) : {}), patch); if (NET.mode === "client") { m[key] = k; setLocal(mi, key, k); render(true); } act({ t: "editme", [key]: k, mi }); }
+function setCrest(mi, patch) { if (mi === PROF_MI) { putProf({ crest: Object.assign({}, mgrOf(mi).crest || {}, patch) }); return render(true); } const m = S.managers[mi]; const c = Object.assign({}, m.crest || {}, patch); if (NET.mode === "client") { m.crest = c; setLocal(mi, "crest", c); render(true); } act({ t: "editme", crest: c, mi }); }
 function viewAuction() {
   const a = S.auction, mi = myMi();
   const lot = a.lot, pl = lot ? P(lot.pid) : null;
@@ -1475,7 +1534,8 @@ function render(force) {
   const ae = document.activeElement, aid = ae && ae.id, ss = ae && ae.selectionStart;
   const keepVal = ae && ae.tagName === "INPUT" && ae.type === "text" ? ae.value : null;
   let body;
-  if (!S) body = viewHome();
+  if (UI.page === "perfil") body = viewProfile();
+  else if (!S) body = viewHome();
   else if (S.phase === "lobby") body = viewLobby();
   else if (S.phase === "auction" || (S.phase === "wc" && S.auction)) body = viewAuction();
   else if (S.phase === "wc") body = viewWC();
@@ -1486,7 +1546,7 @@ function render(force) {
   else if (S.phase === "keep") body = viewKeep();
   else body = viewSeason();
   if (S && NET.mode === "client" && myMi() < 0 && S.phase !== "lobby") body = `<div class="card unhbox" style="margin-bottom:12px">Você entrou assistindo. Se você é presidente de um time desta sala e voltou por outro aparelho, entre com o mesmo nome de presidente: assim que o aparelho antigo ficar uns 30 segundos fora, você reassume o seu time sozinho.</div>` + body;
-  $("#app").innerHTML = header() + `<main class="wrap">${body}</main>`;
+  $("#app").innerHTML = header() + `<main class="wrap">${body}</main>` + loginModal();
   if (aid) { const el = document.getElementById(aid); if (el) { if (keepVal != null) el.value = keepVal; el.focus(); try { if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, ss); } catch (e) { } } }
   tickClocks(); renderChat(); try { profSync(); } catch (e) { }
 }
@@ -1519,8 +1579,15 @@ document.addEventListener("click", e => {
   const a = b.dataset.a;
   if (a === "create") return createOnline();
   if (a === "join") return joinOnline();
-  if (a === "login") { if (window.klAuth) window.klAuth.signIn().catch(e => toast(e && e.code === "auth/unauthorized-domain" ? "Este site ainda não está liberado para login." : "Não deu para entrar agora (" + ((e && e.code) || "erro") + ").")); return; }
-  if (a === "logout") { if (window.klAuth) window.klAuth.signOut(); return; }
+  if (a === "login") { UI.loginOpen = true; UI.lg = { mode: "in", msg: "" }; return render(true); }
+  if (a === "loginclose") { UI.loginOpen = false; return render(true); }
+  if (a === "logingoogle") { const L = UI.lg = UI.lg || {}; L.msg = ""; window.klAuth.signIn().then(() => { UI.loginOpen = false; render(true); }).catch(e => { L.msg = authErr(e); L.ok = false; render(true); }); return; }
+  if (a === "lgmode") { UI.lg = Object.assign(UI.lg || {}, { mode: b.dataset.v, msg: "" }); return render(true); }
+  if (a === "lgreset") { const L = UI.lg = UI.lg || {}; const em = (($("#lg-email") || {}).value || "").trim(); L.email = em; if (!em) { L.msg = "Digite seu e-mail acima e toque de novo em Esqueci a senha."; L.ok = false; return render(true); } window.klAuth.reset(em).then(() => { L.msg = "Mandamos um link para trocar a senha no seu e-mail."; L.ok = true; render(true); }).catch(e => { L.msg = authErr(e); L.ok = false; render(true); }); return; }
+  if (a === "profile") { UI.page = "perfil"; UI.kitTab = 1; window.scrollTo(0, 0); return render(true); }
+  if (a === "profileclose") { UI.page = null; return render(true); }
+  if (a === "profapply") { const mi = myMi(), P0 = getProf(); if (mi < 0) return; const patch = { t: "editme", mi, crest: mgrOf(PROF_MI).crest, kit: mgrOf(PROF_MI).kit }; if (P0.kit2) patch.kit2 = P0.kit2; if (S.phase === "lobby" && P0.team) patch.team = P0.team; UI.profHold = 0; act(patch); toast("Pronto: seu time desta sala está com o visual do perfil."); return; }
+  if (a === "logout") { if (window.klAuth) window.klAuth.signOut(); UI.lprof = null; return; }
   if (a === "rejoin") { const c = b.dataset.code; return joinOnline(c, ($("#j-name") && $("#j-name").value) || store("kl_name") || "Presidente", ($("#j-team") && $("#j-team").value) || store("kl_team") || "Meu Time FC"); }
   if (a === "resumelocal") { const sv = savedLocal(); if (sv) loadLocal(sv); return; }
   if (a === "dellocal") { try { localStorage.removeItem("kl_save"); localStorage.removeItem("kl_save_at"); } catch (e) { } return render(); }
@@ -1576,10 +1643,10 @@ document.addEventListener("click", e => {
   if (a === "fasign" || a === "farel") return act({ t: a, id: +b.dataset.id, mi: +b.dataset.mi });
   if (a === "nextseason") return act({ t: "nextseason" });
   if (a === "replay") { if (LV.lastGoal) { LV.replay = { frames: LV.lastGoal.frames, i: 0 }; } return; }
-  if (a === "kitc3") { const m = S.managers[+b.dataset.mi], k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; return setKit(+b.dataset.mi, { c3: k.c3 ? null : (($("#k-c3") && $("#k-c3").value) || "#ffffff") }); }
+  if (a === "kitc3") { const m = mgrOf(+b.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; return setKit(+b.dataset.mi, { c3: k.c3 ? null : (($("#k-c3") && $("#k-c3").value) || "#ffffff") }); }
   if (a === "kittab") { UI.kitTab = +b.dataset.v; return render(true); }
-  if (a === "kitinvert") { const m = S.managers[+b.dataset.mi]; const k = m.kit || {}; return setKit(+b.dataset.mi, { c1: k.c2 || "#111111", c2: k.c1 || "#f5c542", pat: k.pat || "liso", num: k.c1 || "#ffffff" }); }
-  if (a === "kitfromcrest") { const m = S.managers[+b.dataset.mi]; const c = m.crest || {}; return setKit(+b.dataset.mi, { c1: c.c1 || "#f5c542", c2: c.c2 || "#111111" }); }
+  if (a === "kitinvert") { const m = mgrOf(+b.dataset.mi); const k = m.kit || {}; return setKit(+b.dataset.mi, { c1: k.c2 || "#111111", c2: k.c1 || "#f5c542", pat: k.pat || "liso", num: k.c1 || "#ffffff" }); }
+  if (a === "kitfromcrest") { const m = mgrOf(+b.dataset.mi); const c = m.crest || {}; return setKit(+b.dataset.mi, { c1: c.c1 || "#f5c542", c2: c.c2 || "#111111" }); }
   if (a === "crestpre") { const p = CREST_PRESETS[+b.dataset.k]; return setCrest(+b.dataset.mi, { shape: p.shape, c1: p.c1, c2: p.c2, pat: p.pat, icon: p.icon }); }
   if (a === "ord") { const mi = +b.dataset.mi, k = +b.dataset.k, d = +b.dataset.d; return tacChange(mi, tac => { const o = tac.order.filter(id => tac.slots.includes(id)); const j = k + d; if (j < 0 || j >= o.length) return; [o[k], o[j]] = [o[j], o[k]]; tac.order = o; }); }
   if (a === "watch") return openReplay(b.dataset.id);
@@ -1598,7 +1665,9 @@ document.addEventListener("click", e => {
   if (a === "lpause" || a === "lff") return act({ t: a });
 });
 function liveMi(ti) { return LIVE ? LIVE.t[ti].mi : -1; }
+document.addEventListener("submit", e => { if (e.target && e.target.id === "lgform") { e.preventDefault(); emailSubmit(); } });
 document.addEventListener("input", e => {
+  if (e.target && (e.target.id === "pf-name" || e.target.id === "pf-team")) { const k = e.target.id === "pf-name" ? "name" : "team", v = e.target.value.slice(0, k === "name" ? 18 : 24); UI._pft = UI._pft || {}; clearTimeout(UI._pft[k]); UI._pft[k] = setTimeout(() => putProf({ [k]: v.trim() }), 400); }
   const el = e.target;
   if (el.classList && el.classList.contains("wcamt")) { const d = UI.wcd[+el.dataset.mi] = UI.wcd[+el.dataset.mi] || {}; d[+el.dataset.id] = Math.max(1, Math.floor(+el.value || 1)); clearTimeout(UI._wct); UI._wct = setTimeout(render, 600); }
   if (el.id === "mq") { UI.mq = el.value; clearTimeout(UI._mqt); UI._mqt = setTimeout(render, 250); }

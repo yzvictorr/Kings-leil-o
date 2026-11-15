@@ -2,7 +2,7 @@
 // e recebe aqui um objeto com doc()/collection() que lê e grava no Firestore.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 let db = null;
 try {
@@ -16,10 +16,15 @@ try {
       const A = window.klAuth = { user: null, ready: false, cbs: [], err: null,
         onChange(cb) { this.cbs.push(cb); if (this.ready) cb(this.user); },
         async signIn() {
+          // popup direto do clique (funciona no iPhone); redirecionamento só se o navegador bloquear o popup
           const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" });
           try { await signInWithPopup(auth, p); }
-          catch (e) { if (e && /popup-blocked|operation-not-supported|cancelled-popup/.test(e.code || "")) await signInWithRedirect(auth, p); else throw e; }
+          catch (e) { if (e && /popup-blocked|operation-not-supported/.test(e.code || "")) await signInWithRedirect(auth, p); else throw e; }
         },
+        // e-mail e senha: alternativa para quem não consegue entrar com Google (iPhone, navegador do Instagram/WhatsApp...)
+        emailIn(email, pass) { return signInWithEmailAndPassword(auth, email, pass); },
+        async emailUp(email, pass, name) { const c = await createUserWithEmailAndPassword(auth, email, pass); if (name) { try { await updateProfile(c.user, { displayName: name }); A.user && (A.user.name = name); } catch (e) { } } return c; },
+        reset(email) { return sendPasswordResetEmail(auth, email); },
         signOut() { return signOut(auth); } };
       onAuthStateChanged(auth, u => { A.user = u ? { uid: u.uid, name: u.displayName || "", photo: u.photoURL || "", email: u.email || "" } : null; A.ready = true; A.cbs.forEach(f => { try { f(A.user); } catch (e) { } }); });
       getRedirectResult(auth).catch(e => { A.err = e && e.code; });
