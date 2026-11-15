@@ -31,7 +31,7 @@ function putProf(patch) {
   if (patch.name != null) store("kl_name", P0.name); if (patch.team != null) store("kl_team", P0.team);
   if (ACC.user) profSave(); else { try { store("kl_prof", JSON.stringify(P0)); } catch (e) { } }
 }
-function mgrOf(mi) { if (mi === PROF_MI) { const P0 = getProf(); if (!P0.crest) P0.crest = randCrest("#f5c542", P0.team || "Meu Time"); if (!P0.kit) P0.kit = randKit((P0.crest && P0.crest.c1) || "#f5c542"); return P0; } return S.managers[mi]; }
+function mgrOf(mi) { if (mi === PROF_MI) { const P0 = getProf(); if (!P0.crest || !P0.kit) { const p = {}; if (!P0.crest) p.crest = randCrest("#f5c542", P0.team || "Meu Time"); if (!P0.kit) p.kit = randKit((p.crest || P0.crest).c1 || "#f5c542"); putProf(p); } return P0; } return S.managers[mi]; }
 function profSave(now) {
   if (!ACC.user || !ACC.prof) return;
   clearTimeout(ACC.saveT);
@@ -39,7 +39,13 @@ function profSave(now) {
 }
 // acompanha a sala: aplica o escudo/uniformes do perfil ao entrar e guarda o que você muda, títulos e temporadas
 function profSync() {
-  if (!S || NET.mode === "local") return;
+  if (!S) return;
+  if (NET.mode === "local") { // offline: o jogador 1 é você; o que mudar nele vai pro perfil
+    const m = S.managers && S.managers[0], P0 = getProf(); if (!m || m.cpu) return; let ch = false;
+    ["team", "crest", "kit", "kit2"].forEach(k => { if (m[k] == null) return; const v = JSON.parse(JSON.stringify(m[k])); if (JSON.stringify(P0[k]) !== JSON.stringify(v)) { P0[k] = v; ch = true; } });
+    if (ch) { if (P0.team) store("kl_team", P0.team); if (ACC.user) profSave(); else { try { store("kl_prof", JSON.stringify(P0)); } catch (e) { } } }
+    return;
+  }
   const mi = myMi(); if (mi < 0) return; const m = S.managers[mi], P0 = getProf();
   UI.profApplied = UI.profApplied || {};
   if (!UI.profApplied[S.code]) {
@@ -361,7 +367,13 @@ function startLocal() {
   const names = [...document.querySelectorAll(".lp-name")].map(i => i.value.trim()).filter(Boolean);
   if (names.length < 1) { UI.homeErr = "Coloque pelo menos um jogador."; return render(); }
   S = newGame("LOCL", MYPID, null, null, "local");
-  names.forEach((n, i) => S.managers.push(mkMgr("local" + i, n, (n + " FC").slice(0, 24), i, false)));
+  const P0 = getProf(), pv = mgrOf(PROF_MI);
+  names.forEach((n, i) => S.managers.push(mkMgr("local" + i, n, (i === 0 && P0.team ? P0.team : n + " FC").slice(0, 24), i, false)));
+  const m0 = S.managers[0]; // o jogador 1 usa o seu perfil
+  if (pv.crest) { const c = validCrest(pv.crest); if (c) m0.crest = c; }
+  if (pv.kit) { const k = validKit(pv.kit); if (k) m0.kit = k; }
+  if (pv.kit2) { const k = validKit(pv.kit2); if (k) m0.kit2 = k; }
+  if (names[0] && names[0] !== P0.name) putProf({ name: names[0] });
   S.settings.total = Math.max(names.length, 4);
   NET.mode = "local"; NET.code = "LOCL";
   startLoop(); commit();
@@ -600,24 +612,40 @@ function tickClocks() {
 function hid() { return !!S && (S.settings.hide === "sempre" || (S.settings.hide === "leilao" && ["auction", "wc", "lottery", "draft"].includes(S.phase))); }
 function O(p) { return hid() ? "?" : p.o; }
 let CREST_N = 0;
-function crestSVG(c, size) {
-  c = c || {}; const id = "cr" + (CREST_N++);
-  const shapes = {
-    escudo: `<path d="M50 4 L94 16 V58 C94 88 72 106 50 116 C28 106 6 88 6 58 V16 Z"/>`,
-    redondo: `<circle cx="50" cy="60" r="46"/>`,
-    hexagono: `<polygon points="50,6 94,32 94,88 50,114 6,88 6,32"/>`,
-    diamante: `<polygon points="50,4 96,60 50,116 4,60"/>`,
-    flamula: `<path d="M8 8 H92 V70 L50 116 L8 70 Z"/>`,
-    brasao: `<path d="M10 6 H36 L50 14 L64 6 H90 V60 C90 90 70 106 50 116 C30 106 10 90 10 60 Z"/>`,
-    oval: `<ellipse cx="50" cy="60" rx="40" ry="54"/>`,
-    quadrado: `<rect x="8" y="10" width="84" height="100" rx="14"/>`,
-    classico: `<path d="M8 8 Q50 18 92 8 V62 C92 90 70 106 50 116 C30 106 8 90 8 62 Z"/>`,
-    angular: `<polygon points="10,6 90,6 96,40 82,92 50,116 18,92 4,40"/>`,
-    coroado: `<path d="M8 22 L22 8 L36 20 L50 4 L64 20 L78 8 L92 22 V62 C92 90 70 106 50 116 C30 106 8 90 8 62 Z"/>`,
-    losango: `<path d="M50 6 C60 6 92 48 92 60 C92 72 60 114 50 114 C40 114 8 72 8 60 C8 48 40 6 50 6 Z"/>`
-  };
-  const sh = shapes[c.shape] || shapes.escudo, c1 = c.c1 || "#f5c542", c2 = c.c2 || "#111";
-  const pats = {
+function starPts(cx, cy, R, r, n) { const a = []; for (let i = 0; i < n * 2; i++) { const g = -Math.PI / 2 + i * Math.PI / n, q = i % 2 ? r : R; a.push((cx + Math.cos(g) * q).toFixed(1) + "," + (cy + Math.sin(g) * q).toFixed(1)); } return a.join(" "); }
+const FONT_FAM = { display: "Big Shoulders Display, Arial Narrow, sans-serif", serif: "Georgia, 'Times New Roman', serif", sans: "Arial Black, Arial, sans-serif", script: "'Brush Script MT', 'Segoe Script', cursive" };
+const CREST_SHAPE_D = {
+  escudo: `<path d="M50 4 L94 16 V58 C94 88 72 106 50 116 C28 106 6 88 6 58 V16 Z"/>`,
+  redondo: `<circle cx="50" cy="60" r="46"/>`,
+  hexagono: `<polygon points="50,6 94,32 94,88 50,114 6,88 6,32"/>`,
+  diamante: `<polygon points="50,4 96,60 50,116 4,60"/>`,
+  flamula: `<path d="M8 8 H92 V70 L50 116 L8 70 Z"/>`,
+  brasao: `<path d="M10 6 H36 L50 14 L64 6 H90 V60 C90 90 70 106 50 116 C30 106 10 90 10 60 Z"/>`,
+  oval: `<ellipse cx="50" cy="60" rx="40" ry="54"/>`,
+  quadrado: `<rect x="8" y="10" width="84" height="100" rx="14"/>`,
+  classico: `<path d="M8 8 Q50 18 92 8 V62 C92 90 70 106 50 116 C30 106 8 90 8 62 Z"/>`,
+  angular: `<polygon points="10,6 90,6 96,40 82,92 50,116 18,92 4,40"/>`,
+  coroado: `<path d="M8 22 L22 8 L36 20 L50 4 L64 20 L78 8 L92 22 V62 C92 90 70 106 50 116 C30 106 8 90 8 62 Z"/>`,
+  losango: `<path d="M50 6 C60 6 92 48 92 60 C92 72 60 114 50 114 C40 114 8 72 8 60 C8 48 40 6 50 6 Z"/>`,
+  pentagono: `<polygon points="50,4 96,40 80,114 20,114 4,40"/>`,
+  octogono: `<polygon points="32,6 68,6 94,32 94,88 68,114 32,114 6,88 6,32"/>`,
+  gota: `<path d="M50 4 C70 30 92 52 92 76 C92 100 72 116 50 116 C28 116 8 100 8 76 C8 52 30 30 50 4 Z"/>`,
+  arco: `<path d="M8 50 C8 24 28 6 50 6 C72 6 92 24 92 50 V112 H8 Z"/>`,
+  seta: `<path d="M6 6 H94 V44 L50 116 L6 44 Z"/>`,
+  medieval: `<path d="M50 4 C64 14 80 16 94 14 V60 C94 88 72 106 50 116 C28 106 6 88 6 60 V14 C20 16 36 14 50 4 Z"/>`,
+  estrela: `<polygon points="${starPts(50, 64, 58, 28, 5)}"/>`,
+  triangulo: `<polygon points="4,8 96,8 50,116"/>`,
+  coracao: `<path d="M50 114 C20 92 4 70 4 44 C4 22 20 8 36 8 C44 8 48 12 50 18 C52 12 56 8 64 8 C80 8 96 22 96 44 C96 70 80 92 50 114 Z"/>`,
+  retro: `<polygon points="18,6 82,6 94,18 94,80 50,116 6,80 6,18"/>`,
+  ingles: `<path d="M6 6 H94 V64 C94 92 74 112 50 112 C26 112 6 92 6 64 Z"/>`,
+  bandeira: `<path d="M6 6 H94 V114 L50 92 L6 114 Z"/>`,
+  pontudo: `<path d="M6 12 L50 4 L94 12 V50 C94 80 74 100 50 116 C26 100 6 80 6 50 Z"/>`,
+  selo: `<polygon points="${Array.from({ length: 48 }, (_, i) => { const g = i * Math.PI / 24, q = i % 2 ? 42 : 47; return (50 + Math.cos(g) * q).toFixed(1) + "," + (60 + Math.sin(g) * q).toFixed(1); }).join(" ")}"/>`,
+  capsula: `<rect x="14" y="4" width="72" height="112" rx="36"/>`
+};
+const CREST_PAT_D = (() => {
+  const zz = (y, h) => { const t = [], b = []; for (let i = 0; i <= 8; i++) { const x = i * 12.5, d = i % 2 ? -9 : 0; t.push(x + "," + (y + d)); b.unshift(x + "," + (y + d + h)); } return `<polygon points="${t.concat(b).join(" ")}"/>`; };
+  return {
     liso: "",
     listras: [10, 30, 50, 70, 90].map(x => `<rect x="${x - 5}" y="0" width="10" height="120"/>`).join(""),
     diagonal: `<polygon points="0,30 30,0 100,70 100,100 70,120"/>`,
@@ -628,11 +656,33 @@ function crestSVG(c, size) {
     cruz: `<rect x="40" y="0" width="20" height="120"/><rect x="0" y="40" width="100" height="20"/>`,
     chevron: `<polygon points="0,30 50,70 100,30 100,52 50,92 0,52"/>`,
     quartos: `<rect x="50" y="0" width="50" height="60"/><rect x="0" y="60" width="50" height="60"/>`,
-    aro: `<circle cx="50" cy="60" r="34" fill="none" stroke="${c2}" stroke-width="8"/>`,
+    aro: `<circle cx="50" cy="60" r="34" fill="none" stroke="currentColor" stroke-width="8"/>`,
     diagonal2: `<polygon points="0,10 10,0 100,90 100,100 90,110 0,20"/><polygon points="0,50 10,40 100,130 100,140 90,150 0,60" transform="translate(0 -12)"/>`,
-    triangulo: `<polygon points="0,120 50,40 100,120"/>`
+    triangulo: `<polygon points="0,120 50,40 100,120"/>`,
+    pontos: Array.from({ length: 64 }, (_, k) => { const r = Math.floor(k / 8), c = k % 8; return `<circle cx="${c * 15 + (r % 2 ? 7.5 : 0) - 2}" cy="${r * 15 + 6}" r="3.6"/>`; }).join(""),
+    ondas: [18, 48, 78, 108].map(y => `<path d="M0 ${y} C17 ${y - 9} 33 ${y - 9} 50 ${y} S83 ${y + 9} 100 ${y} V${y + 11} C83 ${y + 20} 67 ${y + 20} 50 ${y + 11} S17 ${y + 2} 0 ${y + 11} Z"/>`).join(""),
+    raios: Array.from({ length: 12 }, (_, k) => { const a1 = k * 30 * Math.PI / 180, a2 = (k * 30 + 15) * Math.PI / 180; return `<polygon points="50,60 ${(50 + Math.cos(a1) * 130).toFixed(1)},${(60 + Math.sin(a1) * 130).toFixed(1)} ${(50 + Math.cos(a2) * 130).toFixed(1)},${(60 + Math.sin(a2) * 130).toFixed(1)}"/>`; }).join(""),
+    losangos: Array.from({ length: 20 }, (_, k) => { const r = Math.floor(k / 4), c = k % 4; return (r + c) % 2 ? "" : `<polygon points="${c * 25 + 12.5},${r * 30} ${c * 25 + 25},${r * 30 + 15} ${c * 25 + 12.5},${r * 30 + 30} ${c * 25},${r * 30 + 15}"/>`; }).join(""),
+    faixav: `<rect x="36" y="0" width="28" height="120"/>`,
+    xis: `<polygon points="0,0 14,0 100,106 100,120 86,120 0,14"/><polygon points="100,0 100,14 14,120 0,120 0,106 86,0"/>`,
+    moldura: "MOLDURA",
+    metadeh: `<rect x="0" y="60" width="100" height="60"/>`,
+    canto: `<polygon points="0,0 62,0 0,62"/>`,
+    zigzag: zz(56, 16),
+    tracos: Array.from({ length: 16 }, (_, k) => { const x = -120 + k * 14; return `<polygon points="${x},0 ${x + 5},0 ${x + 125},120 ${x + 120},120"/>`; }).join(""),
+    estrelas: [[20, 22], [78, 28], [30, 94], [74, 90], [50, 12], [14, 62], [86, 62], [50, 106]].map(([x, y]) => `<polygon points="${starPts(x, y, 6, 2.6, 5)}"/>`).join(""),
+    grade: [14, 28, 42, 56, 70, 84].map(x => `<rect x="${x - 1}" y="0" width="2" height="120"/>`).join("") + [15, 30, 45, 60, 75, 90, 105].map(y => `<rect x="0" y="${y - 1}" width="100" height="2"/>`).join(""),
+    meialua: `<circle cx="50" cy="124" r="50"/>`,
+    faixas2: `<rect x="0" y="36" width="100" height="11"/><rect x="0" y="72" width="100" height="11"/>`,
+    finas: [6, 16, 26, 36, 46, 56, 66, 76, 86, 96].map(x => `<rect x="${x - 1.5}" y="0" width="3" height="120"/>`).join(""),
+    diagonalinv: `<polygon points="100,30 70,0 0,70 0,100 30,120"/>`,
+    topo: `<rect x="0" y="0" width="100" height="36"/>`,
+    base: `<rect x="0" y="84" width="100" height="36"/>`,
+    terco: `<rect x="66" y="0" width="34" height="120"/>`
   };
-  const icons = {
+})();
+function crestIcons(c1) {
+  return {
     coroa: `<path d="M34 64 L36 48 L43 55 L50 44 L57 55 L64 48 L66 64 Z"/><rect x="34" y="65" width="32" height="4" rx="1"/>`,
     raio: `<polygon points="54,40 40,62 50,62 46,80 60,56 50,56"/>`,
     estrela: `<polygon points="50,40 55,54 70,54 58,63 62,77 50,68 38,77 42,63 30,54 45,54"/>`,
@@ -640,59 +690,139 @@ function crestSVG(c, size) {
     chama: `<path d="M50 40 C58 50 66 56 62 68 C60 75 54 80 50 80 C44 80 38 74 38 66 C38 58 44 56 46 48 C48 54 50 56 52 56 C54 52 52 46 50 40 Z"/>`,
     olho: `<path d="M30 60 C40 46 60 46 70 60 C60 74 40 74 30 60 Z" fill="none" stroke-width="3"/><circle cx="50" cy="60" r="7"/>`,
     leao: `<circle cx="50" cy="66" r="9"/><circle cx="38" cy="54" r="5"/><circle cx="46" cy="47" r="5"/><circle cx="55" cy="47" r="5"/><circle cx="63" cy="54" r="5"/>`,
-    foguete: `<path d="M50 38 C58 46 60 58 58 70 H42 C40 58 42 46 50 38 Z"/><polygon points="42,66 34,76 42,74"/><polygon points="58,66 66,76 58,74"/><circle cx="50" cy="54" r="4" fill="${c1}"/>`,
+    foguete: `<path d="M50 38 C58 46 60 58 58 70 H42 C40 58 42 46 50 38 Z"/><polygon points="42,66 34,76 42,74"/><polygon points="58,66 66,76 58,74"/><circle cx="50" cy="54" r="4" fill="${c1}" stroke="none"/>`,
     trofeu: `<path d="M40 44 H60 V56 C60 64 55 68 50 68 C45 68 40 64 40 56 Z"/><path d="M40 47 H34 C34 55 38 58 41 58" fill="none" stroke-width="3"/><path d="M60 47 H66 C66 55 62 58 59 58" fill="none" stroke-width="3"/><rect x="47" y="67" width="6" height="7"/><rect x="41" y="74" width="18" height="4" rx="1"/>`,
     ancora: `<circle cx="50" cy="44" r="4" fill="none" stroke-width="3"/><rect x="48" y="47" width="4" height="30"/><rect x="40" y="53" width="20" height="3"/><path d="M36 64 C38 76 62 76 64 64" fill="none" stroke-width="4"/>`,
     espadas: `<path d="M38 42 L62 76 M62 42 L38 76" stroke-width="5" fill="none"/><path d="M34 70 L44 80 M66 70 L56 80" stroke-width="4" fill="none"/>`,
     coracao: `<path d="M50 78 C40 70 32 62 32 54 C32 47 37 43 42 43 C46 43 49 46 50 49 C51 46 54 43 58 43 C63 43 68 47 68 54 C68 62 60 70 50 78 Z"/>`,
     lua: `<path d="M56 42 C44 44 38 54 40 64 C42 74 52 80 62 76 C52 74 46 66 47 58 C48 50 52 45 56 42 Z"/>`,
     sol: `<circle cx="50" cy="60" r="8"/>${Array.from({ length: 8 }, (_, k) => `<rect x="48.5" y="40" width="3" height="8" rx="1.5" transform="rotate(${k * 45} 50 60)"/>`).join("")}`,
-    montanha: `<polygon points="32,74 44,52 50,61 57,48 70,74"/><polygon points="54,53 57,48 60,53" fill="${c1}"/>`,
+    montanha: `<polygon points="32,74 44,52 50,61 57,48 70,74"/><polygon points="54,53 57,48 60,53" fill="${c1}" stroke="none"/>`,
     onda: `<path d="M32 58 C38 50 44 50 50 58 C56 66 62 66 68 58" fill="none" stroke-width="4"/><path d="M32 68 C38 60 44 60 50 68 C56 76 62 76 68 68" fill="none" stroke-width="4"/>`,
     gema: `<polygon points="40,48 60,48 68,58 50,78 32,58"/><polyline points="32,58 68,58" fill="none" stroke="${c1}" stroke-width="2"/>`,
     asas: `<path d="M50 62 C42 52 34 48 28 50 C32 54 34 58 38 60 C34 60 31 62 30 64 C36 66 44 66 50 62 Z"/><path d="M50 62 C58 52 66 48 72 50 C68 54 66 58 62 60 C66 60 69 62 70 64 C64 66 56 66 50 62 Z"/>`,
-    caveira: `<path d="M50 42 C40 42 34 49 34 57 C34 63 37 66 40 68 V74 H60 V68 C63 66 66 63 66 57 C66 49 60 42 50 42 Z"/><circle cx="44" cy="58" r="4" fill="${c1}"/><circle cx="56" cy="58" r="4" fill="${c1}"/>`,
+    caveira: `<path d="M50 42 C40 42 34 49 34 57 C34 63 37 66 40 68 V74 H60 V68 C63 66 66 63 66 57 C66 49 60 42 50 42 Z"/><circle cx="44" cy="58" r="4" fill="${c1}" stroke="none"/><circle cx="56" cy="58" r="4" fill="${c1}" stroke="none"/>`,
     touro: `<path d="M40 52 C40 64 44 74 50 74 C56 74 60 64 60 52 Z"/><path d="M40 54 C34 52 30 46 30 40 C34 46 38 48 42 48" fill="none" stroke-width="3"/><path d="M60 54 C66 52 70 46 70 40 C66 46 62 48 58 48" fill="none" stroke-width="3"/>`,
+    trevo: `<circle cx="50" cy="50" r="8"/><circle cx="41" cy="62" r="8"/><circle cx="59" cy="62" r="8"/><rect x="48.5" y="62" width="3" height="18" rx="1"/>`,
+    flor: `${Array.from({ length: 5 }, (_, k) => { const g = (-90 + k * 72) * Math.PI / 180; return `<circle cx="${(50 + Math.cos(g) * 10).toFixed(1)}" cy="${(60 + Math.sin(g) * 10).toFixed(1)}" r="7.5"/>`; }).join("")}<circle cx="50" cy="60" r="5" fill="${c1}" stroke="none"/>`,
+    arvore: `<polygon points="50,38 64,56 56,56 68,70 32,70 44,56 36,56"/><rect x="46" y="70" width="8" height="10"/>`,
+    castelo: `<path d="M32 80 V44 H37 V49 H42 V44 H47 V49 H53 V44 H58 V49 H63 V44 H68 V80 H56 V68 C56 63 44 63 44 68 V80 Z"/>`,
+    torre: `<path d="M42 80 V46 H39 V38 H44 V42 H48 V38 H52 V42 H56 V38 H61 V46 H58 V80 Z"/><rect x="47" y="52" width="6" height="9" rx="3" fill="${c1}" stroke="none"/>`,
+    martelo: `<rect x="34" y="42" width="32" height="12" rx="2"/><rect x="47" y="54" width="6" height="26" rx="2"/>`,
+    tridente: `<rect x="48.5" y="46" width="3" height="34"/><path d="M38 42 V52 C38 59 62 59 62 52 V42" fill="none" stroke-width="3"/><polygon points="50,34 46.5,44 53.5,44"/><polygon points="38,36 35,44 41,44"/><polygon points="62,36 59,44 65,44"/>`,
+    flecha: `<polygon points="50,38 65,55 55,55 55,80 45,80 45,55 35,55"/>`,
+    alvo: `<circle cx="50" cy="60" r="18" fill="none" stroke-width="3.5"/><circle cx="50" cy="60" r="10" fill="none" stroke-width="3.5"/><circle cx="50" cy="60" r="3.5"/>`,
+    chave: `<circle cx="50" cy="46" r="7" fill="none" stroke-width="4"/><rect x="48" y="52" width="4" height="28"/><rect x="52" y="70" width="7" height="3.5"/><rect x="52" y="76" width="5" height="3.5"/>`,
+    cometa: `<circle cx="58" cy="52" r="8"/><path d="M52 57 L30 80 L44 62 L30 70 L50 51 Z"/>`,
+    planeta: `<circle cx="50" cy="60" r="11"/><ellipse cx="50" cy="60" rx="22" ry="7" fill="none" stroke-width="3" transform="rotate(-20 50 60)"/>`,
+    ouros: `<polygon points="50,38 66,60 50,82 34,60"/>`,
+    paus: `<circle cx="50" cy="48" r="8"/><circle cx="40" cy="62" r="8"/><circle cx="60" cy="62" r="8"/><polygon points="50,58 44,80 56,80"/>`,
+    naipe: `<path d="M50 38 C58 50 68 54 68 64 C68 71 61 74 55 70 L58 80 H42 L45 70 C39 74 32 71 32 64 C32 54 42 50 50 38 Z"/>`,
+    infinito: `<path d="M50 60 C44 50 32 50 32 60 C32 70 44 70 50 60 C56 50 68 50 68 60 C68 70 56 70 50 60 Z" fill="none" stroke-width="4"/>`,
+    passaro: `<path d="M28 52 C38 48 44 52 50 60 C56 52 62 48 72 52 C62 54 56 58 52 68 H48 C44 58 38 54 28 52 Z"/>`,
+    peixe: `<ellipse cx="46" cy="60" rx="14" ry="9"/><polygon points="58,60 70,49 70,71"/><circle cx="40" cy="58" r="2" fill="${c1}" stroke="none"/>`,
+    folha: `<path d="M34 78 C34 54 48 40 68 40 C68 64 56 78 34 78 Z"/><path d="M37 75 L60 48" fill="none" stroke="${c1}" stroke-width="2"/>`,
+    pena: `<path d="M66 38 C46 42 34 58 38 78 L42 74 C44 62 52 50 66 38 Z"/><path d="M38 78 L34 82" fill="none" stroke-width="2.5"/>`,
+    viking: `<path d="M36 64 C36 52 42 46 50 46 C58 46 64 52 64 64 Z"/><rect x="34" y="64" width="32" height="5" rx="2"/><path d="M37 56 C30 52 28 44 30 38 C33 46 36 48 40 50 Z"/><path d="M63 56 C70 52 72 44 70 38 C67 46 64 48 60 50 Z"/>`,
+    dado: `<rect x="34" y="44" width="32" height="32" rx="6"/>${[[42, 52], [58, 52], [50, 60], [42, 68], [58, 68]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3" fill="${c1}" stroke="none"/>`).join("")}`,
+    gol: `<path d="M30 78 V46 H70 V78" fill="none" stroke-width="4"/>${[38, 46, 54, 62].map(x => `<line x1="${x}" y1="46" x2="${x}" y2="78" stroke-width="1.2"/>`).join("")}${[54, 62, 70].map(y => `<line x1="30" y1="${y}" x2="70" y2="${y}" stroke-width="1.2"/>`).join("")}`,
+    campo: `<rect x="30" y="42" width="40" height="36" rx="2" fill="none" stroke-width="3"/><line x1="30" y1="60" x2="70" y2="60" stroke-width="2.5"/><circle cx="50" cy="60" r="7" fill="none" stroke-width="2.5"/>`,
+    medalha: `<polygon points="41,38 47,38 51,48 49,52 45,52"/><polygon points="59,38 53,38 49,48 51,52 55,52"/><circle cx="50" cy="65" r="13"/><polygon points="${starPts(50, 65, 7, 3, 5)}" fill="${c1}" stroke="none"/>`,
+    cruz: `<polygon points="43,40 57,40 54,54 68,51 68,65 54,62 57,80 43,80 46,62 32,65 32,51 46,54"/>`,
+    floco: `${[0, 60, 120].map(r => `<rect x="48.3" y="40" width="3.4" height="40" rx="1.5" transform="rotate(${r} 50 60)"/>`).join("")}<circle cx="50" cy="60" r="5"/>`,
+    nota: `<ellipse cx="44" cy="74" rx="7" ry="5" transform="rotate(-20 44 74)"/><rect x="49" y="40" width="3.5" height="34"/><path d="M52.5 40 C60 44 64 48 62 57 C60 51 56 49 52.5 49 Z"/>`,
+    lobo: `<polygon points="34,40 44,52 56,52 66,40 64,62 50,80 36,62"/><polygon points="42,62 47,57 47,64" fill="${c1}" stroke="none"/><polygon points="58,62 53,57 53,64" fill="${c1}" stroke="none"/>`,
+    aguia: `<path d="M50 58 C40 46 28 42 22 44 C28 48 30 52 34 54 C28 54 26 58 26 60 C32 60 36 60 40 62 C36 64 34 66 34 68 C40 68 46 66 50 64 Z"/><path d="M50 58 C40 46 28 42 22 44 C28 48 30 52 34 54 C28 54 26 58 26 60 C32 60 36 60 40 62 C36 64 34 66 34 68 C40 68 46 66 50 64 Z" transform="translate(100 0) scale(-1 1)"/><circle cx="50" cy="50" r="5.5"/><polygon points="45,62 55,62 50,78"/>`,
+    cobra: `<path d="M60 42 C44 40 38 50 48 56 C58 62 56 74 40 76" fill="none" stroke-width="5" stroke-linecap="round"/><circle cx="62" cy="42" r="5.5"/>`,
+    raio2: `<polygon points="46,40 34,60 42,60 38,80 50,56 42,56"/><polygon points="62,40 50,60 58,60 54,80 66,56 58,56"/>`,
+    piramide: `<polygon points="50,40 72,78 28,78"/><polyline points="50,40 56,78" fill="none" stroke="${c1}" stroke-width="2"/>`,
+    letra: "LETRA",
     nenhum: ""
   };
-  const ic = icons[c.icon] != null ? icons[c.icon] : icons.coroa;
-  const c3 = c.c3 || c2, tc = c.tc || c2;
-  const txt = c.txt ? `<text x="50" y="${c.shape === "diamante" ? 96 : 101}" text-anchor="middle" font-family="Big Shoulders Display, Arial Narrow, sans-serif" font-weight="900" font-size="17" fill="${tc}" stroke="${c1}" stroke-width="3" paint-order="stroke">${esc(c.txt)}</text>` : "";
-  const ns = Math.max(0, Math.min(7, c.stars | 0)), out = ns && c.spos !== "dentro", sc = c.sc || (out ? "#f5c542" : c3);
-  const stars = ns ? Array.from({ length: ns }, (_, k) => { const gap = out ? 13 : 11, cx = 50 + (k - (ns - 1) / 2) * gap, cy = out ? -10 - (Math.abs(k - (ns - 1) / 2) < 0.6 ? 2 : 0) : c.shape === "diamante" ? 30 : 24; return `<polygon transform="translate(${cx} ${cy}) scale(${out ? 0.27 : 0.22})" points="0,-20 6,-6 21,-6 9,3 13,18 0,9 -13,18 -9,3 -21,-6 -6,-6" fill="${sc}" stroke="${out ? "rgba(0,0,0,.45)" : c1}" stroke-width="4"/>`; }).join("") : "";
-  const icc = c.ic || c2;
-  return `<svg class="crest" viewBox="0 ${out ? -22 : 0} 100 ${out ? 142 : 120}" width="${size}" height="${size * (out ? 1.42 : 1.2)}" aria-hidden="true"><defs><clipPath id="${id}">${sh}</clipPath></defs>
-    <g clip-path="url(#${id})"><rect width="100" height="120" fill="${c1}"/><g fill="${c2}">${pats[c.pat] || ""}</g></g>
-    <g fill="none" stroke="${c3}" stroke-width="6">${sh}</g>
-    ${ic ? `<circle cx="50" cy="60" r="22" fill="${c1}" stroke="${c3}" stroke-width="3"/><g fill="${icc}" stroke="${icc}">${ic}</g>` : ""}${stars}${txt}</svg>`;
 }
+const CREST_ISZ_V = { p: 0.8, m: 1, g: 1.3, xg: 1.6 };
+function crestSVG(c, size) {
+  c = c || {}; const id = "cr" + (CREST_N++);
+  const sh = CREST_SHAPE_D[c.shape] || CREST_SHAPE_D.escudo, c1 = c.c1 || "#f5c542", c2 = c.c2 || "#111";
+  const pat = k => { const d = CREST_PAT_D[k] || ""; return d === "MOLDURA" ? `<g fill="none" stroke="currentColor" stroke-width="22">${sh}</g>` : d; };
+  const icons = crestIcons(c1), icc = c.ic || c2, fam = FONT_FAM[c.fnt] || FONT_FAM.display;
+  let ic = icons[c.icon] != null ? icons[c.icon] : icons.coroa;
+  if (ic === "LETRA") { const L = c.txt || "K"; ic = `<text x="50" y="60" dominant-baseline="central" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="${L.length > 2 ? 19 : L.length > 1 ? 25 : 34}" stroke="none">${esc(L)}</text>`; }
+  const c3 = c.c3 || c2, tc = c.tc || c2, sz = CREST_ISZ_V[c.isz] || 1, small = size < 34;
+  const tp = c.tpos || "baixo", ns = Math.max(0, Math.min(7, c.stars | 0)), out = ns && c.spos !== "dentro", sc = c.sc || (out ? "#f5c542" : c3);
+  const lowY = { diamante: 96, triangulo: 90, seta: 92, estrela: 98, coracao: 94, gota: 104 }[c.shape] || 101;
+  let txt = "";
+  if (c.txt && c.icon !== "letra") {
+    if (tp === "faixa") { const rc = c.c4 || c3; txt = `<path d="M0 88 H100 L94 97 L100 106 H0 L6 97 Z" fill="${rc}" stroke="rgba(0,0,0,.35)" stroke-width="1.2"/><text x="50" y="101.5" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="13" fill="${tc}">${esc(c.txt)}</text>`; }
+    else { const y = tp === "cima" ? (c.shape === "diamante" || c.shape === "triangulo" ? 30 : 34) : lowY; txt = `<text x="50" y="${y}" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="17" fill="${tc}" stroke="${c1}" stroke-width="3" paint-order="stroke">${esc(c.txt)}</text>`; }
+  }
+  const ano = c.ano && !small ? `<text x="50" y="${tp === "cima" ? 20 : 113}" text-anchor="middle" font-family="${fam}" font-weight="800" font-size="7.5" letter-spacing=".5" fill="${tc}" stroke="${c1}" stroke-width="2" paint-order="stroke">${esc(c.ano)}</text>` : "";
+  const sIn = tp === "cima" ? 100 : c.shape === "diamante" ? 30 : 24;
+  const stars = ns ? Array.from({ length: ns }, (_, k) => { const gap = out ? 13 : 11, cx = 50 + (k - (ns - 1) / 2) * gap, cy = out ? -10 - (Math.abs(k - (ns - 1) / 2) < 0.6 ? 2 : 0) : sIn; return `<polygon transform="translate(${cx} ${cy}) scale(${out ? 0.27 : 0.22})" points="0,-20 6,-6 21,-6 9,3 13,18 0,9 -13,18 -9,3 -21,-6 -6,-6" fill="${sc}" stroke="${out ? "rgba(0,0,0,.45)" : c1}" stroke-width="4"/>`; }).join("") : "";
+  const R = 22 * sz, mf = c.mf || c1;
+  const meds = {
+    nenhum: "", circulo: `<circle cx="50" cy="60" r="${R}" fill="${mf}" stroke="${c3}" stroke-width="3"/>`, anel: `<circle cx="50" cy="60" r="${R}" fill="none" stroke="${c3}" stroke-width="3"/>`,
+    losango: `<polygon points="50,${60 - R * 1.2} ${50 + R * 1.2},60 50,${60 + R * 1.2} ${50 - R * 1.2},60" fill="${mf}" stroke="${c3}" stroke-width="3"/>`,
+    escudo: `<path d="M50 ${60 - R} L${50 + R} ${60 - R * 0.7} V${60 + R * 0.1} C${50 + R} ${60 + R * 0.75} ${50 + R * 0.45} ${60 + R * 1.05} 50 ${60 + R * 1.25} C${50 - R * 0.45} ${60 + R * 1.05} ${50 - R} ${60 + R * 0.75} ${50 - R} ${60 + R * 0.1} V${60 - R * 0.7} Z" fill="${mf}" stroke="${c3}" stroke-width="3"/>`,
+    hexagono: `<polygon points="${Array.from({ length: 6 }, (_, i) => { const g = (-90 + i * 60) * Math.PI / 180; return (50 + Math.cos(g) * R * 1.1).toFixed(1) + "," + (60 + Math.sin(g) * R * 1.1).toFixed(1); }).join(" ")}" fill="${mf}" stroke="${c3}" stroke-width="3"/>`
+  };
+  const med = meds[c.med] || "", halo = !c.hn && !small;
+  const bw = { normal: 6, fina: 3, grossa: 10, dupla: 5, nenhuma: 0 }[c.bw] != null ? { normal: 6, fina: 3, grossa: 10, dupla: 5, nenhuma: 0 }[c.bw] : 6;
+  const border = (bw ? `<g fill="none" stroke="${c3}" stroke-width="${bw}">${sh}</g>` : "") + (c.bw === "dupla" ? `<g fill="none" stroke="${c3}" stroke-width="2.2" transform="translate(50 60) scale(.84) translate(-50 -60)">${sh}</g>` : "");
+  const icg = ic ? `<g ${halo ? `filter="url(#${id}h)"` : ""}><g fill="${icc}" stroke="${icc}" ${sz !== 1 ? `transform="translate(50 60) scale(${sz}) translate(-50 -60)"` : ""}>${ic}</g></g>` : "";
+  return `<svg class="crest" viewBox="0 ${out ? -22 : 0} 100 ${out ? 142 : 120}" width="${size}" height="${size * (out ? 1.42 : 1.2)}" aria-hidden="true"><defs><clipPath id="${id}">${sh}</clipPath>${halo && ic ? `<filter id="${id}h" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/><feFlood flood-color="${c.med && c.med !== "nenhum" && c.med !== "anel" ? mf : c1}"/><feComposite in2="d" operator="in" result="h"/><feMerge><feMergeNode in="h"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : ""}</defs>
+    <g clip-path="url(#${id})"><rect width="100" height="120" fill="${c1}"/><g fill="${c2}" color="${c2}">${pat(c.pat)}</g>${c.c4 && c.pat2 && c.pat2 !== "liso" ? `<g fill="${c.c4}" color="${c.c4}">${pat(c.pat2)}</g>` : ""}</g>
+    ${border}${med}${icg}${stars}${txt}${ano}</svg>`;
+}
+const KIT_PAT_D = {
+  liso: "", listras: [34, 46, 58, 70].map(x => `<rect x="${x - 4}" y="0" width="8" height="100"/>`).join(""),
+  horizontais: [24, 44, 64, 84].map(y => `<rect x="0" y="${y - 5}" width="100" height="10"/>`).join(""),
+  faixa: `<polygon points="20,10 36,10 84,92 68,92"/>`, metade: `<rect x="50" y="0" width="50" height="100"/>`,
+  xadrez: Array.from({ length: 50 }, (_, q) => { const x = q % 10, y = Math.floor(q / 10); return (x + y) % 2 ? `<rect x="${x * 10}" y="${y * 20}" width="10" height="20"/>` : ""; }).join(""),
+  gola: `<path d="M40 4 C45 14 55 14 60 4 L58 12 C54 18 46 18 42 12 Z"/><rect x="0" y="86" width="100" height="6"/><rect x="8" y="22" width="12" height="4" transform="rotate(30 14 24)"/><rect x="80" y="22" width="12" height="4" transform="rotate(-30 86 24)"/>`,
+  centro: `<rect x="42" y="0" width="16" height="100"/>`,
+  ombros: `<rect x="0" y="0" width="100" height="22"/>`,
+  v: `<polygon points="20,20 50,52 80,20 80,32 50,64 20,32"/>`,
+  finas: [30, 38, 46, 54, 62, 70].map(x => `<rect x="${x - 1.2}" y="0" width="2.4" height="100"/>`).join(""),
+  degrade: Array.from({ length: 10 }, (_, q) => `<rect x="0" y="${40 + q * 6}" width="100" height="6.2" opacity="${(q + 1) / 10}"/>`).join(""),
+  laterais: `<rect x="28" y="0" width="9" height="100"/><rect x="63" y="0" width="9" height="100"/>`,
+  peito: `<rect x="0" y="34" width="100" height="16"/>`,
+  bicolor: `<polygon points="100,0 100,100 0,100"/>`,
+  chevron: `<polygon points="20,26 50,46 80,26 80,38 50,58 20,38"/><polygon points="20,46 50,66 80,46 80,54 50,74 20,54"/>`,
+  quadros: Array.from({ length: 12 }, (_, q) => { const x = q % 4, y = Math.floor(q / 4); return (x + y) % 2 ? `<rect x="${x * 25}" y="${y * 33}" width="25" height="33"/>` : ""; }).join(""),
+  mangas: `<polygon points="0,0 30,8 30,40 0,40"/><polygon points="100,0 70,8 70,40 100,40"/>`,
+  pontos: Array.from({ length: 100 }, (_, q) => { const r = Math.floor(q / 10), c = q % 10; return `<circle cx="${c * 10 + (r % 2 ? 5 : 0)}" cy="${r * 10 + 4}" r="2.4"/>`; }).join(""),
+  zigzag: (() => { const t = [], b = []; for (let i = 0; i <= 10; i++) { const x = i * 10, d = i % 2 ? -7 : 0; t.push(x + "," + (44 + d)); b.unshift(x + "," + (56 + d)); } return `<polygon points="${t.concat(b).join(" ")}"/>`; })(),
+  ondas: [26, 50, 74].map(y => `<path d="M0 ${y} C17 ${y - 7} 33 ${y - 7} 50 ${y} S83 ${y + 7} 100 ${y} V${y + 8} C83 ${y + 15} 67 ${y + 15} 50 ${y + 8} S17 ${y + 1} 0 ${y + 8} Z"/>`).join(""),
+  faixadupla: `<polygon points="16,10 28,10 76,92 64,92"/><polygon points="34,10 46,10 94,92 82,92"/>`,
+  xis: `<polygon points="20,10 34,10 84,92 70,92"/><polygon points="80,10 66,10 16,92 30,92"/>`,
+  faixabaixo: `<rect x="0" y="70" width="100" height="22"/>`,
+  colete: `<rect x="0" y="30" width="37" height="70"/><rect x="63" y="30" width="37" height="70"/>`,
+  listrasgrossas: `<rect x="28" y="0" width="15" height="100"/><rect x="57" y="0" width="15" height="100"/>`,
+  horizfinas: Array.from({ length: 12 }, (_, q) => `<rect x="0" y="${q * 8 + 3}" width="100" height="2.2"/>`).join(""),
+  estrela: `<polygon points="${starPts(60, 24, 7.5, 3.2, 5)}"/>`,
+  diagonalinv: `<polygon points="80,10 64,10 16,92 32,92"/>`,
+  metadeh: `<rect x="0" y="52" width="100" height="48"/>`,
+  quadriculado: Array.from({ length: 289 }, (_, q) => { const x = q % 17, y = Math.floor(q / 17); return (x + y) % 2 ? `<rect x="${x * 6}" y="${y * 6}" width="6" height="6"/>` : ""; }).join(""),
+  camuflado: [[34, 24, 10, 6, 20], [60, 40, 12, 7, -30], [40, 62, 11, 6, 40], [66, 78, 10, 6, 10], [30, 84, 8, 5, -20], [54, 16, 8, 5, 60], [72, 58, 7, 5, 0]].map(([x, y, a, b, r]) => `<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}" transform="rotate(${r} ${x} ${y})"/>`).join(""),
+  tracos: Array.from({ length: 14 }, (_, q) => { const x = -100 + q * 14; return `<polygon points="${x},0 ${x + 4},0 ${x + 104},100 ${x + 100},100"/>`; }).join(""),
+  cruz: `<rect x="44" y="0" width="12" height="100"/><rect x="0" y="34" width="100" height="12"/>`,
+  grade: [36, 50, 64].map(x => `<rect x="${x - 0.9}" y="0" width="1.8" height="100"/>`).join("") + [30, 50, 70].map(y => `<rect x="0" y="${y - 0.9}" width="100" height="1.8"/>`).join("")
+};
 function kitSVG(k, size, num) {
   k = k || {}; const id = "kt" + (CREST_N++); const c1 = k.c1 || "#f5c542", c2 = k.c2 || "#111";
   const body = `<path d="M30 8 L42 4 C45 10 55 10 58 4 L70 8 L92 24 L82 40 L72 34 V92 H28 V34 L18 40 L8 24 Z"/>`;
-  const pats = {
-    liso: "", listras: [34, 46, 58, 70].map(x => `<rect x="${x - 4}" y="0" width="8" height="100"/>`).join(""),
-    horizontais: [24, 44, 64, 84].map(y => `<rect x="0" y="${y - 5}" width="100" height="10"/>`).join(""),
-    faixa: `<polygon points="20,10 36,10 84,92 68,92"/>`, metade: `<rect x="50" y="0" width="50" height="100"/>`,
-    xadrez: Array.from({ length: 50 }, (_, q) => { const x = q % 10, y = Math.floor(q / 10); return (x + y) % 2 ? `<rect x="${x * 10}" y="${y * 20}" width="10" height="20"/>` : ""; }).join(""),
-    gola: `<path d="M40 4 C45 14 55 14 60 4 L58 12 C54 18 46 18 42 12 Z"/><rect x="0" y="86" width="100" height="6"/><rect x="8" y="22" width="12" height="4" transform="rotate(30 14 24)"/><rect x="80" y="22" width="12" height="4" transform="rotate(-30 86 24)"/>`,
-    centro: `<rect x="42" y="0" width="16" height="100"/>`,
-    ombros: `<rect x="0" y="0" width="100" height="22"/>`,
-    v: `<polygon points="20,20 50,52 80,20 80,32 50,64 20,32"/>`,
-    finas: [30, 38, 46, 54, 62, 70].map(x => `<rect x="${x - 1.2}" y="0" width="2.4" height="100"/>`).join(""),
-    degrade: Array.from({ length: 10 }, (_, q) => `<rect x="0" y="${40 + q * 6}" width="100" height="6.2" opacity="${(q + 1) / 10}"/>`).join(""),
-    laterais: `<rect x="28" y="0" width="9" height="100"/><rect x="63" y="0" width="9" height="100"/>`,
-    peito: `<rect x="0" y="34" width="100" height="16"/>`,
-    bicolor: `<polygon points="100,0 100,100 0,100"/>`,
-    chevron: `<polygon points="20,26 50,46 80,26 80,38 50,58 20,38"/><polygon points="20,46 50,66 80,46 80,54 50,74 20,54"/>`,
-    quadros: Array.from({ length: 12 }, (_, q) => { const x = q % 4, y = Math.floor(q / 4); return (x + y) % 2 ? `<rect x="${x * 25}" y="${y * 33}" width="25" height="33"/>` : ""; }).join(""),
-    mangas: `<polygon points="0,0 30,8 30,40 0,40"/><polygon points="100,0 70,8 70,40 100,40"/>`
-  };
-  const c3 = k.c3 || null;
-  const trim = c3 ? `<g fill="${c3}"><path d="M42 4 C45 10 55 10 58 4 L60 6 C56 14 44 14 40 6 Z"/><polygon points="8,24 18,40 21,38 11,22"/><polygon points="92,24 82,40 79,38 89,22"/><rect x="28" y="88" width="44" height="4"/></g>` : "";
+  const c3 = k.c3 || null, gc = c3 || c2;
+  const p2 = c3 && k.pat2 && k.pat2 !== "liso" ? `<g fill="${c3}">${KIT_PAT_D[k.pat2] || ""}</g>` : "";
+  const sleeves = k.cm ? `<g fill="${k.cm}"><polygon points="30,6 6,24 18,42 30,34"/><polygon points="70,6 94,24 82,42 70,34"/></g>` : "";
+  const trim = c3 && k.tr !== false ? `<g fill="${c3}"><path d="M42 4 C45 10 55 10 58 4 L60 6 C56 14 44 14 40 6 Z"/><polygon points="8,24 18,40 21,38 11,22"/><polygon points="92,24 82,40 79,38 89,22"/><rect x="28" y="88" width="44" height="4"/></g>` : "";
+  const gola = { padrao: "", redonda: `<path d="M41 3 C45 11 55 11 59 3 L62 6 C56 16 44 16 38 6 Z" fill="${gc}"/>`, v: `<polygon points="40,4 50,22 60,4 56.5,4 50,16 43.5,4" fill="${gc}"/>`, polo: `<g fill="${gc}"><polygon points="40,3 50,13 46,21 35,10"/><polygon points="60,3 50,13 54,21 65,10"/></g><rect x="49.2" y="13" width="1.6" height="14" fill="${gc}"/><circle cx="50" cy="18" r="1.1" fill="${c1}"/><circle cx="50" cy="23" r="1.1" fill="${c1}"/>` }[k.gl] || "";
+  const fam = FONT_FAM[k.nf] || FONT_FAM.display;
+  const sp = k.sp && size >= 50 ? `<text x="50" y="40" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="${k.sp.length > 8 ? 7 : 8.5}" fill="${k.num || "#fff"}" opacity=".92">${esc(k.sp)}</text>` : "";
   return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true"><defs><clipPath id="${id}">${body}</clipPath></defs>
-    <g clip-path="url(#${id})"><rect width="100" height="100" fill="${c1}"/><g fill="${c2}">${pats[k.pat] || ""}</g>${trim}</g>
-    <g fill="none" stroke="rgba(0,0,0,.55)" stroke-width="2.5">${body}</g>
-    <text x="50" y="68" text-anchor="middle" font-family="Big Shoulders Display, Arial Narrow, sans-serif" font-weight="900" font-size="30" fill="${k.num || "#fff"}" stroke="rgba(0,0,0,.45)" stroke-width="2" paint-order="stroke">${num || 10}</text></svg>`;
+    <g clip-path="url(#${id})"><rect width="100" height="100" fill="${c1}"/><g fill="${c2}">${KIT_PAT_D[k.pat] || ""}</g>${p2}${sleeves}${trim}${gola}</g>
+    <g fill="none" stroke="rgba(0,0,0,.55)" stroke-width="2.5">${body}</g>${sp}
+    <text x="50" y="${sp ? 72 : 68}" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="${sp ? 27 : 30}" fill="${k.num || "#fff"}" stroke="${k.nc || "rgba(0,0,0,.45)"}" stroke-width="${k.nc ? 2.6 : 2}" paint-order="stroke">${num || 10}</text></svg>`;
 }
 function pcard(p) {
   const owner = S ? ownerOf(S, p.id) : -1;
@@ -853,32 +983,59 @@ function viewLobby() {
   ${crestBox}`;
 }
 
+const CREST_LBL = {
+  shape: ["Escudo", "Redondo", "Hexágono", "Diamante", "Flâmula", "Brasão", "Oval", "Quadrado", "Clássico", "Angular", "Coroado", "Losango arredondado", "Pentágono", "Octógono", "Gota", "Arco", "Seta", "Medieval", "Estrela", "Triângulo", "Coração", "Retrô", "Inglês", "Bandeira", "Pontudo", "Selo", "Cápsula"],
+  pat: ["Liso", "Listras", "Diagonal", "Metade", "Faixa", "Xadrez", "Listras horizontais", "Cruz", "Chevron", "Quartos", "Aro", "Diagonal dupla", "Triângulo", "Bolinhas", "Ondas", "Raios de sol", "Losangos", "Faixa vertical", "Xis", "Moldura interna", "Metade horizontal", "Canto", "Zigue-zague", "Traços finos", "Estrelas", "Grade", "Meia-lua", "Faixas duplas", "Listras finas", "Diagonal invertida", "Topo", "Base", "Terço lateral"],
+  icon: ["Coroa", "Raio", "Estrela", "Bola", "Chama", "Olho", "Garra", "Foguete", "Troféu", "Âncora", "Espadas", "Coração", "Lua", "Sol", "Montanha", "Onda", "Gema", "Asas", "Caveira", "Touro", "Trevo", "Flor", "Árvore", "Castelo", "Torre", "Martelo", "Tridente", "Flecha", "Alvo", "Chave", "Cometa", "Planeta", "Ouros", "Paus", "Espada (naipe)", "Infinito", "Pássaro", "Peixe", "Folha", "Pena", "Capacete viking", "Dado", "Gol", "Campo", "Medalha", "Cruz", "Floco de neve", "Nota musical", "Lobo", "Águia", "Cobra", "Raio duplo", "Pirâmide", "Monograma (a sigla no centro)", "Nenhum"],
+  med: ["Nenhum (só o símbolo)", "Círculo", "Anel", "Losango", "Mini escudo", "Hexágono"],
+  isz: ["Médio", "Pequeno", "Grande", "Gigante"],
+  tpos: ["Embaixo", "Em cima", "Numa faixa"],
+  fnt: ["Condensada", "Clássica (serifa)", "Pesada", "Manuscrita"],
+  bw: ["Normal", "Fina", "Grossa", "Dupla", "Sem borda"]
+};
+const KIT_NAMES = ["Lisa", "Listras verticais", "Listras horizontais", "Faixa diagonal", "Metade", "Xadrez", "Gola e punhos", "Faixa central", "Ombros", "V no peito", "Listras finas", "Degradê", "Faixas laterais", "Faixa no peito", "Bicolor diagonal", "Chevron duplo", "Quadros grandes", "Mangas", "Bolinhas", "Zigue-zague", "Ondas", "Faixa diagonal dupla", "Xis", "Barra inferior", "Colete", "Listras grossas", "Listras horizontais finas", "Estrela no peito", "Faixa diagonal invertida", "Metade horizontal", "Quadriculado fino", "Camuflado", "Traços finos", "Cruz", "Grade"];
+const KIT_GOLA_LBL = ["Padrão", "Redonda", "Gola V", "Polo"], KIT_FONT_LBL = ["Condensada", "Clássica (serifa)", "Pesada"];
+const PAL = ["#f5c542", "#111318", "#ffffff", "#c81e3a", "#1d3fbf", "#0f5132", "#ff7b00", "#5b2a86", "#00a6a6", "#ff3d8b", "#bde0fe", "#7a0019", "#03045e", "#2a9d8f", "#e9c46a", "#432818", "#9d0208", "#3a0ca3", "#ffba08", "#adb5bd"];
 function crestEditor(force) {
   const mis = force != null ? [force] : editableMis(); if (!mis.length) return "";
   if (force == null && (UI.crestMi == null || !mis.includes(UI.crestMi))) UI.crestMi = mis[0];
   const mi = force != null ? force : UI.crestMi, m = mgrOf(mi), c = m.crest || {};
-  const sel = (id, list, val, labels) => `<select id="${id}" data-mi="${mi}">${list.map((k, i) => `<option value="${k}" ${k === val ? "selected" : ""}>${labels ? labels[i] : k}</option>`).join("")}</select>`;
+  const sel = (f, list, val, labels) => `<select id="c-${f}" data-mi="${mi}">${list.map((k, i) => `<option value="${k}" ${k === val ? "selected" : ""}>${labels ? labels[i] : k}</option>`).join("")}</select>`;
+  const col = (f, label, v) => `<label class="f" for="c-${f}">${label}<input id="c-${f}" type="color" data-mi="${mi}" value="${v}"></label>`;
+  const tog = (f, label, def, on) => `<label class="f" for="c-${f}">${label}<span class="row" style="gap:6px;flex-wrap:nowrap"><input id="c-${f}" type="color" data-mi="${mi}" value="${c[f] || def}" ${on ? "" : 'style="opacity:.45"'}><button class="btn sm ${on ? "gold" : "ghost"}" data-a="ctog" data-f="${f}" data-def="${def}" data-mi="${mi}">${on ? "Ligada" : "Desligada"}</button></span></label>`;
   return `<div class="sec-title"><h2>Escudo</h2><span class="muted">escolha um pronto ou monte o seu</span></div>
   <div class="card crested">
     ${mis.length > 1 ? `<div class="row" style="margin-bottom:10px"><span class="muted">Editando:</span>${mis.map(i => `<button class="btn sm ${i === mi ? "gold" : ""}" data-a="crestmi" data-mi="${i}">${esc(S.managers[i].team)}</button>`).join("")}</div>` : ""}
     <div class="crestgrid">
-      <div class="crestprev">${crestSVG(c, 130)}<b>${esc(m.team)}</b></div>
-      <div style="display:grid;gap:10px">
+      <div class="crestprev">${crestSVG(c, 130)}<b>${esc(m.team)}</b><div class="row" style="gap:6px;justify-content:center;margin-top:6px">${crestSVG(c, 34)}${crestSVG(c, 22)}</div><button class="btn sm" style="margin-top:8px" data-a="crestrand" data-mi="${mi}">🎲 Escudo aleatório</button></div>
+      <div style="display:grid;gap:12px">
         <div class="presets">${CREST_PRESETS.map((p, k) => `<button class="preset" data-a="crestpre" data-k="${k}" data-mi="${mi}" title="${esc(p.n)}">${crestSVG(Object.assign({}, p, { txt: c.txt }), 40)}<span>${esc(p.n)}</span></button>`).join("")}</div>
-        <div class="grid3" style="gap:8px">
-          <label class="f" for="c-shape">Formato${sel("c-shape", CREST_SHAPES, c.shape, ["Escudo", "Redondo", "Hexágono", "Diamante", "Flâmula", "Brasão", "Oval", "Quadrado", "Clássico", "Angular", "Coroado", "Losango"])}</label>
-          <label class="f" for="c-pat">Desenho${sel("c-pat", CREST_PATS, c.pat, ["Liso", "Listras", "Diagonal", "Metade", "Faixa", "Xadrez", "Listras horizontais", "Cruz", "Chevron", "Quartos", "Aro", "Diagonal dupla", "Triângulo"])}</label>
-          <label class="f" for="c-icon">Símbolo${sel("c-icon", CREST_ICONS, c.icon, ["Coroa", "Raio", "Estrela", "Bola", "Chama", "Olho", "Garra", "Foguete", "Troféu", "Âncora", "Espadas", "Coração", "Lua", "Sol", "Montanha", "Onda", "Gema", "Asas", "Caveira", "Touro", "Nenhum"])}</label>
-          <label class="f" for="c-c1">Cor principal<input id="c-c1" type="color" data-mi="${mi}" value="${c.c1 || "#f5c542"}"></label>
-          <label class="f" for="c-c2">Cor secundária<input id="c-c2" type="color" data-mi="${mi}" value="${c.c2 || "#111111"}"></label>
+        <div class="edsec"><b>Formato e desenho</b><div class="grid3">
+          <label class="f" for="c-shape">Formato${sel("shape", CREST_SHAPES, c.shape, CREST_LBL.shape)}</label>
+          <label class="f" for="c-pat">Desenho${sel("pat", CREST_PATS, c.pat, CREST_LBL.pat)}</label>
+          <label class="f" for="c-bw">Borda${sel("bw", CREST_BW, c.bw || "normal", CREST_LBL.bw)}</label>
+          ${col("c1", "Cor principal", c.c1 || "#f5c542")}${col("c2", "Cor secundária (desenho)", c.c2 || "#111111")}${col("c3", "Cor da borda", c.c3 || c.c2 || "#ffffff")}
+          ${tog("c4", "Cor terciária (opcional)", "#ffffff", !!c.c4)}
+          <label class="f" for="c-pat2">Desenho da cor terciária${sel("pat2", CREST_PATS, c.pat2 || "liso", ["Nenhum"].concat(CREST_LBL.pat.slice(1)))}</label>
+        </div></div>
+        <div class="edsec"><b>Símbolo</b><div class="grid3">
+          <label class="f" for="c-icon">Símbolo${sel("icon", CREST_ICONS, c.icon, CREST_LBL.icon)}</label>
+          <label class="f" for="c-isz">Tamanho do símbolo${sel("isz", CREST_ISZ, c.isz || "m", CREST_LBL.isz)}</label>
+          ${col("ic", "Cor do símbolo", c.ic || c.c2 || "#111111")}
+          <label class="f" for="c-med">Fundo do símbolo${sel("med", CREST_MEDS, c.med || "nenhum", CREST_LBL.med)}</label>
+          ${col("mf", "Cor do fundo do símbolo", c.mf || c.c1 || "#f5c542")}
+          <label class="f" for="c-hn">Contorno do símbolo<select id="c-hn" data-mi="${mi}"><option value="0" ${!c.hn ? "selected" : ""}>Com contorno</option><option value="1" ${c.hn ? "selected" : ""}>Sem contorno</option></select></label>
+        </div></div>
+        <div class="edsec"><b>Texto e estrelas</b><div class="grid3">
           <label class="f" for="c-txt">Sigla (até 3)<input id="c-txt" type="text" maxlength="3" data-mi="${mi}" value="${esc(c.txt || "")}" style="text-transform:uppercase"></label>
-          <label class="f" for="c-c3">Cor da borda<input id="c-c3" type="color" data-mi="${mi}" value="${c.c3 || c.c2 || "#ffffff"}"></label>
-          <label class="f" for="c-tc">Cor da sigla<input id="c-tc" type="color" data-mi="${mi}" value="${c.tc || c.c2 || "#111111"}"></label>
-          <label class="f" for="c-ic">Cor do símbolo<input id="c-ic" type="color" data-mi="${mi}" value="${c.ic || c.c2 || "#111111"}"></label>
+          <label class="f" for="c-tpos">Posição da sigla${sel("tpos", CREST_TPOS, c.tpos || "baixo", CREST_LBL.tpos)}</label>
+          <label class="f" for="c-fnt">Fonte${sel("fnt", CREST_FONTS, c.fnt || "display", CREST_LBL.fnt)}</label>
+          ${col("tc", "Cor da sigla", c.tc || c.c2 || "#111111")}
+          <label class="f" for="c-ano">Ano de fundação<input id="c-ano" type="text" inputmode="numeric" maxlength="4" placeholder="ex.: 2026" data-mi="${mi}" value="${esc(c.ano || "")}"></label>
           <label class="f" for="c-stars">Estrelas (títulos)<select id="c-stars" data-mi="${mi}">${[0, 1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(c.stars | 0) === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
           <label class="f" for="c-spos">Posição das estrelas<select id="c-spos" data-mi="${mi}"><option value="fora" ${c.spos !== "dentro" ? "selected" : ""}>Em cima, fora do escudo</option><option value="dentro" ${c.spos === "dentro" ? "selected" : ""}>Dentro do escudo</option></select></label>
-          <label class="f" for="c-sc">Cor das estrelas<input id="c-sc" type="color" data-mi="${mi}" value="${c.sc || "#f5c542"}"></label>
-        </div>
+          ${col("sc", "Cor das estrelas", c.sc || "#f5c542")}
+        </div></div>
       </div>
     </div>
     <p class="muted" style="font-size:12.5px;margin:8px 0 0">Os escudos oficiais dos times da Kings League são marcas registradas, então os prontos aqui são originais. Dá pra recriar as cores do seu time do coração no editor.</p>
@@ -886,21 +1043,43 @@ function crestEditor(force) {
   <div class="sec-title"><h2>Uniformes</h2><span class="muted">principal no campo e na torcida; o reserva entra quando as cores batem com o do rival</span></div>
   ${kitEditor(mi, m)}`;
 }
-const KIT_NAMES = ["Lisa", "Listras verticais", "Listras horizontais", "Faixa diagonal", "Metade", "Xadrez", "Gola e punhos", "Faixa central", "Ombros", "V no peito", "Listras finas", "Degradê", "Faixas laterais", "Faixa no peito", "Bicolor diagonal", "Chevron duplo", "Quadros grandes", "Mangas"];
 function kitEditor(mi, m) {
   const which = UI.kitTab === 2 ? 2 : 1, key = which === 2 ? "kit2" : "kit";
   const k = m[key] || (which === 2 ? awayKit(m.kit) : {}) || {};
+  const sel = (f, list, val, labels) => `<select id="k-${f}" data-mi="${mi}">${list.map((v, i) => `<option value="${v}" ${v === val ? "selected" : ""}>${labels ? labels[i] : v}</option>`).join("")}</select>`;
+  const tog = (f, label, def) => { const on = !!k[f]; return `<label class="f" for="k-${f}">${label}<span class="row" style="gap:6px;flex-wrap:nowrap"><input id="k-${f}" type="color" data-mi="${mi}" value="${k[f] || def}" ${on ? "" : 'style="opacity:.45"'}><button class="btn sm ${on ? "gold" : "ghost"}" data-a="ktog" data-f="${f}" data-def="${def}" data-mi="${mi}">${on ? "Ligada" : "Desligada"}</button></span></label>`; };
   return `<div class="card crested"><div class="row" style="margin-bottom:10px;gap:6px"><button class="btn sm ${which === 1 ? "gold" : ""}" data-a="kittab" data-v="1">Principal</button><button class="btn sm ${which === 2 ? "gold" : ""}" data-a="kittab" data-v="2">Reserva</button></div>
   <div class="crestgrid">
-    <div class="crestprev"><div class="row" style="gap:6px;justify-content:center">${kitSVG(m.kit, which === 1 ? 120 : 70, 10)}${kitSVG(m.kit2 || awayKit(m.kit), which === 2 ? 120 : 70, 10)}</div><b>${esc(m.team)}</b><span class="muted" style="font-size:12px">${which === 1 ? "Principal (casa)" : "Reserva (fora, se as cores baterem)"}</span></div>
-    <div class="grid3" style="gap:8px;align-content:start">
-      <label class="f" for="k-c1">Cor da camisa<input id="k-c1" type="color" data-mi="${mi}" value="${k.c1 || "#f5c542"}"></label>
-      <label class="f" for="k-c2">Cor do detalhe<input id="k-c2" type="color" data-mi="${mi}" value="${k.c2 || "#111111"}"></label>
-      <label class="f" for="k-num">Cor do número<input id="k-num" type="color" data-mi="${mi}" value="${k.num || "#ffffff"}"></label>
-      <label class="f" for="k-c3">3ª cor (gola, punhos e barra)<span class="row" style="gap:6px;flex-wrap:nowrap"><input id="k-c3" type="color" data-mi="${mi}" value="${k.c3 || "#ffffff"}" ${k.c3 ? "" : 'style="opacity:.45"'}><button class="btn sm ${k.c3 ? "gold" : "ghost"}" data-a="kitc3" data-mi="${mi}">${k.c3 ? "Ligada" : "Desligada"}</button></span></label>
-      <label class="f" for="k-pat">Modelo<select id="k-pat" data-mi="${mi}">${KIT_PATS.map((p, i) => `<option value="${p}" ${k.pat === p ? "selected" : ""}>${KIT_NAMES[i] || p}</option>`).join("")}</select></label>
-      <div class="row" style="gap:6px;align-items:flex-end;grid-column:span 2"><button class="btn sm" data-a="kitfromcrest" data-mi="${mi}">Usar cores do escudo</button>${which === 2 ? `<button class="btn sm ghost" data-a="kitinvert" data-mi="${mi}">Inverter o principal</button>` : ""}</div>
+    <div class="crestprev"><div class="row" style="gap:6px;justify-content:center">${kitSVG(m.kit, which === 1 ? 120 : 70, 10)}${kitSVG(m.kit2 || awayKit(m.kit), which === 2 ? 120 : 70, 10)}</div><b>${esc(m.team)}</b><span class="muted" style="font-size:12px">${which === 1 ? "Principal (casa)" : "Reserva (fora, se as cores baterem)"}</span><button class="btn sm" style="margin-top:8px" data-a="kitrand" data-mi="${mi}">🎲 Camisa aleatória</button></div>
+    <div style="display:grid;gap:12px;align-content:start">
+      <div class="edsec"><b>Modelo e cores</b><div class="grid3">
+        <label class="f" for="k-pat">Modelo${sel("pat", KIT_PATS, k.pat, KIT_NAMES)}</label>
+        <label class="f" for="k-c1">Cor da camisa<input id="k-c1" type="color" data-mi="${mi}" value="${k.c1 || "#f5c542"}"></label>
+        <label class="f" for="k-c2">Cor do detalhe<input id="k-c2" type="color" data-mi="${mi}" value="${k.c2 || "#111111"}"></label>
+        ${tog("c3", "Cor terciária (opcional)", "#ffffff")}
+        <label class="f" for="k-pat2">Desenho da cor terciária${sel("pat2", KIT_PATS, k.pat2 || "liso", ["Nenhum"].concat(KIT_NAMES.slice(1)))}</label>
+        <label class="f" for="k-tr">Gola, punhos e barra na 3ª cor<select id="k-tr" data-mi="${mi}"><option value="1" ${k.tr !== false ? "selected" : ""}>Sim</option><option value="0" ${k.tr === false ? "selected" : ""}>Não</option></select></label>
+      </div></div>
+      <div class="edsec"><b>Gola, mangas e número</b><div class="grid3">
+        <label class="f" for="k-gl">Gola${sel("gl", KIT_GOLAS, k.gl || "padrao", KIT_GOLA_LBL)}</label>
+        ${tog("cm", "Cor das mangas (opcional)", "#ffffff")}
+        <label class="f" for="k-num">Cor do número<input id="k-num" type="color" data-mi="${mi}" value="${k.num || "#ffffff"}"></label>
+        ${tog("nc", "Contorno do número (opcional)", "#000000")}
+        <label class="f" for="k-nf">Fonte do número${sel("nf", KIT_FONTS, k.nf || "display", KIT_FONT_LBL)}</label>
+        <label class="f" for="k-sp">Patrocínio (até 12)<input id="k-sp" type="text" maxlength="12" placeholder="ex.: KINGS BET" data-mi="${mi}" value="${esc(k.sp || "")}"></label>
+      </div></div>
+      <div class="row" style="gap:6px"><button class="btn sm" data-a="kitfromcrest" data-mi="${mi}">Usar cores do escudo</button>${which === 2 ? `<button class="btn sm ghost" data-a="kitinvert" data-mi="${mi}">Inverter o principal</button>` : ""}</div>
     </div></div></div>`;
+}
+function rndOf(a) { return a[Math.floor(Math.random() * a.length)]; }
+function randCrestFull(txt) {
+  const c1 = rndOf(PAL); let c2 = rndOf(PAL); while (c2 === c1) c2 = rndOf(PAL);
+  const third = Math.random() < 0.45;
+  return { shape: rndOf(CREST_SHAPES), pat: rndOf(CREST_PATS), icon: rndOf(CREST_ICONS.filter(i => i !== "nenhum")), c1, c2, c3: Math.random() < 0.5 ? c2 : rndOf(PAL), ic: Math.random() < 0.6 ? c2 : rndOf(PAL), tc: c2, c4: third ? rndOf(PAL) : null, pat2: third ? rndOf(CREST_PATS.slice(1)) : "liso", med: Math.random() < 0.7 ? "nenhum" : rndOf(CREST_MEDS), isz: rndOf(CREST_ISZ), tpos: rndOf(CREST_TPOS), fnt: rndOf(CREST_FONTS), bw: rndOf(["normal", "normal", "fina", "grossa", "dupla"]), txt };
+}
+function randKitFull() {
+  const c1 = rndOf(PAL); let c2 = rndOf(PAL); while (c2 === c1) c2 = rndOf(PAL); const third = Math.random() < 0.4;
+  return { c1, c2, pat: rndOf(KIT_PATS), num: rndOf(["#ffffff", "#111111", c2]), c3: third ? rndOf(PAL) : null, pat2: third && Math.random() < 0.5 ? rndOf(KIT_PATS.slice(1)) : "liso", tr: true, gl: rndOf(KIT_GOLAS), cm: Math.random() < 0.2 ? rndOf(PAL) : null, nf: rndOf(KIT_FONTS) };
 }
 function setKit(mi, patch) { if (mi === PROF_MI) { const m = mgrOf(mi), key = UI.kitTab === 2 ? "kit2" : "kit"; putProf({ [key]: Object.assign({}, m[key] || (key === "kit2" ? awayKit(m.kit) : {}), patch) }); return render(true); } const m = S.managers[mi], key = UI.kitTab === 2 ? "kit2" : "kit"; const k = Object.assign({}, m[key] || (key === "kit2" ? awayKit(m.kit) : {}), patch); if (NET.mode === "client") { m[key] = k; setLocal(mi, key, k); render(true); } act({ t: "editme", [key]: k, mi }); }
 function setCrest(mi, patch) { if (mi === PROF_MI) { putProf({ crest: Object.assign({}, mgrOf(mi).crest || {}, patch) }); return render(true); } const m = S.managers[mi]; const c = Object.assign({}, m.crest || {}, patch); if (NET.mode === "client") { m.crest = c; setLocal(mi, "crest", c); render(true); } act({ t: "editme", crest: c, mi }); }
@@ -1643,7 +1822,10 @@ document.addEventListener("click", e => {
   if (a === "fasign" || a === "farel") return act({ t: a, id: +b.dataset.id, mi: +b.dataset.mi });
   if (a === "nextseason") return act({ t: "nextseason" });
   if (a === "replay") { if (LV.lastGoal) { LV.replay = { frames: LV.lastGoal.frames, i: 0 }; } return; }
-  if (a === "kitc3") { const m = mgrOf(+b.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; return setKit(+b.dataset.mi, { c3: k.c3 ? null : (($("#k-c3") && $("#k-c3").value) || "#ffffff") }); }
+  if (a === "ktog") { const m = mgrOf(+b.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 || awayKit(m.kit) : m.kit) || {}, f = b.dataset.f; return setKit(+b.dataset.mi, { [f]: k[f] ? null : (($("#k-" + f) && $("#k-" + f).value) || b.dataset.def) }); }
+  if (a === "ctog") { const m = mgrOf(+b.dataset.mi), c = m.crest || {}, f = b.dataset.f; const patch = { [f]: c[f] ? null : (($("#c-" + f) && $("#c-" + f).value) || b.dataset.def) }; if (f === "c4" && !c.c4 && (!c.pat2 || c.pat2 === "liso")) patch.pat2 = "faixa"; return setCrest(+b.dataset.mi, patch); }
+  if (a === "crestrand") { const m = mgrOf(+b.dataset.mi); return setCrest(+b.dataset.mi, Object.assign(randCrestFull((m.crest && m.crest.txt) || initials(m.team)), { stars: (m.crest && m.crest.stars) || 0, spos: (m.crest && m.crest.spos) || "fora", ano: (m.crest && m.crest.ano) || "" })); }
+  if (a === "kitrand") { const m = mgrOf(+b.dataset.mi), cur = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; return setKit(+b.dataset.mi, Object.assign(randKitFull(), { sp: cur.sp || "" })); }
   if (a === "kittab") { UI.kitTab = +b.dataset.v; return render(true); }
   if (a === "kitinvert") { const m = mgrOf(+b.dataset.mi); const k = m.kit || {}; return setKit(+b.dataset.mi, { c1: k.c2 || "#111111", c2: k.c1 || "#f5c542", pat: k.pat || "liso", num: k.c1 || "#ffffff" }); }
   if (a === "kitfromcrest") { const m = mgrOf(+b.dataset.mi); const c = m.crest || {}; return setKit(+b.dataset.mi, { c1: c.c1 || "#f5c542", c2: c.c2 || "#111111" }); }
@@ -1678,12 +1860,8 @@ document.addEventListener("change", e => {
   if (id === "mpos") { UI.mpos = el.value; return render(); }
   if (id && id.startsWith("st-")) { const mi = +el.dataset.mi; if (NET.mode === "client" && S.managers[mi]) { const st = Object.assign({}, S.managers[mi].strat, { [el.dataset.k]: el.value }); S.managers[mi].strat = st; setLocal(mi, "strat", st); } return act({ t: "strat", [el.dataset.k]: el.value, mi }); }
   if (["s-fmt", "s-year", "s-staff", "s-trades", "s-hide", "s-career"].includes(id) && isHost()) return act(readSettings());
-  if (id === "c-stars") return setCrest(+el.dataset.mi, { stars: +el.value });
-  if (id === "c-spos") return setCrest(+el.dataset.mi, { spos: el.value });
-  if (id === "c-sc" || id === "c-ic") return setCrest(+el.dataset.mi, { [id.slice(2)]: el.value });
-  if (id === "k-c3") return setKit(+el.dataset.mi, { c3: el.value });
-  if (id === "k-c1" || id === "k-c2" || id === "k-num" || id === "k-pat") return setKit(+el.dataset.mi, { [id.slice(2)]: el.value });
-  if (id === "c-shape" || id === "c-pat" || id === "c-icon" || id === "c-c1" || id === "c-c2" || id === "c-c3" || id === "c-tc" || id === "c-txt") return setCrest(+el.dataset.mi, { [id.slice(2) === "shape" ? "shape" : id.slice(2)]: id === "c-txt" ? el.value.toUpperCase().slice(0, 3) : el.value });
+  if (id && /^c-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = f === "stars" ? +v : f === "hn" ? v === "1" : f === "txt" ? v.toUpperCase().replace(/[^A-Z0-9À-Ú]/g, "").slice(0, 3) : f === "ano" ? v.replace(/[^0-9]/g, "").slice(0, 4) : v; const patch = { [f]: val }; if (f === "pat2" && v !== "liso" && !(mgrOf(+el.dataset.mi).crest || {}).c4) patch.c4 = ($("#c-c4") && $("#c-c4").value) || "#ffffff"; return setCrest(+el.dataset.mi, patch); }
+  if (id && /^k-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = f === "tr" ? v === "1" : f === "sp" ? v.replace(/[<>&"']/g, "").slice(0, 12) : v; const patch = { [f]: val }; if (f === "pat2" && v !== "liso") { const m = mgrOf(+el.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; if (!k.c3) patch.c3 = ($("#k-c3") && $("#k-c3").value) || "#ffffff"; } return setKit(+el.dataset.mi, patch); }
   if (id === "t-auto") return tacChange(+el.dataset.mi, tac => { tac.autoSub = el.checked; });
   if (id === "t-gkm") return tacChange(+el.dataset.mi, tac => { tac.gkMode = el.value; });
   if (id === "t-pk") return tacChange(+el.dataset.mi, tac => { tac.pk = el.value ? +el.value : null; });

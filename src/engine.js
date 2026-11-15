@@ -106,9 +106,14 @@ function newGame(code, hostPid, hostName, hostTeam, mode) {
     auction: null, season: null, log: []
   };
 }
-const CREST_SHAPES = ["escudo", "redondo", "hexagono", "diamante", "flamula", "brasao", "oval", "quadrado", "classico", "angular", "coroado", "losango"];
-const CREST_PATS = ["liso", "listras", "diagonal", "metade", "faixa", "xadrez", "horizontais", "cruz", "chevron", "quartos", "aro", "diagonal2", "triangulo"];
-const CREST_ICONS = ["coroa", "raio", "estrela", "bola", "chama", "olho", "leao", "foguete", "trofeu", "ancora", "espadas", "coracao", "lua", "sol", "montanha", "onda", "gema", "asas", "caveira", "touro", "nenhum"];
+const CREST_SHAPES = ["escudo", "redondo", "hexagono", "diamante", "flamula", "brasao", "oval", "quadrado", "classico", "angular", "coroado", "losango", "pentagono", "octogono", "gota", "arco", "seta", "medieval", "estrela", "triangulo", "coracao", "retro", "ingles", "bandeira", "pontudo", "selo", "capsula"];
+const CREST_PATS = ["liso", "listras", "diagonal", "metade", "faixa", "xadrez", "horizontais", "cruz", "chevron", "quartos", "aro", "diagonal2", "triangulo", "pontos", "ondas", "raios", "losangos", "faixav", "xis", "moldura", "metadeh", "canto", "zigzag", "tracos", "estrelas", "grade", "meialua", "faixas2", "finas", "diagonalinv", "topo", "base", "terco"];
+const CREST_ICONS = ["coroa", "raio", "estrela", "bola", "chama", "olho", "leao", "foguete", "trofeu", "ancora", "espadas", "coracao", "lua", "sol", "montanha", "onda", "gema", "asas", "caveira", "touro", "trevo", "flor", "arvore", "castelo", "torre", "martelo", "tridente", "flecha", "alvo", "chave", "cometa", "planeta", "ouros", "paus", "naipe", "infinito", "passaro", "peixe", "folha", "pena", "viking", "dado", "gol", "campo", "medalha", "cruz", "floco", "nota", "lobo", "aguia", "cobra", "raio2", "piramide", "letra", "nenhum"];
+const CREST_MEDS = ["nenhum", "circulo", "anel", "losango", "escudo", "hexagono"];
+const CREST_TPOS = ["baixo", "cima", "faixa"];
+const CREST_BW = ["normal", "fina", "grossa", "dupla", "nenhuma"];
+const CREST_FONTS = ["display", "serif", "sans", "script"];
+const CREST_ISZ = ["m", "p", "g", "xg"];
 const CREST_PRESETS = [
   { n: "Coroa Dourada", shape: "escudo", c1: "#111318", c2: "#f5c542", pat: "faixa", icon: "coroa" },
   { n: "Trovão", shape: "hexagono", c1: "#1d3fbf", c2: "#ffe14d", pat: "diagonal", icon: "raio" },
@@ -119,27 +124,45 @@ const CREST_PRESETS = [
   { n: "Várzea Raiz", shape: "redondo", c1: "#ffffff", c2: "#111", pat: "xadrez", icon: "bola" },
   { n: "Olho de Tigre", shape: "hexagono", c1: "#ff7b00", c2: "#151515", pat: "listras", icon: "olho" },
   { n: "Rosa Choque", shape: "escudo", c1: "#ff3d8b", c2: "#1a1a1a", pat: "diagonal", icon: "coroa" },
-  { n: "Gelo", shape: "diamante", c1: "#bde0fe", c2: "#1d3557", pat: "metade", icon: "estrela" }
+  { n: "Gelo", shape: "diamante", c1: "#bde0fe", c2: "#1d3557", pat: "metade", icon: "estrela" },
+  { n: "Castelo", shape: "medieval", c1: "#2b2d42", c2: "#edf2f4", pat: "moldura", icon: "castelo" },
+  { n: "Águia Real", shape: "pontudo", c1: "#7a0019", c2: "#ffcc33", pat: "raios", icon: "aguia" },
+  { n: "Lobo da Noite", shape: "octogono", c1: "#0d1b2a", c2: "#778da9", pat: "zigzag", icon: "lobo" },
+  { n: "Tridente", shape: "gota", c1: "#03045e", c2: "#00b4d8", pat: "ondas", icon: "tridente" },
+  { n: "Trevo da Sorte", shape: "selo", c1: "#1b4332", c2: "#95d5b2", pat: "pontos", icon: "trevo" },
+  { n: "Viking", shape: "retro", c1: "#432818", c2: "#bb9457", pat: "xis", icon: "viking" },
+  { n: "Cometa", shape: "estrela", c1: "#3a0ca3", c2: "#f72585", pat: "tracos", icon: "cometa" },
+  { n: "Rei de Ouros", shape: "bandeira", c1: "#9d0208", c2: "#ffba08", pat: "losangos", icon: "ouros" },
+  { n: "Gol de Placa", shape: "ingles", c1: "#f1f1f1", c2: "#2d6a4f", pat: "grade", icon: "gol" },
+  { n: "Cruzado", shape: "coracao", c1: "#d00000", c2: "#ffffff", pat: "meialua", icon: "cruz" },
+  { n: "Pirâmide", shape: "triangulo", c1: "#e9c46a", c2: "#264653", pat: "base", icon: "piramide" },
+  { n: "Serpente", shape: "capsula", c1: "#2a9d8f", c2: "#111111", pat: "diagonalinv", icon: "cobra" },
+  { n: "Monograma", shape: "arco", c1: "#111318", c2: "#f5c542", pat: "faixav", icon: "letra" }
 ];
 function randCrest(color, team) { const p = pick(CREST_PRESETS); return { shape: p.shape, c1: color || p.c1, c2: p.c2, pat: p.pat, icon: p.icon, txt: initials(team) }; }
 function initials(t) { return String(t || "FC").replace(/\b(FC|EC|SC|Clube|Club|de|da|do|dos|das)\b/gi, "").trim().split(/\s+/).filter(Boolean).map(w => w[0]).join("").slice(0, 3).toUpperCase() || "FC"; }
 function validCrest(c) {
   if (!c || typeof c !== "object") return null;
   const hex = v => /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
-  const o = { shape: CREST_SHAPES.includes(c.shape) ? c.shape : "escudo", c1: hex(c.c1) || "#f5c542", c2: hex(c.c2) || "#111111", pat: CREST_PATS.includes(c.pat) ? c.pat : "liso", icon: CREST_ICONS.includes(c.icon) ? c.icon : "coroa", txt: String(c.txt || "").replace(/[^A-Za-z0-9À-ú]/g, "").slice(0, 3).toUpperCase(), c3: hex(c.c3) || "#ffffff", tc: hex(c.tc) || null, stars: Math.max(0, Math.min(7, c.stars | 0)), sc: hex(c.sc) || null, spos: c.spos === "dentro" ? "dentro" : "fora", ic: hex(c.ic) || null };
+  const o = { shape: CREST_SHAPES.includes(c.shape) ? c.shape : "escudo", c1: hex(c.c1) || "#f5c542", c2: hex(c.c2) || "#111111", pat: CREST_PATS.includes(c.pat) ? c.pat : "liso", icon: CREST_ICONS.includes(c.icon) ? c.icon : "coroa", txt: String(c.txt || "").replace(/[^A-Za-z0-9À-ú]/g, "").slice(0, 3).toUpperCase(), c3: hex(c.c3) || "#ffffff", tc: hex(c.tc) || null, stars: Math.max(0, Math.min(7, c.stars | 0)), sc: hex(c.sc) || null, spos: c.spos === "dentro" ? "dentro" : "fora", ic: hex(c.ic) || null,
+    c4: hex(c.c4) || null, pat2: CREST_PATS.includes(c.pat2) ? c.pat2 : "liso", med: CREST_MEDS.includes(c.med) ? c.med : "nenhum", mf: hex(c.mf) || null, hn: !!c.hn, isz: CREST_ISZ.includes(c.isz) ? c.isz : "m",
+    tpos: CREST_TPOS.includes(c.tpos) ? c.tpos : "baixo", fnt: CREST_FONTS.includes(c.fnt) ? c.fnt : "display", bw: CREST_BW.includes(c.bw) ? c.bw : "normal", ano: String(c.ano || "").replace(/[^0-9]/g, "").slice(0, 4) };
   return o;
 }
 function mkMgr(pid, name, team, i, cpu, pers) {
   const color = COLORS[i % COLORS.length];
   return { pid, name: (name || "Presidente").slice(0, 18), team: (team || "Meu Time FC").slice(0, 24), color, cpu: !!cpu, pers: pers || 1, budget: 0, roster: [], strat: { card: "perdendo", pp: "perdendo" }, tac: null, crest: randCrest(color, team), kit: randKit(color), kit2: null, coach: null, pres: null };
 }
-const KIT_PATS = ["liso", "listras", "horizontais", "faixa", "metade", "xadrez", "gola", "centro", "ombros", "v", "finas", "degrade", "laterais", "peito", "bicolor", "chevron", "quadros", "mangas"];
+const KIT_PATS = ["liso", "listras", "horizontais", "faixa", "metade", "xadrez", "gola", "centro", "ombros", "v", "finas", "degrade", "laterais", "peito", "bicolor", "chevron", "quadros", "mangas", "pontos", "zigzag", "ondas", "faixadupla", "xis", "faixabaixo", "colete", "listrasgrossas", "horizfinas", "estrela", "diagonalinv", "metadeh", "quadriculado", "camuflado", "tracos", "cruz", "grade"];
+const KIT_GOLAS = ["padrao", "redonda", "v", "polo"];
+const KIT_FONTS = ["display", "serif", "sans"];
 function randKit(color) { return { c1: color || "#f5c542", c2: pick(["#111111", "#ffffff", "#0b0d12", "#f5c542"]), pat: pick(KIT_PATS), num: "#ffffff" }; }
 function awayKit(k) { const dark = !k || /^#(0|1|2)/.test(k.c1); return { c1: dark ? "#f2f2f2" : "#15171c", c2: (k && k.c1) || "#f5c542", pat: "gola", num: dark ? "#111111" : "#ffffff" }; }
 function validKit(k) {
   if (!k || typeof k !== "object") return null;
   const hex = v => /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
-  return { c1: hex(k.c1) || "#f5c542", c2: hex(k.c2) || "#111111", pat: KIT_PATS.includes(k.pat) ? k.pat : "liso", num: hex(k.num) || "#ffffff", c3: hex(k.c3) || null };
+  return { c1: hex(k.c1) || "#f5c542", c2: hex(k.c2) || "#111111", pat: KIT_PATS.includes(k.pat) ? k.pat : "liso", num: hex(k.num) || "#ffffff", c3: hex(k.c3) || null,
+    pat2: KIT_PATS.includes(k.pat2) ? k.pat2 : "liso", tr: k.tr !== false, gl: KIT_GOLAS.includes(k.gl) ? k.gl : "padrao", cm: hex(k.cm) || null, nc: hex(k.nc) || null, nf: KIT_FONTS.includes(k.nf) ? k.nf : "display", sp: String(k.sp || "").replace(/[<>&"']/g, "").slice(0, 12) };
 }
 // quem está fora da sala (caiu ou saiu) é controlado por um bot até voltar
 function isBot(S, i) { const m = S.managers[i]; return !!(m && (m.cpu || (S.away && S.away[i]))); }
