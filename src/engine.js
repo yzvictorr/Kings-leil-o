@@ -162,7 +162,7 @@ function validKit(k) {
   if (!k || typeof k !== "object") return null;
   const hex = v => /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
   return { c1: hex(k.c1) || "#f5c542", c2: hex(k.c2) || "#111111", pat: KIT_PATS.includes(k.pat) ? k.pat : "liso", num: hex(k.num) || "#ffffff", c3: hex(k.c3) || null,
-    pat2: KIT_PATS.includes(k.pat2) ? k.pat2 : "liso", tr: k.tr !== false, gl: KIT_GOLAS.includes(k.gl) ? k.gl : "padrao", cm: hex(k.cm) || null, nc: hex(k.nc) || null, nf: KIT_FONTS.includes(k.nf) ? k.nf : "display", sp: String(k.sp || "").replace(/[<>&"']/g, "").slice(0, 12) };
+    pat2: KIT_PATS.includes(k.pat2) ? k.pat2 : "liso", gc: hex(k.gc) || null, pu: !!k.pu, pc: hex(k.pc) || null, gl: KIT_GOLAS.includes(k.gl) ? k.gl : "padrao", cm: hex(k.cm) || null, nc: hex(k.nc) || null, nf: KIT_FONTS.includes(k.nf) ? k.nf : "display", sp: String(k.sp || "").replace(/[<>&"']/g, "").slice(0, 12) };
 }
 // quem está fora da sala (caiu ou saiu) é controlado por um bot até voltar
 function isBot(S, i) { const m = S.managers[i]; return !!(m && (m.cpu || (S.away && S.away[i]))); }

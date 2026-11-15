@@ -391,3 +391,6 @@ input[type=color]{width:100%;height:40px;padding:2px;border-radius:10px;border:1
 .edsec{display:grid;gap:8px;border:1px solid var(--line,rgba(255,255,255,.08));border-radius:12px;padding:10px 12px}
 .edsec>b{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold,#f5c542)}
 .edsec .grid3{gap:8px}
+.looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.look{display:grid;gap:6px;justify-items:center;text-align:center;padding:10px 8px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)}
+.look b{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}

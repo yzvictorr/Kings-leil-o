@@ -24,7 +24,7 @@ async function onUser(u) {
   render();
 }
 const PROF_MI = -9; // editor do perfil usa este "time" fictício
-function localProf() { try { return Object.assign({ name: store("kl_name") || "", team: store("kl_team") || "", crest: null, kit: null, kit2: null, titles: [], seasons: [] }, JSON.parse(store("kl_prof") || "{}")); } catch (e) { return { name: store("kl_name") || "", team: store("kl_team") || "" }; } }
+function localProf() { try { return Object.assign({ name: store("kl_name") || "", team: store("kl_team") || "", crest: null, kit: null, kit2: null, titles: [], seasons: [], looks: [] }, JSON.parse(store("kl_prof") || "{}")); } catch (e) { return { name: store("kl_name") || "", team: store("kl_team") || "" }; } }
 function getProf() { if (ACC.user) return ACC.prof || (ACC.prof = { name: "", team: "", titles: [], seasons: [], rooms: [] }); return UI.lprof || (UI.lprof = localProf()); }
 function putProf(patch) {
   const P0 = getProf(); Object.assign(P0, patch);
@@ -753,7 +753,8 @@ function crestSVG(c, size) {
   const lowY = { diamante: 96, triangulo: 90, seta: 92, estrela: 98, coracao: 94, gota: 104 }[c.shape] || 101;
   let txt = "";
   if (c.txt && c.icon !== "letra") {
-    if (tp === "faixa") { const rc = c.c4 || c3; txt = `<path d="M0 88 H100 L94 97 L100 106 H0 L6 97 Z" fill="${rc}" stroke="rgba(0,0,0,.35)" stroke-width="1.2"/><text x="50" y="101.5" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="13" fill="${tc}">${esc(c.txt)}</text>`; }
+    if (tp === "faixa") { const rc = c.c4 || c3; const ry = lowY - 15, w = c.txt.length > 2 ? 30 : 25, x1 = 50 - w, x2 = 50 + w;
+      txt = `<g stroke="rgba(0,0,0,.4)" stroke-width="1" stroke-linejoin="round"><polygon points="${x1 - 9},${ry + 4} ${x1 + 2},${ry + 4} ${x1 + 2},${ry + 16} ${x1 - 9},${ry + 16} ${x1 - 5},${ry + 10}" fill="${rc}"/><polygon points="${x2 + 9},${ry + 4} ${x2 - 2},${ry + 4} ${x2 - 2},${ry + 16} ${x2 + 9},${ry + 16} ${x2 + 5},${ry + 10}" fill="${rc}"/><polygon points="${x1 + 2},${ry + 12} ${x1 + 6},${ry + 16} ${x1 + 2},${ry + 16}" fill="rgba(0,0,0,.45)"/><polygon points="${x2 - 2},${ry + 12} ${x2 - 6},${ry + 16} ${x2 - 2},${ry + 16}" fill="rgba(0,0,0,.45)"/><rect x="${x1 + 2}" y="${ry}" width="${2 * w - 4}" height="12" rx="1" fill="${rc}"/></g><text x="50" y="${ry + 9.6}" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="10.5" letter-spacing=".6" fill="${tc}">${esc(c.txt)}</text>`; }
     else { const y = tp === "cima" ? (c.shape === "diamante" || c.shape === "triangulo" ? 30 : 34) : lowY; txt = `<text x="50" y="${y}" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="17" fill="${tc}" stroke="${c1}" stroke-width="3" paint-order="stroke">${esc(c.txt)}</text>`; }
   }
   const ano = c.ano && !small ? `<text x="50" y="${tp === "cima" ? 20 : 113}" text-anchor="middle" font-family="${fam}" font-weight="800" font-size="7.5" letter-spacing=".5" fill="${tc}" stroke="${c1}" stroke-width="2" paint-order="stroke">${esc(c.ano)}</text>` : "";
@@ -812,10 +813,11 @@ const KIT_PAT_D = {
 function kitSVG(k, size, num) {
   k = k || {}; const id = "kt" + (CREST_N++); const c1 = k.c1 || "#f5c542", c2 = k.c2 || "#111";
   const body = `<path d="M30 8 L42 4 C45 10 55 10 58 4 L70 8 L92 24 L82 40 L72 34 V92 H28 V34 L18 40 L8 24 Z"/>`;
-  const c3 = k.c3 || null, gc = c3 || c2;
+  const c3 = k.c3 || null, gc = k.gc || c2;
   const p2 = c3 && k.pat2 && k.pat2 !== "liso" ? `<g fill="${c3}">${KIT_PAT_D[k.pat2] || ""}</g>` : "";
   const sleeves = k.cm ? `<g fill="${k.cm}"><polygon points="30,6 6,24 18,42 30,34"/><polygon points="70,6 94,24 82,42 70,34"/></g>` : "";
-  const trim = c3 && k.tr !== false ? `<g fill="${c3}"><path d="M42 4 C45 10 55 10 58 4 L60 6 C56 14 44 14 40 6 Z"/><polygon points="8,24 18,40 21,38 11,22"/><polygon points="92,24 82,40 79,38 89,22"/><rect x="28" y="88" width="44" height="4"/></g>` : "";
+  const pc = k.pu ? (k.pc || c3 || c2) : null;
+  const trim = (k.gc && (!k.gl || k.gl === "padrao") ? `<path d="M42 4 C45 10 55 10 58 4 L60 6 C56 14 44 14 40 6 Z" fill="${k.gc}"/>` : "") + (pc ? `<g fill="${pc}"><polygon points="8,24 18,40 21,38 11,22"/><polygon points="92,24 82,40 79,38 89,22"/><rect x="28" y="88" width="44" height="4"/></g>` : "");
   const gola = { padrao: "", redonda: `<path d="M41 3 C45 11 55 11 59 3 L62 6 C56 16 44 16 38 6 Z" fill="${gc}"/>`, v: `<polygon points="40,4 50,22 60,4 56.5,4 50,16 43.5,4" fill="${gc}"/>`, polo: `<g fill="${gc}"><polygon points="40,3 50,13 46,21 35,10"/><polygon points="60,3 50,13 54,21 65,10"/></g><rect x="49.2" y="13" width="1.6" height="14" fill="${gc}"/><circle cx="50" cy="18" r="1.1" fill="${c1}"/><circle cx="50" cy="23" r="1.1" fill="${c1}"/>` }[k.gl] || "";
   const fam = FONT_FAM[k.nf] || FONT_FAM.display;
   const sp = k.sp && size >= 50 ? `<text x="50" y="40" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="${k.sp.length > 8 ? 7 : 8.5}" fill="${k.num || "#fff"}" opacity=".92">${esc(k.sp)}</text>` : "";
@@ -1003,7 +1005,7 @@ function crestEditor(force) {
   const sel = (f, list, val, labels) => `<select id="c-${f}" data-mi="${mi}">${list.map((k, i) => `<option value="${k}" ${k === val ? "selected" : ""}>${labels ? labels[i] : k}</option>`).join("")}</select>`;
   const col = (f, label, v) => `<label class="f" for="c-${f}">${label}<input id="c-${f}" type="color" data-mi="${mi}" value="${v}"></label>`;
   const tog = (f, label, def, on) => `<label class="f" for="c-${f}">${label}<span class="row" style="gap:6px;flex-wrap:nowrap"><input id="c-${f}" type="color" data-mi="${mi}" value="${c[f] || def}" ${on ? "" : 'style="opacity:.45"'}><button class="btn sm ${on ? "gold" : "ghost"}" data-a="ctog" data-f="${f}" data-def="${def}" data-mi="${mi}">${on ? "Ligada" : "Desligada"}</button></span></label>`;
-  return `<div class="sec-title"><h2>Escudo</h2><span class="muted">escolha um pronto ou monte o seu</span></div>
+  return `${looksBox(mi, m)}<div class="sec-title"><h2>Escudo</h2><span class="muted">escolha um pronto ou monte o seu</span></div>
   <div class="card crested">
     ${mis.length > 1 ? `<div class="row" style="margin-bottom:10px"><span class="muted">Editando:</span>${mis.map(i => `<button class="btn sm ${i === mi ? "gold" : ""}" data-a="crestmi" data-mi="${i}">${esc(S.managers[i].team)}</button>`).join("")}</div>` : ""}
     <div class="crestgrid">
@@ -1043,11 +1045,26 @@ function crestEditor(force) {
   <div class="sec-title"><h2>Uniformes</h2><span class="muted">principal no campo e na torcida; o reserva entra quando as cores batem com o do rival</span></div>
   ${kitEditor(mi, m)}`;
 }
+// visuais salvos: vários conjuntos de escudo + uniformes guardados no perfil
+function looksBox(mi, m) {
+  const L = getProf().looks || [];
+  return `<div class="sec-title"><h2>Meus visuais</h2><span class="muted">guarde vários escudos e uniformes e troque quando quiser, por exemplo antes de uma temporada nova</span></div>
+  <div class="card crested"><div class="looks">${L.map((x, k) => `<div class="look"><div class="row" style="gap:4px;justify-content:center">${crestSVG(x.crest, 34)}${kitSVG(x.kit, 38, 10)}${x.kit2 ? kitSVG(x.kit2, 30, 10) : ""}</div><b>${esc(x.n)}</b><div class="row" style="gap:4px;justify-content:center"><button class="btn sm gold" data-a="lookuse" data-k="${k}" data-mi="${mi}">Usar</button><button class="btn sm ghost" data-a="lookdel" data-k="${k}" title="Apagar">✕</button></div></div>`).join("") || `<p class="muted" style="margin:0;font-size:13px">Nenhum visual salvo ainda. Monte o escudo e os uniformes abaixo e salve aqui.</p>`}</div>
+  <div class="row" style="gap:6px;margin-top:10px"><input id="look-n" type="text" maxlength="20" placeholder="Nome do visual (ex.: Temporada 2)" style="flex:1;min-width:160px"><button class="btn sm" data-a="looksave" data-mi="${mi}" ${L.length >= 12 ? "disabled" : ""}>Salvar o visual atual</button></div>
+  ${L.length >= 12 ? `<p class="muted" style="font-size:12px;margin:6px 0 0">Limite de 12 visuais. Apague um para salvar outro.</p>` : ""}</div>`;
+}
+function useLook(mi, x) {
+  const cp = v => v ? JSON.parse(JSON.stringify(v)) : null, crest = cp(x.crest), kit = cp(x.kit), kit2 = cp(x.kit2);
+  if (mi === PROF_MI) { putProf({ crest, kit, kit2 }); return render(true); }
+  const m = S.managers[mi], a = { t: "editme", mi, crest, kit }; if (kit2) a.kit2 = kit2;
+  if (NET.mode === "client") { m.crest = crest; m.kit = kit; setLocal(mi, "crest", crest); setLocal(mi, "kit", kit); if (kit2) { m.kit2 = kit2; setLocal(mi, "kit2", kit2); } render(true); }
+  act(a);
+}
 function kitEditor(mi, m) {
   const which = UI.kitTab === 2 ? 2 : 1, key = which === 2 ? "kit2" : "kit";
   const k = m[key] || (which === 2 ? awayKit(m.kit) : {}) || {};
   const sel = (f, list, val, labels) => `<select id="k-${f}" data-mi="${mi}">${list.map((v, i) => `<option value="${v}" ${v === val ? "selected" : ""}>${labels ? labels[i] : v}</option>`).join("")}</select>`;
-  const tog = (f, label, def) => { const on = !!k[f]; return `<label class="f" for="k-${f}">${label}<span class="row" style="gap:6px;flex-wrap:nowrap"><input id="k-${f}" type="color" data-mi="${mi}" value="${k[f] || def}" ${on ? "" : 'style="opacity:.45"'}><button class="btn sm ${on ? "gold" : "ghost"}" data-a="ktog" data-f="${f}" data-def="${def}" data-mi="${mi}">${on ? "Ligada" : "Desligada"}</button></span></label>`; };
+  const tog = (f, label, def, flag) => { const on = !!k[flag || f]; return `<label class="f" for="k-${f}">${label}<span class="row" style="gap:6px;flex-wrap:nowrap"><input id="k-${f}" type="color" data-mi="${mi}" value="${k[f] || def}" ${on ? "" : 'style="opacity:.45"'}><button class="btn sm ${on ? "gold" : "ghost"}" data-a="ktog" data-f="${f}" data-flag="${flag || ""}" data-def="${def}" data-mi="${mi}">${on ? "Ligada" : "Desligada"}</button></span></label>`; };
   return `<div class="card crested"><div class="row" style="margin-bottom:10px;gap:6px"><button class="btn sm ${which === 1 ? "gold" : ""}" data-a="kittab" data-v="1">Principal</button><button class="btn sm ${which === 2 ? "gold" : ""}" data-a="kittab" data-v="2">Reserva</button></div>
   <div class="crestgrid">
     <div class="crestprev"><div class="row" style="gap:6px;justify-content:center">${kitSVG(m.kit, which === 1 ? 120 : 70, 10)}${kitSVG(m.kit2 || awayKit(m.kit), which === 2 ? 120 : 70, 10)}</div><b>${esc(m.team)}</b><span class="muted" style="font-size:12px">${which === 1 ? "Principal (casa)" : "Reserva (fora, se as cores baterem)"}</span><button class="btn sm" style="margin-top:8px" data-a="kitrand" data-mi="${mi}">🎲 Camisa aleatória</button></div>
@@ -1058,10 +1075,11 @@ function kitEditor(mi, m) {
         <label class="f" for="k-c2">Cor do detalhe<input id="k-c2" type="color" data-mi="${mi}" value="${k.c2 || "#111111"}"></label>
         ${tog("c3", "Cor terciária (opcional)", "#ffffff")}
         <label class="f" for="k-pat2">Desenho da cor terciária${sel("pat2", KIT_PATS, k.pat2 || "liso", ["Nenhum"].concat(KIT_NAMES.slice(1)))}</label>
-        <label class="f" for="k-tr">Gola, punhos e barra na 3ª cor<select id="k-tr" data-mi="${mi}"><option value="1" ${k.tr !== false ? "selected" : ""}>Sim</option><option value="0" ${k.tr === false ? "selected" : ""}>Não</option></select></label>
+        ${tog("pc", "Punhos e barra (opcional)", "#ffffff", "pu")}
       </div></div>
       <div class="edsec"><b>Gola, mangas e número</b><div class="grid3">
         <label class="f" for="k-gl">Gola${sel("gl", KIT_GOLAS, k.gl || "padrao", KIT_GOLA_LBL)}</label>
+        ${tog("gc", "Cor da gola (opcional)", "#ffffff")}
         ${tog("cm", "Cor das mangas (opcional)", "#ffffff")}
         <label class="f" for="k-num">Cor do número<input id="k-num" type="color" data-mi="${mi}" value="${k.num || "#ffffff"}"></label>
         ${tog("nc", "Contorno do número (opcional)", "#000000")}
@@ -1079,7 +1097,7 @@ function randCrestFull(txt) {
 }
 function randKitFull() {
   const c1 = rndOf(PAL); let c2 = rndOf(PAL); while (c2 === c1) c2 = rndOf(PAL); const third = Math.random() < 0.4;
-  return { c1, c2, pat: rndOf(KIT_PATS), num: rndOf(["#ffffff", "#111111", c2]), c3: third ? rndOf(PAL) : null, pat2: third && Math.random() < 0.5 ? rndOf(KIT_PATS.slice(1)) : "liso", tr: true, gl: rndOf(KIT_GOLAS), cm: Math.random() < 0.2 ? rndOf(PAL) : null, nf: rndOf(KIT_FONTS) };
+  return { c1, c2, pat: rndOf(KIT_PATS), num: rndOf(["#ffffff", "#111111", c2]), c3: third ? rndOf(PAL) : null, pat2: third && Math.random() < 0.6 ? rndOf(KIT_PATS.slice(1)) : "liso", gc: Math.random() < 0.4 ? rndOf(PAL) : null, pu: Math.random() < 0.3, pc: rndOf(PAL), gl: rndOf(KIT_GOLAS), cm: Math.random() < 0.2 ? rndOf(PAL) : null, nf: rndOf(KIT_FONTS) };
 }
 function setKit(mi, patch) { if (mi === PROF_MI) { const m = mgrOf(mi), key = UI.kitTab === 2 ? "kit2" : "kit"; putProf({ [key]: Object.assign({}, m[key] || (key === "kit2" ? awayKit(m.kit) : {}), patch) }); return render(true); } const m = S.managers[mi], key = UI.kitTab === 2 ? "kit2" : "kit"; const k = Object.assign({}, m[key] || (key === "kit2" ? awayKit(m.kit) : {}), patch); if (NET.mode === "client") { m[key] = k; setLocal(mi, key, k); render(true); } act({ t: "editme", [key]: k, mi }); }
 function setCrest(mi, patch) { if (mi === PROF_MI) { putProf({ crest: Object.assign({}, mgrOf(mi).crest || {}, patch) }); return render(true); } const m = S.managers[mi]; const c = Object.assign({}, m.crest || {}, patch); if (NET.mode === "client") { m.crest = c; setLocal(mi, "crest", c); render(true); } act({ t: "editme", crest: c, mi }); }
@@ -1822,8 +1840,11 @@ document.addEventListener("click", e => {
   if (a === "fasign" || a === "farel") return act({ t: a, id: +b.dataset.id, mi: +b.dataset.mi });
   if (a === "nextseason") return act({ t: "nextseason" });
   if (a === "replay") { if (LV.lastGoal) { LV.replay = { frames: LV.lastGoal.frames, i: 0 }; } return; }
-  if (a === "ktog") { const m = mgrOf(+b.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 || awayKit(m.kit) : m.kit) || {}, f = b.dataset.f; return setKit(+b.dataset.mi, { [f]: k[f] ? null : (($("#k-" + f) && $("#k-" + f).value) || b.dataset.def) }); }
+  if (a === "ktog") { const m = mgrOf(+b.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 || awayKit(m.kit) : m.kit) || {}, f = b.dataset.f, fl = b.dataset.flag; if (fl) return setKit(+b.dataset.mi, k[fl] ? { [fl]: false } : { [fl]: true, [f]: ($("#k-" + f) && $("#k-" + f).value) || b.dataset.def }); return setKit(+b.dataset.mi, { [f]: k[f] ? null : (($("#k-" + f) && $("#k-" + f).value) || b.dataset.def) }); }
   if (a === "ctog") { const m = mgrOf(+b.dataset.mi), c = m.crest || {}, f = b.dataset.f; const patch = { [f]: c[f] ? null : (($("#c-" + f) && $("#c-" + f).value) || b.dataset.def) }; if (f === "c4" && !c.c4 && (!c.pat2 || c.pat2 === "liso")) patch.pat2 = "faixa"; return setCrest(+b.dataset.mi, patch); }
+  if (a === "looksave") { const m = mgrOf(+b.dataset.mi), P0 = getProf(), L = (P0.looks || []).slice(); if (L.length >= 12) return; const n = (($("#look-n") && $("#look-n").value) || "").trim().slice(0, 20) || ("Visual " + (L.length + 1)); L.push({ n, crest: JSON.parse(JSON.stringify(m.crest || {})), kit: JSON.parse(JSON.stringify(m.kit || {})), kit2: m.kit2 ? JSON.parse(JSON.stringify(m.kit2)) : null, at: Date.now() }); putProf({ looks: L }); toast("Visual salvo: " + n); return render(true); }
+  if (a === "lookuse") { const x = (getProf().looks || [])[+b.dataset.k]; if (x) { useLook(+b.dataset.mi, x); toast("Usando o visual " + x.n); } return; }
+  if (a === "lookdel") { const L = (getProf().looks || []).slice(); L.splice(+b.dataset.k, 1); putProf({ looks: L }); return render(true); }
   if (a === "crestrand") { const m = mgrOf(+b.dataset.mi); return setCrest(+b.dataset.mi, Object.assign(randCrestFull((m.crest && m.crest.txt) || initials(m.team)), { stars: (m.crest && m.crest.stars) || 0, spos: (m.crest && m.crest.spos) || "fora", ano: (m.crest && m.crest.ano) || "" })); }
   if (a === "kitrand") { const m = mgrOf(+b.dataset.mi), cur = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; return setKit(+b.dataset.mi, Object.assign(randKitFull(), { sp: cur.sp || "" })); }
   if (a === "kittab") { UI.kitTab = +b.dataset.v; return render(true); }
@@ -1861,7 +1882,7 @@ document.addEventListener("change", e => {
   if (id && id.startsWith("st-")) { const mi = +el.dataset.mi; if (NET.mode === "client" && S.managers[mi]) { const st = Object.assign({}, S.managers[mi].strat, { [el.dataset.k]: el.value }); S.managers[mi].strat = st; setLocal(mi, "strat", st); } return act({ t: "strat", [el.dataset.k]: el.value, mi }); }
   if (["s-fmt", "s-year", "s-staff", "s-trades", "s-hide", "s-career"].includes(id) && isHost()) return act(readSettings());
   if (id && /^c-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = f === "stars" ? +v : f === "hn" ? v === "1" : f === "txt" ? v.toUpperCase().replace(/[^A-Z0-9À-Ú]/g, "").slice(0, 3) : f === "ano" ? v.replace(/[^0-9]/g, "").slice(0, 4) : v; const patch = { [f]: val }; if (f === "pat2" && v !== "liso" && !(mgrOf(+el.dataset.mi).crest || {}).c4) patch.c4 = ($("#c-c4") && $("#c-c4").value) || "#ffffff"; return setCrest(+el.dataset.mi, patch); }
-  if (id && /^k-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = f === "tr" ? v === "1" : f === "sp" ? v.replace(/[<>&"']/g, "").slice(0, 12) : v; const patch = { [f]: val }; if (f === "pat2" && v !== "liso") { const m = mgrOf(+el.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; if (!k.c3) patch.c3 = ($("#k-c3") && $("#k-c3").value) || "#ffffff"; } return setKit(+el.dataset.mi, patch); }
+  if (id && /^k-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = f === "tr" ? v === "1" : f === "sp" ? v.replace(/[<>&"']/g, "").slice(0, 12) : v; const patch = { [f]: val }; if (f === "pc") patch.pu = true; if (f === "pat2" && v !== "liso") { const m = mgrOf(+el.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; if (!k.c3) patch.c3 = ($("#k-c3") && $("#k-c3").value) || "#ffffff"; } return setKit(+el.dataset.mi, patch); }
   if (id === "t-auto") return tacChange(+el.dataset.mi, tac => { tac.autoSub = el.checked; });
   if (id === "t-gkm") return tacChange(+el.dataset.mi, tac => { tac.gkMode = el.value; });
   if (id === "t-pk") return tacChange(+el.dataset.mi, tac => { tac.pk = el.value ? +el.value : null; });

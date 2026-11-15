@@ -38,12 +38,12 @@ function renderLive(force) {
     + `<button class="btn sm ghost" data-a="hidelive">${M.status === "done" ? "Fechar" : "Minimizar"}</button>`;
   const ph = phaseLabel(M);
   const mm = Math.floor(M.min), ss = Math.round((M.min - mm) * 60);
-  $("#l-board").innerHTML = `<div class="tn" style="color:${H.color}"><span class="bcrest">${crestSVG(S && S.managers[H.mi] ? S.managers[H.mi].crest : null, 34)}</span>${esc(H.name)}<small>pres. ${esc(H.pres)} · ${M.t[0].tac.form} · ${STYLES[H.tac.style].n}</small></div>
+  $("#l-board").innerHTML = `<div class="tn" style="color:${H.color}"><span class="bcrest">${crestSVG(S && S.managers[H.mi] ? tcrest(S.managers[H.mi]) : null, 34)}</span>${esc(H.name)}<small>pres. ${esc(H.pres)} · ${M.t[0].tac.form} · ${STYLES[H.tac.style].n}</small></div>
     <div><div class="score num">${M.score[0]}<span class="muted">:</span>${M.score[1]}</div>
     <div class="min num">${M.status === "done" ? "FIM" : M.phase === "so" ? "SHOOTOUTS" : (mm >= 36 ? "36'+" : `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`)}</div>
     ${M.so ? `<div class="muted num" style="text-align:center">shootouts ${M.so[0]}-${M.so[1]}</div>` : ""}
     <div style="text-align:center;margin-top:6px"><span class="phase ${ph.k}">${esc(ph.t)}</span>${M.paused ? ' <span class="phase mb">pausado</span>' : ""}</div></div>
-    <div class="tn" style="text-align:right;color:${A.color}"><span class="bcrest">${crestSVG(S && S.managers[A.mi] ? S.managers[A.mi].crest : null, 34)}</span>${esc(A.name)}<small>pres. ${esc(A.pres)} · ${A.tac.form} · ${STYLES[A.tac.style].n}</small></div>`;
+    <div class="tn" style="text-align:right;color:${A.color}"><span class="bcrest">${crestSVG(S && S.managers[A.mi] ? tcrest(S.managers[A.mi]) : null, 34)}</span>${esc(A.name)}<small>pres. ${esc(A.pres)} · ${A.tac.form} · ${STYLES[A.tac.style].n}</small></div>`;
   const zone = (a, b, c) => `<div class="z" style="left:${a / 40 * 100}%;width:${(b - a) / 40 * 100}%;background:${c}"></div>`;
   $("#l-tl").innerHTML = zone(0, 6, "rgba(76,201,240,.35)") + zone(6, 17, "rgba(179,146,240,.25)") + zone(17, 20, "rgba(245,197,66,.6)") + zone(20, 23, "rgba(47,212,126,.45)") + zone(23, 36, "rgba(179,146,240,.25)") + zone(36, 40, "rgba(255,77,97,.5)") + `<div class="cur" style="left:${Math.min(39.6, M.min) / 40 * 100}%"></div>`;
   renderPrompt(force); renderCtrl(force); renderFeed(); showReacts(M);
@@ -207,7 +207,7 @@ function playNext() {
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let html = "", dur = 1400;
   if (e.type === "goal") {
-    html = `<div class="ov ov-goal" style="--c:${col}"><div class="big">GOOOL!</div><div class="who">${esc(e.who || "")}</div>${e.v === 2 ? '<div class="x2">VALE 2</div>' : ""}<div class="team">${esc(M.t[e.team].name)} ${e.s[0]}-${e.s[1]}</div></div>`;
+    const masc = mascotSVG(M.t[e.team].crest, 120); html = `<div class="ov ov-goal" style="--c:${col}">${masc ? `<div class="masc">${masc}</div>` : ""}<div class="big">GOOOL!</div><div class="who">${esc(e.who || "")}</div>${e.v === 2 ? '<div class="x2">VALE 2</div>' : ""}<div class="team">${esc(M.t[e.team].name)} ${e.s[0]}-${e.s[1]}</div></div>`;
     dur = 2300; burst(e.team, col); LV.shake = 14; LV.goalAt = LV.goalAt || {}; LV.goalAt[e.team] = performance.now() / 1000;
   } else if (e.type === "card") {
     const key = e.card;
@@ -378,6 +378,8 @@ function drawKit(c, X, Y, r, k, gk) {
   c.beginPath(); c.arc(X, Y, r, 0, Math.PI * 2); c.closePath();
   c.fillStyle = gk ? "#15171c" : k.c1; c.fill();
   c.clip();
+  const tx = !gk && kitTex(k);
+  if (tx) { c.drawImage(tx, X - r, Y - r, 2 * r, 2 * r); c.restore(); c.beginPath(); c.arc(X, Y, r, 0, Math.PI * 2); c.lineWidth = 2.2; c.strokeStyle = "rgba(255,255,255,.7)"; c.stroke(); return; }
   c.fillStyle = gk ? k.c1 : k.c2;
   if (!gk) {
     if (k.pat === "listras") for (let i = -2; i <= 2; i += 2) c.fillRect(X + i * r * 0.38 - r * 0.16, Y - r, r * 0.32, 2 * r);
@@ -422,7 +424,7 @@ function drawStands(c, M, W, HT, SH, t) {
     const g = c.createLinearGradient(0, y0, 0, y0 + SH);
     g.addColorStop(0, ti === 0 ? "#1a1f29" : "#232a36"); g.addColorStop(1, ti === 0 ? "#232a36" : "#1a1f29");
     c.fillStyle = g; c.fillRect(0, y0, W, SH);
-    const k = kits[ti], mos = mosaicFor(M, ti);
+    const k = kits[ti], CR = M.t[ti].crest || {}, sty = CR.tor || "mosaico", A1 = CR.t1 || k.c1, A2 = CR.t2 || k.c2 || "#111111", mos = sty === "mosaico" ? mosaicFor(M, ti) : null;
     const cell = Math.max(4, Math.floor(SH / 11));
     const cols = Math.floor(W / cell), rows = Math.floor((SH - 6) / cell);
     const goalAt = (LV.goalAt || {})[ti] || -99, cheer = t - goalAt < 2.6;
@@ -434,15 +436,29 @@ function drawStands(c, M, W, HT, SH, t) {
       if (mos && mq >= 0 && mq < mos.cols && mr >= 0 && mr < mos.rows) {
         const i4 = (mr * mos.cols + mq) * 4;
         col = mos.data[i4 + 3] > 60 ? `rgb(${mos.data[i4]},${mos.data[i4 + 1]},${mos.data[i4 + 2]})` : (seed % 2 ? k.c1 : k.c2);
-      } else col = seed % 9 === 0 ? "#3a4252" : seed % 3 === 0 ? k.c2 : k.c1;
+      } else if (sty === "listras") col = seed % 13 === 0 ? "#3a4252" : Math.floor(q / 3) % 2 ? A2 : A1;
+      else if (sty === "xadrez") col = seed % 13 === 0 ? "#3a4252" : (Math.floor(q / 2) + Math.floor(r / 2)) % 2 ? A2 : A1;
+      else if (sty === "ondas") col = r < rows / 2 + Math.sin(q / 3 - t * 2.2) * rows * 0.3 ? A1 : A2;
+      else col = seed % 9 === 0 ? "#3a4252" : seed % 3 === 0 ? A2 : A1;
       const jump = cheer ? Math.abs(Math.sin(t * 9 + seed)) * cell * 0.5 : Math.sin(t * 2 + seed) * 0.6;
       c.fillStyle = col;
       c.fillRect(q * cell + 1, y0 + 3 + r * cell - (ti === 0 ? jump : -jump * 0) - (ti === 1 ? jump : 0), cell - 1.5, cell - 1.5);
     }
+    if (sty === "bandeiras") for (let f = 0; f < 7; f++) { // bandeiras tremulando
+      const px = (f + 0.5) * W / 7 + ((f * 37) % 23) - 11, top = y0 + 2, ph = t * 4 + f;
+      c.fillStyle = "#d7dbe3"; c.fillRect(px, top, 1.5, SH - 8);
+      for (let s2 = 0; s2 < 12; s2++) { const w2 = 2.2, xx = px + 1.5 + s2 * w2, yy = top + Math.sin(ph + s2 * 0.5) * 2.2; c.fillStyle = s2 % 4 < 2 ? A1 : A2; c.fillRect(xx, yy, w2 + 0.3, Math.min(16, SH * 0.45)); }
+    }
+    if (sty === "sinalizadores") for (let f = 0; f < 6; f++) { // sinalizadores com fumaça nas cores do time
+      const px = (f + 0.5) * W / 6 + ((f * 53) % 31) - 15, py = y0 + SH * (0.35 + ((f * 7) % 4) * 0.12), fl = 0.6 + Math.abs(Math.sin(t * 13 + f * 3)) * 0.4;
+      for (let s2 = 0; s2 < 5; s2++) { const a = ((t * 0.6 + s2 * 0.2 + f * 0.13) % 1); c.globalAlpha = 0.28 * (1 - a); c.fillStyle = s2 % 2 ? A1 : A2; c.beginPath(); c.arc(px + Math.sin(a * 6 + f) * 6, py - a * SH * 0.8, 4 + a * 12, 0, Math.PI * 2); c.fill(); }
+      c.globalAlpha = 1; c.fillStyle = `rgba(255,${Math.round(80 + fl * 90)},40,${fl})`; c.beginPath(); c.arc(px, py, 3.2 * fl + 1.5, 0, Math.PI * 2); c.fill();
+    }
     // faixa com o nome do time
     c.fillStyle = "rgba(0,0,0,.55)"; const by = ti === 0 ? y0 + SH - 14 : y0; c.fillRect(0, by, W, 14);
     c.fillStyle = k.c1; c.font = `800 11px "Big Shoulders Display", sans-serif`; c.textAlign = "center";
-    c.fillText(`${M.t[ti].name.toUpperCase()} · ${M.t[ti].name.toUpperCase()} · ${M.t[ti].name.toUpperCase()}`, W / 2, by + 11);
+    const fx = (CR.fx || M.t[ti].name).toUpperCase(); c.fillStyle = A1;
+    c.fillText(`${fx} · ${fx} · ${fx}`, W / 2, by + 11);
   });
 }
 function shortName(n) { const s = n.replace(/'/g, "").split(" "); const w = s.length > 1 && s[0].length <= 3 ? s[1] : s[0]; return w.length > 9 ? w.slice(0, 8) + "." : w; }
