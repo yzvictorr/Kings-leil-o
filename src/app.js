@@ -4,8 +4,60 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&a
 const CROWN = `<svg viewBox="0 0 64 64" aria-hidden="true"><path fill="#f5c542" d="M6 22l14 12 12-20 12 20 14-12-6 30H12z"/><rect x="12" y="54" width="40" height="5" rx="2" fill="#f5c542"/><circle cx="6" cy="20" r="4" fill="#f5c542"/><circle cx="32" cy="11" r="4" fill="#f5c542"/><circle cx="58" cy="20" r="4" fill="#f5c542"/></svg>`;
 function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 let MYPID = store("kl_pid"); if (!MYPID) { MYPID = "u" + Math.random().toString(36).slice(2, 10); store("kl_pid", MYPID); }
+const ANON_PID = MYPID; // identidade deste aparelho sem login
+// ---- conta (login com Google, opcional) ----
+const ACC = { user: null, prof: null, saveT: null, last: "" };
+function accountInit() {
+  let n = 0; const t = setInterval(() => { if (window.klAuth) { clearInterval(t); window.klAuth.onChange(onUser); } else if (++n > 60) clearInterval(t); }, 250);
+}
+async function onUser(u) {
+  ACC.user = u;
+  if (!S) MYPID = u ? "g" + u.uid : ANON_PID; // com login, você é o mesmo presidente em qualquer aparelho
+  ACC.prof = null;
+  if (u) {
+    try { const db = await window.claude.use("db"); const d = db ? await db.doc("users/" + u.uid).get() : null; ACC.prof = d && d.exists ? d.data() : null; } catch (e) { }
+    const P0 = ACC.prof = Object.assign({ name: (u.name || "").split(" ")[0].slice(0, 18), team: "", crest: null, kit: null, kit2: null, rooms: [], titles: [], seasons: [] }, ACC.prof || {});
+    if (P0.name) store("kl_name", P0.name); if (P0.team) store("kl_team", P0.team);
+    try { const l = JSON.parse(store("kl_rooms") || "[]"); (P0.rooms || []).forEach(r => { if (!l.some(x => x.c === r.c)) l.push(r); }); l.sort((a, b) => b.at - a.at); store("kl_rooms", JSON.stringify(l.slice(0, 5))); } catch (e) { }
+    ACC.last = JSON.stringify(P0);
+  }
+  render();
+}
+function profSave(now) {
+  if (!ACC.user || !ACC.prof) return;
+  clearTimeout(ACC.saveT);
+  ACC.saveT = setTimeout(async () => { try { const j = JSON.stringify(ACC.prof); if (j === ACC.last) return; const db = await window.claude.use("db"); if (db) { await db.doc("users/" + ACC.user.uid).set(Object.assign({}, ACC.prof, { at: Date.now() })); ACC.last = j; } } catch (e) { } }, now ? 0 : 2500);
+}
+// acompanha a sala: aplica o escudo/uniformes do perfil ao entrar e guarda o que você muda, títulos e temporadas
+function profSync() {
+  if (!ACC.user || !ACC.prof || !S || NET.mode === "local") return;
+  const mi = myMi(); if (mi < 0) return; const m = S.managers[mi], P0 = ACC.prof;
+  UI.profApplied = UI.profApplied || {};
+  if (!UI.profApplied[S.code]) {
+    UI.profApplied[S.code] = true;
+    if (S.phase === "lobby" && (P0.crest || P0.kit)) { const patch = { mi }; if (P0.crest) patch.crest = P0.crest; if (P0.kit) patch.kit = P0.kit; if (P0.kit2) patch.kit2 = P0.kit2; UI.profHold = Date.now() + 9000; act(Object.assign({ t: "editme" }, patch)); return; }
+  }
+  let ch = false;
+  const hold = UI.profHold && Date.now() < UI.profHold && JSON.stringify(m.crest) !== JSON.stringify(P0.crest);
+  (hold ? ["name", "team"] : ["name", "team", "crest", "kit", "kit2"]).forEach(k => { const v = m[k] == null ? null : JSON.parse(JSON.stringify(m[k])); if (JSON.stringify(P0[k]) !== JSON.stringify(v)) { P0[k] = v; ch = true; } });
+  P0.rooms = P0.rooms || []; if (!P0.rooms.length || P0.rooms[0].c !== S.code) { P0.rooms = [{ c: S.code, at: Date.now(), t: m.team }].concat(P0.rooms.filter(r => r.c !== S.code)).slice(0, 5); ch = true; }
+  ((S.hall && S.hall.titles) || []).forEach(t => { if (t.pid !== MYPID) return; const key = S.code + "-" + t.at; P0.titles = P0.titles || []; if (!P0.titles.some(x => x.k === key)) { P0.titles.push({ k: key, comp: t.comp, team: t.team, season: t.season || null, code: S.code, at: t.at }); ch = true; } });
+  if (S.phase === "done" && S.season) { const key = S.code + "-" + (S.games || 0) + "-" + (S.career ? S.career.year : 0) + "-" + S.season.fmt; P0.seasons = P0.seasons || []; if (!P0.seasons.some(x => x.k === key)) { P0.seasons.push({ k: key, team: m.team, comp: S.season.fmt === "cup" ? "Kings Cup" : "Split", champ: S.season.champion === mi, at: Date.now() }); if (P0.seasons.length > 60) P0.seasons.shift(); ch = true; } }
+  if (ch) profSave();
+}
+function accountChip() {
+  if (!window.klAuth) return "";
+  if (!ACC.user) return S ? "" : `<button class="btn sm" data-a="login"><span class="g-ico">G</span> Entrar com Google</button>`;
+  return `<span class="chip acc">${ACC.user.photo ? `<img src="${esc(ACC.user.photo)}" alt="" referrerpolicy="no-referrer">` : ""}${esc((ACC.prof && ACC.prof.name) || ACC.user.name || "Conta")}</span>${S ? "" : `<button class="btn sm ghost" data-a="logout">Sair da conta</button>`}`;
+}
+function profileCard() {
+  if (!window.klAuth) return "";
+  if (!ACC.user) return `<div class="card acccard"><div><b>Entre com o Google para guardar seu perfil</b><div class="muted" style="font-size:13px">Seu escudo, uniformes, nome do time, salas e títulos ficam salvos na sua conta, e você é o mesmo presidente no celular, no PC ou em qualquer navegador. Sem login também dá pra jogar normalmente.</div></div><button class="btn gold" data-a="login"><span class="g-ico">G</span> Entrar com Google</button></div>`;
+  const P0 = ACC.prof || {}, t = (P0.titles || []).length, se = (P0.seasons || []).length;
+  return `<div class="card acccard">${P0.crest ? crestSVG(P0.crest, 54) : ""}<div style="flex:1"><b>${esc(P0.name || ACC.user.name)}${P0.team ? ` · ${esc(P0.team)}` : ""}</b><div class="muted" style="font-size:13px">${t} título${t === 1 ? "" : "s"} · ${se} competiç${se === 1 ? "ão" : "ões"} jogada${se === 1 ? "" : "s"}${(P0.titles || []).length ? " · último: " + esc(P0.titles[P0.titles.length - 1].comp) + " com o " + esc(P0.titles[P0.titles.length - 1].team) : ""}</div><div class="muted" style="font-size:12px">Seu escudo e uniformes entram sozinhos nas salas novas. O que você mudar no vestiário fica salvo na conta.</div></div></div>`;
+}
 
-const NET = { mode: "none", code: null, db: null, rjoin: null, docRef: null, liveRef: null, unsub: [], busy: false, pending: false, lastWrite: 0, lbusy: false, lpending: false, llast: 0, seq: 0, queue: [], clockOff: 0, canWriteIn: true };
+const NET = { mode: "none", code: null, db: null, rjoin: null, docRef: null, liveRef: null, unsub: [], busy: false, pending: false, lastWrite: 0, lbusy: false, lpending: false, llast: 0, seq: Date.now(), queue: [], clockOff: 0, canWriteIn: true };
 let S = null;      // estado do jogo
 let LIVE = null;   // partida que este aparelho está assistindo
 let LIVES = {};    // todas as partidas ao vivo da rodada (fid -> partida)
@@ -42,13 +94,13 @@ function saveLocal() { try { const j = JSON.stringify(S); sessionStorage.setItem
 function savedLocal() { try { const raw = JSON.parse(localStorage.getItem("kl_save") || "null"); return raw && raw.mode === "local" && raw.v === 2 ? raw : null; } catch (e) { return null; } }
 function loadLocal(raw) { S = raw; setPov(S.pov); NET.mode = "local"; NET.code = "LOCL"; LIVES = {}; UI.watch = null; startLoop(); commit(); renderLive(true); }
 async function exportSave() {
-  const name = `kings-leilao-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`, data = JSON.stringify({ kl: 1, at: Date.now(), S });
+  const name = `the-kings-game-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`, data = JSON.stringify({ kl: 1, at: Date.now(), S });
   try { const dl = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null; if (dl) { await dl.save({ filename: name, data }); toast("Progresso salvo no arquivo."); return; } } catch (e) { toast("O arquivo não foi salvo."); return; }
-  try { const blob = new Blob([JSON.stringify({ kl: 1, at: Date.now(), S })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `kings-leilao-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); toast("Progresso salvo no arquivo."); } catch (e) { toast("Não consegui gerar o arquivo aqui."); }
+  try { const blob = new Blob([JSON.stringify({ kl: 1, at: Date.now(), S })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `the-kings-game-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); toast("Progresso salvo no arquivo."); } catch (e) { toast("Não consegui gerar o arquivo aqui."); }
 }
 function importSave(file) {
   const r = new FileReader();
-  r.onload = () => { try { const d = JSON.parse(r.result), raw = d && d.S ? d.S : d; if (!raw || raw.v !== 2 || !Array.isArray(raw.managers)) throw 0; raw.mode = "local"; raw.code = "LOCL"; raw.managers.forEach((m, i) => { if (!m.cpu && !/^local/.test(m.pid)) m.pid = "local" + i; }); delete raw.away; loadLocal(raw); toast("Jogo carregado!"); } catch (e) { UI.homeErr = "Esse arquivo não é um jogo salvo do Kings Leilão."; render(); } };
+  r.onload = () => { try { const d = JSON.parse(r.result), raw = d && d.S ? d.S : d; if (!raw || raw.v !== 2 || !Array.isArray(raw.managers)) throw 0; raw.mode = "local"; raw.code = "LOCL"; raw.managers.forEach((m, i) => { if (!m.cpu && !/^local/.test(m.pid)) m.pid = "local" + i; }); delete raw.away; loadLocal(raw); toast("Jogo carregado!"); } catch (e) { UI.homeErr = "Esse arquivo não é um jogo salvo do The Kings Game."; render(); } };
   r.readAsText(file);
 }
 function scheduleWrite() {
@@ -161,7 +213,7 @@ function startPoll() {
       } else if (NET.mode === "client") {
         const d = await NET.docRef.get(); if (d.exists) applyRemote(d.data());
         const l = await NET.liveRef.get(); applyRemoteLive(l.exists ? l.data() : null);
-        if (myMi() < 0 && S && NET.joinInfo && Date.now() - (NET.lastJoin || 0) > (S.phase === "lobby" ? 4000 : 8000)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team }); }
+        if (myMi() < 0 && S && NET.joinInfo && Date.now() - (NET.lastJoin || 0) > (S.phase === "lobby" ? 4000 : 8000)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team, prev: ANON_PID }); }
       }
     } catch (e) { NET.pollErr = (e && e.code) || "erro"; }
   }, window.KL_POLL_MS || (NET.mode === "host" ? 600 : 800));
@@ -232,12 +284,13 @@ async function joinOnline(c0, n0, t0) {
     const data = snap.data();
     if (first) {
       clearTimeout(timer); first = false;
+      if (MYPID !== ANON_PID && !data.managers.some(m => m.pid === MYPID) && data.managers.some(m => m.pid === ANON_PID) && (data.hostPid === ANON_PID)) { data.managers.forEach(m => { if (m.pid === ANON_PID) m.pid = MYPID; }); data.hostPid = MYPID; }
       if (data.hostPid === MYPID) { S = JSON.parse(JSON.stringify(data)); setPov(S.pov); NET.unsub.forEach(u => u()); NET.unsub = []; becomeHost(room); return; }
       NET.mode = "client"; store("kl_last", code); rememberRoom(code); UI.busy = false; UI.homeErr = "";
       NET.joinInfo = { name, team };
       (async () => {
         NET.lobby = room; NET.rjoin = await joinRoom(room, code);
-        if (!data.managers.some(m => m.pid === MYPID)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name, team }); }
+        if (!data.managers.some(m => m.pid === MYPID)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name, team, prev: ANON_PID }); }
         startLoop(); startPoll(); render();
       })();
       NET.unsub.push(NET.liveRef.onSnapshot(ls => applyRemoteLive(ls.exists ? ls.data() : null), () => { }));
@@ -606,7 +659,7 @@ function connStatus() {
 function header() {
   const me = S ? S.managers[myMi()] : null;
   return `<div class="top"><div class="wrap">
-    <div class="brand">${CROWN}<div>Kings Leilão<small>KINGS LEAGUE BRASIL · FUT 7</small></div></div>
+    <div class="brand">${CROWN}<div>The Kings Game<small>KINGS LEAGUE BRASIL · FUT 7</small></div></div>
     <div class="spacer"></div>
     ${S && NET.mode !== "local" ? `<span class="chip">Sala <b>${esc(S.code)}</b></span>` : ""}
     ${S && NET.mode === "local" ? `<span class="chip">Um aparelho só</span>` : ""}
@@ -614,6 +667,7 @@ function header() {
     ${NET.mode === "host" ? `<span class="chip">Anfitrião</span>` : ""}
     ${S && S.phase === "season" ? `<button class="btn sm gold" id="hdr-live" data-a="showlive" style="${anyLive() ? "" : "display:none"}">Ao vivo</button>` : ""}
     ${S && NET.mode === "local" ? `<button class="btn sm ghost" data-a="exportsave" title="Baixa um arquivo com o jogo inteiro">Salvar arquivo</button>` : ""}
+    ${accountChip()}
     ${S ? `<button class="btn sm ghost" data-a="leave">Sair</button>` : ""}
   </div></div>`;
 }
@@ -628,9 +682,10 @@ const RULES = [
 function viewHome() {
   const nm = esc(store("kl_name") || ""), tm = esc(store("kl_team") || "");
   return `<div class="hero">
-    <h1>Monte seu time.<br><em>Leilão</em> da Kings League.</h1>
-    <p>Jogadores da Kings League Brasil sorteados um a um no leilão, com overall calculado pelo Split 1, Split 2, Kings Cup, Nations e Mundial. Depois, cada jogo é disputado ao vivo no campo: você escolhe formação, estilo, ordem do escalonado e a hora de usar a carta secreta e o pênalti do presidente.</p>
+    <h1>The Kings Game<br><em>Monte, jogue e ganhe</em> a Kings League.</h1>
+    <p>Leilão ou draft com os jogadores da Kings League Brasil, campeonato com as regras oficiais jogado ao vivo com os amigos, mercado de trocas e modo carreira com evolução de cada jogador. Você escolhe formação, estilo, ordem do escalonado, cobrador e a hora de usar a carta secreta e o pênalti do presidente.</p>
   </div>
+  ${profileCard()}
   ${resumeBox()}
   <div class="rules">${RULES.map(r => `<div style="--c:${r[2]}"><b>${r[0]}</b>${r[1]}</div>`).join("")}</div>
   <div class="grid3">
@@ -937,6 +992,12 @@ function careerWindow(me) {
   </div>`;
 }
 /* ---------- Kings Cup: manter wild cards e jogadores ---------- */
+function evoView() {
+  const E = S.evoLast; if (!E || (!E.evo.length && !E.pot.length)) return "";
+  return `<div class="card" style="display:grid;gap:8px;margin:12px 0"><h3 style="margin:0;font-size:20px">Evolução depois ${E.comp === "Split" ? "do Split" : "da Kings Cup"}</h3>
+    ${E.evo.length ? `<div class="row" style="gap:6px">${E.evo.map(([id, a, b]) => `<span class="pill ${b > a ? "you" : ""}">${esc(shortName(P(id).n))} ${a}→<b>${b}</b></span>`).join("")}</div>` : ""}
+    ${E.pot.length ? `<div class="muted" style="font-size:12px">POTENCIAL SUBIU (competição muito boa)</div><div class="row" style="gap:6px">${E.pot.map(([id, a, b]) => `<span class="pill you">${esc(shortName(P(id).n))} pot ${a}→<b>${b}</b></span>`).join("")}</div>` : ""}</div>`;
+}
 function viewKeep() {
   const k = S.keep, mis = NET.mode === "local" ? humansIdx() : myMi() >= 0 ? [myMi()] : [];
   UI.kp = UI.kp || {};
@@ -955,7 +1016,7 @@ function viewKeep() {
       <div class="row" style="justify-content:space-between"><span class="muted" style="font-size:13px">Quem não for escolhido volta para o draft da Kings Cup.</span><button class="btn gold" data-a="kpsend" data-mi="${mi}">Confirmar elenco</button></div>`}
     </div>`;
   }
-  return `<div class="sec-title"><h2>Kings Cup</h2><span class="phase">montagem dos elencos</span>${k.deadline ? `<span class="pill">fecha em <b class="num" data-dl="${k.deadline}">1:00</b> · quem não confirmar fica com os melhores</span>` : ""}</div>
+  return `${evoView()}<div class="sec-title"><h2>Kings Cup</h2><span class="phase">montagem dos elencos</span>${k.deadline ? `<span class="pill">fecha em <b class="num" data-dl="${k.deadline}">1:00</b> · quem não confirmar fica com os melhores</span>` : ""}</div>
   <p class="muted" style="max-width:75ch">Igual à vida real: cada presidente segura até ${k.maxWC} wild cards e até ${k.maxKeep} jogadores do draft. Os outros vão para o pote e o draft em cobra completa os elencos.</p>
   ${isHost() ? `<div class="row" style="margin-bottom:10px"><span class="muted" style="font-size:13px">Anfitrião:</span><button class="btn sm" data-a="keepclose">Fechar e ir para o sorteio</button></div>` : ""}
   ${box}
@@ -1103,7 +1164,7 @@ function viewSeason() {
   const stageName = { league: se.fmt === "cup" ? "Fase de grupos" : "Fase de liga", playin: "Play-in", quarters: "Quartas de final", semis: "Semifinais", final: "Final", done: "Encerrado" }[se.stage];
   const next = roundFixtures(S).filter(f => !f.res);
   const tabs = [["time", "Meu time"], ["tabela", "Classificação"], ["jogos", "Jogos"], ["elencos", "Elencos"], ["artilharia", "Estatísticas"]].concat(S.settings.career ? [["carreira", "Carreira"]] : []);
-  return `${gameOver(S) ? voteCard() + hallView() : ""}${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(champ.crest, 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
+  return `${gameOver(S) ? voteCard() + hallView() : ""}${champ ? evoView() : ""}${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(champ.crest, 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
   <div class="sec-title"><h2>${se.fmt === "cup" ? "Kings Cup" : "Split"}</h2>${S.career ? `<span class="pill you">Carreira · temporada ${S.career.year}</span>` : ""}<span class="phase">${stageName}</span>${se.koInfo ? `<span class="muted" style="font-size:13px">${esc(se.koInfo)}</span>` : ""}</div>
   ${se.fmt === "cup" ? `<div class="row" style="margin-bottom:10px;gap:8px"><span class="pill">Desafios: Grupo A <b class="num">${se.desafio[0]}</b> x <b class="num">${se.desafio[1]}</b> Grupo B</span>${Object.keys(se.dwin).length ? `<span class="muted" style="font-size:13px">Carta extra no mata-mata: ${Object.keys(se.dwin).map(i => esc(S.managers[+i].team)).join(", ")}</span>` : ""}</div>` : ""}
   ${!champ ? `<div class="card" style="display:grid;gap:10px">
@@ -1427,7 +1488,7 @@ function render(force) {
   if (S && NET.mode === "client" && myMi() < 0 && S.phase !== "lobby") body = `<div class="card unhbox" style="margin-bottom:12px">Você entrou assistindo. Se você é presidente de um time desta sala e voltou por outro aparelho, entre com o mesmo nome de presidente: assim que o aparelho antigo ficar uns 30 segundos fora, você reassume o seu time sozinho.</div>` + body;
   $("#app").innerHTML = header() + `<main class="wrap">${body}</main>`;
   if (aid) { const el = document.getElementById(aid); if (el) { if (keepVal != null) el.value = keepVal; el.focus(); try { if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, ss); } catch (e) { } } }
-  tickClocks(); renderChat();
+  tickClocks(); renderChat(); try { profSync(); } catch (e) { }
 }
 /* ---------- chat da sala ---------- */
 const QUICK = ["Boa!", "Que golaço!", "Roubado!", "Bora!", "Sem chance 😂", "GG"];
@@ -1458,6 +1519,8 @@ document.addEventListener("click", e => {
   const a = b.dataset.a;
   if (a === "create") return createOnline();
   if (a === "join") return joinOnline();
+  if (a === "login") { if (window.klAuth) window.klAuth.signIn().catch(e => toast(e && e.code === "auth/unauthorized-domain" ? "Este site ainda não está liberado para login." : "Não deu para entrar agora (" + ((e && e.code) || "erro") + ").")); return; }
+  if (a === "logout") { if (window.klAuth) window.klAuth.signOut(); return; }
   if (a === "rejoin") { const c = b.dataset.code; return joinOnline(c, ($("#j-name") && $("#j-name").value) || store("kl_name") || "Presidente", ($("#j-team") && $("#j-team").value) || store("kl_team") || "Meu Time FC"); }
   if (a === "resumelocal") { const sv = savedLocal(); if (sv) loadLocal(sv); return; }
   if (a === "dellocal") { try { localStorage.removeItem("kl_save"); localStorage.removeItem("kl_save_at"); } catch (e) { } return render(); }
@@ -1563,6 +1626,7 @@ document.addEventListener("change", e => {
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#viewer").classList.contains("on")) closeReplay(); });
 
 function boot(saved) {
+  accountInit();
   try {
     const raw = saved && saved.S ? saved.S : JSON.parse(sessionStorage.getItem("kl_local2") || "null");
     if (raw && raw.mode === "local" && raw.v === 2) { S = raw; setPov(S.pov); NET.mode = "local"; NET.code = "LOCL"; startLoop(); }

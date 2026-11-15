@@ -736,30 +736,7 @@ function careerRelease(S, mi, id) {
 function nextSeason(S) {
   if (!gameOver(S)) return false;
   const C = S.career = S.career || { year: 1 };
-  // desempenho da temporada: nota média, gols e assistências por jogo
-  const st = {}, gm = {};
-  (S.season ? S.season.fixtures : []).forEach(f => { const r = f.res; if (!r) return; [f.h, f.a].forEach(mi => gm[mi] = (gm[mi] || 0) + 1);
-    (r.nt || []).forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.j++; x.n += n; });
-    (r.sc || []).concat(r.ast || []).forEach(l => l.forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.ga += n; })); });
-  S.pov = S.pov || {}; const evo = [], potUp = [];
-  S.managers.forEach((m, mi) => m.roster.forEach(id => {
-    const p = P(id), x = st[id] || { j: 0, n: 0, ga: 0 }, avg = x.j ? x.n / x.j : 6;
-    // potencial dinâmico: quem faz temporada muito boa ganha teto mais alto (bom para o jogador mediano crescer)
-    let ps = avg + (p.p !== "GOL" && x.j ? Math.min(0.6, Math.max(0, x.ga / x.j - (p.p === "ATA" ? 1 : p.p === "MEI" ? 0.7 : 0.4)) * 0.4) : 0);
-    const reg = x.j >= Math.max(2, (gm[mi] || 0) * 0.6);
-    let pot = p.pot || p.o;
-    if (x.j >= 2) pot += ps >= 8 ? 3 : ps >= 7.4 ? 2 : ps >= 6.9 ? 1 : (ps < 6 && x.j >= 3) ? -1 : 0;
-    pot = Math.min(97, Math.max(p.o, pot));
-    let d = 0;
-    if (p.o < pot) { d = (ps >= 8 ? 3 : ps >= 7.4 ? 2 : ps >= 6.8 ? 1 : 0) + (reg ? 1 : 0) + (Math.random() < 0.3 ? 1 : 0); if (!x.j) d = Math.random() < 0.3 ? 1 : 0; d = Math.min(d, pot - p.o); }
-    else if (x.j >= 2 && ps < 6.2 && Math.random() < 0.4) d = -1;
-    if (d || pot !== (p.pot || p.o)) {
-      S.pov[id] = Object.assign({}, S.pov[id] || {}, { o: p.o + d, at: p.at + d, df: p.df + d, pot, v: Math.max(1, Math.round(1.25 * Math.exp((p.o + d - 64) * 0.13))) });
-      if (d) evo.push([id, p.o, p.o + d]);
-      if (pot > (p.pot || p.o)) potUp.push([id, p.pot || p.o, pot]);
-    }
-  }));
-  C.lastPot = potUp.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10);
+  if (!(S.season && S.season.evolved)) evolveComp(S);
   setPov(S.pov);
   // premiação pela campanha
   const tb = standings(S).map(r => r.i), ch = S.season && S.season.champion;
@@ -767,7 +744,6 @@ function nextSeason(S) {
   careerSeasonEnd(S);
   C.lastGoals = null;
   if (C.goals && C.goals.res) { C.lastGoals = { year: C.year, res: C.goals.res }; Object.entries(C.goals.res).forEach(([i, r]) => { const m = S.managers[i]; if (m) m.budget = Math.max(0, m.budget + r.money); }); }
-  C.lastEvo = evo.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10);
   C.year++;
   ["season", "history", "yearDone", "keep", "votes"].forEach(k => delete S[k]);
   if (S.base) { S.settings.fmt = S.base.fmt; }
@@ -828,6 +804,44 @@ function unhappyTick(S, f) {
   [f.h, f.a].forEach((mi, ti) => f.res.pl[ti].forEach(id => { const u = U[id]; if (u && u.mi === mi && u.left > 0) { u.left--; if (!u.left) { delete U[id]; addLog(S, `${P(id).n} voltou a ser feliz no ${S.managers[mi].team}.`); } } }));
   Object.keys(U).forEach(id => { const u = U[id]; if (!S.managers[u.mi] || !S.managers[u.mi].roster.includes(+id)) delete U[id]; });
 }
+// evolução e potencial dinâmico: roda ao fim de cada competição (Split ou Kings Cup) na carreira e na temporada completa
+function evolveComp(S) {
+  const se = S.season; if (!se || se.evolved) return; se.evolved = true;
+  const C = S.career || {};
+  // desempenho da temporada: nota média, gols e assistências por jogo
+  const st = {}, gm = {};
+  (S.season ? S.season.fixtures : []).forEach(f => { const r = f.res; if (!r) return; [f.h, f.a].forEach(mi => gm[mi] = (gm[mi] || 0) + 1);
+    (r.nt || []).forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.j++; x.n += n; });
+    (r.sc || []).concat(r.ast || []).forEach(l => l.forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.ga += n; })); });
+  S.pov = S.pov || {}; const evo = [], potUp = [];
+  S.managers.forEach((m, mi) => m.roster.forEach(id => {
+    const p = P(id), x = st[id] || { j: 0, n: 0, ga: 0 }, avg = x.j ? x.n / x.j : 6;
+    // potencial dinâmico: quem faz temporada muito boa ganha teto mais alto (bom para o jogador mediano crescer)
+    let ps = avg + (p.p !== "GOL" && x.j ? Math.min(0.6, Math.max(0, x.ga / x.j - (p.p === "ATA" ? 1 : p.p === "MEI" ? 0.7 : 0.4)) * 0.4) : 0);
+    const reg = x.j >= Math.max(2, (gm[mi] || 0) * 0.6);
+    let pot = p.pot || p.o;
+    if (x.j >= 2) pot += (ps >= 8 ? (S.settings.year ? 2 : 3) : ps >= 7.4 ? 2 : ps >= 6.9 ? 1 : (ps < 6 && x.j >= 3) ? -1 : 0);
+    pot = Math.min(97, Math.max(p.o, pot));
+    let d = 0;
+    if (p.o < pot) { d = (ps >= 8 ? (S.settings.year ? 2 : 3) : ps >= 7.4 ? 2 : ps >= 6.8 ? 1 : 0) + (reg && ps >= 6.8 ? 1 : 0) + (Math.random() < 0.25 ? 1 : 0); if (!x.j) d = Math.random() < 0.3 ? 1 : 0; if (S.settings.year) d = Math.min(d, 2); d = Math.min(d, pot - p.o); }
+    else if (x.j >= 2 && ps < 6.2 && Math.random() < 0.4) d = -1;
+    if (d || pot !== (p.pot || p.o)) {
+      S.pov[id] = Object.assign({}, S.pov[id] || {}, { o: p.o + d, at: p.at + d, df: p.df + d, pot, v: Math.max(1, Math.round(1.25 * Math.exp((p.o + d - 64) * 0.13))) });
+      if (d) evo.push([id, p.o, p.o + d]);
+      if (pot > (p.pot || p.o)) potUp.push([id, p.pot || p.o, pot]);
+    }
+  }));
+  setPov(S.pov);
+  const comp = se.fmt === "cup" ? "Kings Cup" : "Split";
+  S.evoLast = { comp, year: C.year || 1, evo: evo.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 12), pot: potUp.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10) };
+  if (S.career) { // junta o Split e a Kings Cup do mesmo ano
+    if (C.evoYear !== C.year) { C.evoYear = C.year; C.evoAcc = {}; C.potAcc = {}; }
+    evo.forEach(([id, a, b]) => { C.evoAcc[id] = [C.evoAcc[id] ? C.evoAcc[id][0] : a, b]; });
+    potUp.forEach(([id, a, b]) => { C.potAcc[id] = [C.potAcc[id] ? C.potAcc[id][0] : a, b]; });
+    const top = o => Object.entries(o).map(([id, [a, b]]) => [+id, a, b]).filter(x => x[2] !== x[1]).sort((x, y) => (y[2] - y[1]) - (x[2] - x[1])).slice(0, 10);
+    C.lastEvo = top(C.evoAcc); C.lastPot = top(C.potAcc);
+  }
+}
 function startCareerSeason(S) {
   // bots completam o elenco com agentes livres
   S.managers.forEach((m, i) => {
@@ -882,7 +896,7 @@ function resetToLobby(S) {
   const fo = finalOrder(S); if (fo) S.lastOrder = fo.map(i => S.managers[i].cpu ? null : S.managers[i].pid);
   S.managers = S.managers.filter(m => !m.cpu);
   S.managers.forEach(m => { if (m.tac) m.lastTac = m.tac; m.budget = 0; m.roster = []; m.tac = null; m.coach = null; m.pres = null; delete m.wc; });
-  ["auction", "season", "draft", "wc", "trade", "keep", "staffA", "history", "yearDone", "cupDraft", "staffDone", "votes", "pov", "career"].forEach(k => delete S[k]);
+  ["auction", "season", "draft", "wc", "trade", "keep", "staffA", "history", "yearDone", "cupDraft", "staffDone", "votes", "pov", "career", "evoLast"].forEach(k => delete S[k]);
   setPov(null);
   if (S.base) { S.settings.fmt = S.base.fmt; S.settings.squad = S.base.squad; S.settings.picks = S.base.picks; }
   S.games = (S.games || 0) + 1;
@@ -1139,6 +1153,7 @@ function advanceRound(S) {
     se.champion = fin.res.w === 0 ? fin.h : fin.a; se.stage = "done"; S.phase = "done";
     addLog(S, `${S.managers[se.champion].team} é CAMPEÃO!`);
     hallTitle(S, se.champion, se.fmt === "cup" ? "Kings Cup" : "Split");
+    if (S.settings.career || S.settings.year) evolveComp(S);
     if (S.settings.year) yearAfterComp(S);
     careerSeasonEnd(S);
     return true;
@@ -1808,6 +1823,8 @@ function applyAction(S, act, actorMi, isHost, now) {
   if (t === "join") {
     if (S.phase !== "lobby" || S.managers.length >= 12) { // jogo em andamento: volta de outro aparelho com o mesmo nome de presidente
       if (S.managers.some(m => m.pid === act.pid)) return true;
+      const pk = act.prev ? S.managers.findIndex(m => !m.cpu && m.pid === act.prev) : -1; // mesmo aparelho, agora com login
+      if (pk >= 0 && S.managers[pk].pid !== S.hostPid) { S.managers[pk].pid = act.pid; if (S.away) delete S.away[pk]; return true; }
       const nm = x => String(x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
       const k = S.managers.findIndex((m, i) => !m.cpu && m.pid !== S.hostPid && nm(m.name) === nm(act.name) && S.away && S.away[i]);
       if (k < 0) return false;
@@ -1815,6 +1832,7 @@ function applyAction(S, act, actorMi, isHost, now) {
       addLog(S, `${S.managers[k].name} voltou por outro aparelho e reassumiu o ${S.managers[k].team}.`);
       return true;
     }
+    if (act.prev && !S.managers.some(m => m.pid === act.pid)) { const pm = S.managers.find(m => !m.cpu && m.pid === act.prev && m.pid !== S.hostPid); if (pm) pm.pid = act.pid; }
     const ex = S.managers.find(m => m.pid === act.pid);
     if (ex) { ex.name = (act.name || ex.name).slice(0, 18); ex.team = (act.team || ex.team).slice(0, 24); return true; }
     if (S.managers.length >= 12) return false;

@@ -2,12 +2,28 @@
 // e recebe aqui um objeto com doc()/collection() que lê e grava no Firestore.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 let db = null;
 try {
   const cfg = window.FIREBASE_CONFIG;
   if (cfg && cfg.apiKey && !/COLE/.test(cfg.apiKey)) {
-    const fs = getFirestore(initializeApp(cfg));
+    const app = initializeApp(cfg);
+    const fs = getFirestore(app);
+    // login com Google (opcional): guarda o perfil do jogador em users/{uid}
+    try {
+      const auth = getAuth(app);
+      const A = window.klAuth = { user: null, ready: false, cbs: [], err: null,
+        onChange(cb) { this.cbs.push(cb); if (this.ready) cb(this.user); },
+        async signIn() {
+          const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" });
+          try { await signInWithPopup(auth, p); }
+          catch (e) { if (e && /popup-blocked|operation-not-supported|cancelled-popup/.test(e.code || "")) await signInWithRedirect(auth, p); else throw e; }
+        },
+        signOut() { return signOut(auth); } };
+      onAuthStateChanged(auth, u => { A.user = u ? { uid: u.uid, name: u.displayName || "", photo: u.photoURL || "", email: u.email || "" } : null; A.ready = true; A.cbs.forEach(f => { try { f(A.user); } catch (e) { } }); });
+      getRedirectResult(auth).catch(e => { A.err = e && e.code; });
+    } catch (e) { console.error("Login não iniciou:", e); }
     // os dados vão como texto JSON (o Firestore não aceita listas dentro de listas)
     const wrap = s => ({
       exists: s.exists(), id: s.id,

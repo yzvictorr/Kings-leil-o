@@ -1,4 +1,4 @@
-# Kings Leilão ⚽👑
+# The Kings Game ⚽👑
 
 Jogo de leilão e draft com jogadores da **Kings League Brasil**, pra jogar online com os amigos, cada um no seu celular. Os times se montam no leilão ou no draft e depois jogam o campeonato com as regras da Kings League: escalonado, cartas secretas, pênalti do presidente, gol em dobro, dado, match ball e shootouts.
 

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kings Leilão</title>
+<title>The Kings Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Big+Shoulders+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <style>:root{
@@ -377,6 +377,10 @@ input[type=color]{width:100%;height:40px;padding:2px;border-radius:10px;border:1
 .mbchip{display:grid;justify-items:center;gap:1px;min-width:62px;padding:3px 6px;border-radius:9px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);font-size:11px;text-align:center}
 .mbchip b{font-size:14px;color:var(--gold)}.mbchip span{max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mbchip.empty{border-style:dashed;opacity:.6}.mbpos{font-size:9.5px;color:var(--muted);letter-spacing:.06em}
+
+.acccard{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.chip.acc{display:inline-flex;align-items:center;gap:6px}.chip.acc img{width:20px;height:20px;border-radius:50%}
+.g-ico{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#fff;color:#4285f4;font-weight:900;font-size:12px;margin-right:4px}
 </style></head><body>
 <div id="app"></div><div id="live" class="live" role="dialog" aria-label="Partida ao vivo"></div><div id="viewer" class="viewer" role="dialog" aria-label="Lances"></div><div id="toast" class="toast" role="status"></div>
 <script>
@@ -1120,30 +1124,7 @@ function careerRelease(S, mi, id) {
 function nextSeason(S) {
   if (!gameOver(S)) return false;
   const C = S.career = S.career || { year: 1 };
-  // desempenho da temporada: nota média, gols e assistências por jogo
-  const st = {}, gm = {};
-  (S.season ? S.season.fixtures : []).forEach(f => { const r = f.res; if (!r) return; [f.h, f.a].forEach(mi => gm[mi] = (gm[mi] || 0) + 1);
-    (r.nt || []).forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.j++; x.n += n; });
-    (r.sc || []).concat(r.ast || []).forEach(l => l.forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.ga += n; })); });
-  S.pov = S.pov || {}; const evo = [], potUp = [];
-  S.managers.forEach((m, mi) => m.roster.forEach(id => {
-    const p = P(id), x = st[id] || { j: 0, n: 0, ga: 0 }, avg = x.j ? x.n / x.j : 6;
-    // potencial dinâmico: quem faz temporada muito boa ganha teto mais alto (bom para o jogador mediano crescer)
-    let ps = avg + (p.p !== "GOL" && x.j ? Math.min(0.6, Math.max(0, x.ga / x.j - (p.p === "ATA" ? 1 : p.p === "MEI" ? 0.7 : 0.4)) * 0.4) : 0);
-    const reg = x.j >= Math.max(2, (gm[mi] || 0) * 0.6);
-    let pot = p.pot || p.o;
-    if (x.j >= 2) pot += ps >= 8 ? 3 : ps >= 7.4 ? 2 : ps >= 6.9 ? 1 : (ps < 6 && x.j >= 3) ? -1 : 0;
-    pot = Math.min(97, Math.max(p.o, pot));
-    let d = 0;
-    if (p.o < pot) { d = (ps >= 8 ? 3 : ps >= 7.4 ? 2 : ps >= 6.8 ? 1 : 0) + (reg ? 1 : 0) + (Math.random() < 0.3 ? 1 : 0); if (!x.j) d = Math.random() < 0.3 ? 1 : 0; d = Math.min(d, pot - p.o); }
-    else if (x.j >= 2 && ps < 6.2 && Math.random() < 0.4) d = -1;
-    if (d || pot !== (p.pot || p.o)) {
-      S.pov[id] = Object.assign({}, S.pov[id] || {}, { o: p.o + d, at: p.at + d, df: p.df + d, pot, v: Math.max(1, Math.round(1.25 * Math.exp((p.o + d - 64) * 0.13))) });
-      if (d) evo.push([id, p.o, p.o + d]);
-      if (pot > (p.pot || p.o)) potUp.push([id, p.pot || p.o, pot]);
-    }
-  }));
-  C.lastPot = potUp.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10);
+  if (!(S.season && S.season.evolved)) evolveComp(S);
   setPov(S.pov);
   // premiação pela campanha
   const tb = standings(S).map(r => r.i), ch = S.season && S.season.champion;
@@ -1151,7 +1132,6 @@ function nextSeason(S) {
   careerSeasonEnd(S);
   C.lastGoals = null;
   if (C.goals && C.goals.res) { C.lastGoals = { year: C.year, res: C.goals.res }; Object.entries(C.goals.res).forEach(([i, r]) => { const m = S.managers[i]; if (m) m.budget = Math.max(0, m.budget + r.money); }); }
-  C.lastEvo = evo.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10);
   C.year++;
   ["season", "history", "yearDone", "keep", "votes"].forEach(k => delete S[k]);
   if (S.base) { S.settings.fmt = S.base.fmt; }
@@ -1212,6 +1192,44 @@ function unhappyTick(S, f) {
   [f.h, f.a].forEach((mi, ti) => f.res.pl[ti].forEach(id => { const u = U[id]; if (u && u.mi === mi && u.left > 0) { u.left--; if (!u.left) { delete U[id]; addLog(S, `${P(id).n} voltou a ser feliz no ${S.managers[mi].team}.`); } } }));
   Object.keys(U).forEach(id => { const u = U[id]; if (!S.managers[u.mi] || !S.managers[u.mi].roster.includes(+id)) delete U[id]; });
 }
+// evolução e potencial dinâmico: roda ao fim de cada competição (Split ou Kings Cup) na carreira e na temporada completa
+function evolveComp(S) {
+  const se = S.season; if (!se || se.evolved) return; se.evolved = true;
+  const C = S.career || {};
+  // desempenho da temporada: nota média, gols e assistências por jogo
+  const st = {}, gm = {};
+  (S.season ? S.season.fixtures : []).forEach(f => { const r = f.res; if (!r) return; [f.h, f.a].forEach(mi => gm[mi] = (gm[mi] || 0) + 1);
+    (r.nt || []).forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.j++; x.n += n; });
+    (r.sc || []).concat(r.ast || []).forEach(l => l.forEach(([id, n]) => { const x = st[id] = st[id] || { j: 0, n: 0, ga: 0 }; x.ga += n; })); });
+  S.pov = S.pov || {}; const evo = [], potUp = [];
+  S.managers.forEach((m, mi) => m.roster.forEach(id => {
+    const p = P(id), x = st[id] || { j: 0, n: 0, ga: 0 }, avg = x.j ? x.n / x.j : 6;
+    // potencial dinâmico: quem faz temporada muito boa ganha teto mais alto (bom para o jogador mediano crescer)
+    let ps = avg + (p.p !== "GOL" && x.j ? Math.min(0.6, Math.max(0, x.ga / x.j - (p.p === "ATA" ? 1 : p.p === "MEI" ? 0.7 : 0.4)) * 0.4) : 0);
+    const reg = x.j >= Math.max(2, (gm[mi] || 0) * 0.6);
+    let pot = p.pot || p.o;
+    if (x.j >= 2) pot += (ps >= 8 ? (S.settings.year ? 2 : 3) : ps >= 7.4 ? 2 : ps >= 6.9 ? 1 : (ps < 6 && x.j >= 3) ? -1 : 0);
+    pot = Math.min(97, Math.max(p.o, pot));
+    let d = 0;
+    if (p.o < pot) { d = (ps >= 8 ? (S.settings.year ? 2 : 3) : ps >= 7.4 ? 2 : ps >= 6.8 ? 1 : 0) + (reg && ps >= 6.8 ? 1 : 0) + (Math.random() < 0.25 ? 1 : 0); if (!x.j) d = Math.random() < 0.3 ? 1 : 0; if (S.settings.year) d = Math.min(d, 2); d = Math.min(d, pot - p.o); }
+    else if (x.j >= 2 && ps < 6.2 && Math.random() < 0.4) d = -1;
+    if (d || pot !== (p.pot || p.o)) {
+      S.pov[id] = Object.assign({}, S.pov[id] || {}, { o: p.o + d, at: p.at + d, df: p.df + d, pot, v: Math.max(1, Math.round(1.25 * Math.exp((p.o + d - 64) * 0.13))) });
+      if (d) evo.push([id, p.o, p.o + d]);
+      if (pot > (p.pot || p.o)) potUp.push([id, p.pot || p.o, pot]);
+    }
+  }));
+  setPov(S.pov);
+  const comp = se.fmt === "cup" ? "Kings Cup" : "Split";
+  S.evoLast = { comp, year: C.year || 1, evo: evo.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 12), pot: potUp.sort((a, b) => (b[2] - b[1]) - (a[2] - a[1])).slice(0, 10) };
+  if (S.career) { // junta o Split e a Kings Cup do mesmo ano
+    if (C.evoYear !== C.year) { C.evoYear = C.year; C.evoAcc = {}; C.potAcc = {}; }
+    evo.forEach(([id, a, b]) => { C.evoAcc[id] = [C.evoAcc[id] ? C.evoAcc[id][0] : a, b]; });
+    potUp.forEach(([id, a, b]) => { C.potAcc[id] = [C.potAcc[id] ? C.potAcc[id][0] : a, b]; });
+    const top = o => Object.entries(o).map(([id, [a, b]]) => [+id, a, b]).filter(x => x[2] !== x[1]).sort((x, y) => (y[2] - y[1]) - (x[2] - x[1])).slice(0, 10);
+    C.lastEvo = top(C.evoAcc); C.lastPot = top(C.potAcc);
+  }
+}
 function startCareerSeason(S) {
   // bots completam o elenco com agentes livres
   S.managers.forEach((m, i) => {
@@ -1266,7 +1284,7 @@ function resetToLobby(S) {
   const fo = finalOrder(S); if (fo) S.lastOrder = fo.map(i => S.managers[i].cpu ? null : S.managers[i].pid);
   S.managers = S.managers.filter(m => !m.cpu);
   S.managers.forEach(m => { if (m.tac) m.lastTac = m.tac; m.budget = 0; m.roster = []; m.tac = null; m.coach = null; m.pres = null; delete m.wc; });
-  ["auction", "season", "draft", "wc", "trade", "keep", "staffA", "history", "yearDone", "cupDraft", "staffDone", "votes", "pov", "career"].forEach(k => delete S[k]);
+  ["auction", "season", "draft", "wc", "trade", "keep", "staffA", "history", "yearDone", "cupDraft", "staffDone", "votes", "pov", "career", "evoLast"].forEach(k => delete S[k]);
   setPov(null);
   if (S.base) { S.settings.fmt = S.base.fmt; S.settings.squad = S.base.squad; S.settings.picks = S.base.picks; }
   S.games = (S.games || 0) + 1;
@@ -1523,6 +1541,7 @@ function advanceRound(S) {
     se.champion = fin.res.w === 0 ? fin.h : fin.a; se.stage = "done"; S.phase = "done";
     addLog(S, `${S.managers[se.champion].team} é CAMPEÃO!`);
     hallTitle(S, se.champion, se.fmt === "cup" ? "Kings Cup" : "Split");
+    if (S.settings.career || S.settings.year) evolveComp(S);
     if (S.settings.year) yearAfterComp(S);
     careerSeasonEnd(S);
     return true;
@@ -2192,6 +2211,8 @@ function applyAction(S, act, actorMi, isHost, now) {
   if (t === "join") {
     if (S.phase !== "lobby" || S.managers.length >= 12) { // jogo em andamento: volta de outro aparelho com o mesmo nome de presidente
       if (S.managers.some(m => m.pid === act.pid)) return true;
+      const pk = act.prev ? S.managers.findIndex(m => !m.cpu && m.pid === act.prev) : -1; // mesmo aparelho, agora com login
+      if (pk >= 0 && S.managers[pk].pid !== S.hostPid) { S.managers[pk].pid = act.pid; if (S.away) delete S.away[pk]; return true; }
       const nm = x => String(x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
       const k = S.managers.findIndex((m, i) => !m.cpu && m.pid !== S.hostPid && nm(m.name) === nm(act.name) && S.away && S.away[i]);
       if (k < 0) return false;
@@ -2199,6 +2220,7 @@ function applyAction(S, act, actorMi, isHost, now) {
       addLog(S, `${S.managers[k].name} voltou por outro aparelho e reassumiu o ${S.managers[k].team}.`);
       return true;
     }
+    if (act.prev && !S.managers.some(m => m.pid === act.pid)) { const pm = S.managers.find(m => !m.cpu && m.pid === act.prev && m.pid !== S.hostPid); if (pm) pm.pid = act.pid; }
     const ex = S.managers.find(m => m.pid === act.pid);
     if (ex) { ex.name = (act.name || ex.name).slice(0, 18); ex.team = (act.team || ex.team).slice(0, 24); return true; }
     if (S.managers.length >= 12) return false;
@@ -2302,8 +2324,60 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&a
 const CROWN = `<svg viewBox="0 0 64 64" aria-hidden="true"><path fill="#f5c542" d="M6 22l14 12 12-20 12 20 14-12-6 30H12z"/><rect x="12" y="54" width="40" height="5" rx="2" fill="#f5c542"/><circle cx="6" cy="20" r="4" fill="#f5c542"/><circle cx="32" cy="11" r="4" fill="#f5c542"/><circle cx="58" cy="20" r="4" fill="#f5c542"/></svg>`;
 function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
 let MYPID = store("kl_pid"); if (!MYPID) { MYPID = "u" + Math.random().toString(36).slice(2, 10); store("kl_pid", MYPID); }
+const ANON_PID = MYPID; // identidade deste aparelho sem login
+// ---- conta (login com Google, opcional) ----
+const ACC = { user: null, prof: null, saveT: null, last: "" };
+function accountInit() {
+  let n = 0; const t = setInterval(() => { if (window.klAuth) { clearInterval(t); window.klAuth.onChange(onUser); } else if (++n > 60) clearInterval(t); }, 250);
+}
+async function onUser(u) {
+  ACC.user = u;
+  if (!S) MYPID = u ? "g" + u.uid : ANON_PID; // com login, você é o mesmo presidente em qualquer aparelho
+  ACC.prof = null;
+  if (u) {
+    try { const db = await window.claude.use("db"); const d = db ? await db.doc("users/" + u.uid).get() : null; ACC.prof = d && d.exists ? d.data() : null; } catch (e) { }
+    const P0 = ACC.prof = Object.assign({ name: (u.name || "").split(" ")[0].slice(0, 18), team: "", crest: null, kit: null, kit2: null, rooms: [], titles: [], seasons: [] }, ACC.prof || {});
+    if (P0.name) store("kl_name", P0.name); if (P0.team) store("kl_team", P0.team);
+    try { const l = JSON.parse(store("kl_rooms") || "[]"); (P0.rooms || []).forEach(r => { if (!l.some(x => x.c === r.c)) l.push(r); }); l.sort((a, b) => b.at - a.at); store("kl_rooms", JSON.stringify(l.slice(0, 5))); } catch (e) { }
+    ACC.last = JSON.stringify(P0);
+  }
+  render();
+}
+function profSave(now) {
+  if (!ACC.user || !ACC.prof) return;
+  clearTimeout(ACC.saveT);
+  ACC.saveT = setTimeout(async () => { try { const j = JSON.stringify(ACC.prof); if (j === ACC.last) return; const db = await window.claude.use("db"); if (db) { await db.doc("users/" + ACC.user.uid).set(Object.assign({}, ACC.prof, { at: Date.now() })); ACC.last = j; } } catch (e) { } }, now ? 0 : 2500);
+}
+// acompanha a sala: aplica o escudo/uniformes do perfil ao entrar e guarda o que você muda, títulos e temporadas
+function profSync() {
+  if (!ACC.user || !ACC.prof || !S || NET.mode === "local") return;
+  const mi = myMi(); if (mi < 0) return; const m = S.managers[mi], P0 = ACC.prof;
+  UI.profApplied = UI.profApplied || {};
+  if (!UI.profApplied[S.code]) {
+    UI.profApplied[S.code] = true;
+    if (S.phase === "lobby" && (P0.crest || P0.kit)) { const patch = { mi }; if (P0.crest) patch.crest = P0.crest; if (P0.kit) patch.kit = P0.kit; if (P0.kit2) patch.kit2 = P0.kit2; UI.profHold = Date.now() + 9000; act(Object.assign({ t: "editme" }, patch)); return; }
+  }
+  let ch = false;
+  const hold = UI.profHold && Date.now() < UI.profHold && JSON.stringify(m.crest) !== JSON.stringify(P0.crest);
+  (hold ? ["name", "team"] : ["name", "team", "crest", "kit", "kit2"]).forEach(k => { const v = m[k] == null ? null : JSON.parse(JSON.stringify(m[k])); if (JSON.stringify(P0[k]) !== JSON.stringify(v)) { P0[k] = v; ch = true; } });
+  P0.rooms = P0.rooms || []; if (!P0.rooms.length || P0.rooms[0].c !== S.code) { P0.rooms = [{ c: S.code, at: Date.now(), t: m.team }].concat(P0.rooms.filter(r => r.c !== S.code)).slice(0, 5); ch = true; }
+  ((S.hall && S.hall.titles) || []).forEach(t => { if (t.pid !== MYPID) return; const key = S.code + "-" + t.at; P0.titles = P0.titles || []; if (!P0.titles.some(x => x.k === key)) { P0.titles.push({ k: key, comp: t.comp, team: t.team, season: t.season || null, code: S.code, at: t.at }); ch = true; } });
+  if (S.phase === "done" && S.season) { const key = S.code + "-" + (S.games || 0) + "-" + (S.career ? S.career.year : 0) + "-" + S.season.fmt; P0.seasons = P0.seasons || []; if (!P0.seasons.some(x => x.k === key)) { P0.seasons.push({ k: key, team: m.team, comp: S.season.fmt === "cup" ? "Kings Cup" : "Split", champ: S.season.champion === mi, at: Date.now() }); if (P0.seasons.length > 60) P0.seasons.shift(); ch = true; } }
+  if (ch) profSave();
+}
+function accountChip() {
+  if (!window.klAuth) return "";
+  if (!ACC.user) return S ? "" : `<button class="btn sm" data-a="login"><span class="g-ico">G</span> Entrar com Google</button>`;
+  return `<span class="chip acc">${ACC.user.photo ? `<img src="${esc(ACC.user.photo)}" alt="" referrerpolicy="no-referrer">` : ""}${esc((ACC.prof && ACC.prof.name) || ACC.user.name || "Conta")}</span>${S ? "" : `<button class="btn sm ghost" data-a="logout">Sair da conta</button>`}`;
+}
+function profileCard() {
+  if (!window.klAuth) return "";
+  if (!ACC.user) return `<div class="card acccard"><div><b>Entre com o Google para guardar seu perfil</b><div class="muted" style="font-size:13px">Seu escudo, uniformes, nome do time, salas e títulos ficam salvos na sua conta, e você é o mesmo presidente no celular, no PC ou em qualquer navegador. Sem login também dá pra jogar normalmente.</div></div><button class="btn gold" data-a="login"><span class="g-ico">G</span> Entrar com Google</button></div>`;
+  const P0 = ACC.prof || {}, t = (P0.titles || []).length, se = (P0.seasons || []).length;
+  return `<div class="card acccard">${P0.crest ? crestSVG(P0.crest, 54) : ""}<div style="flex:1"><b>${esc(P0.name || ACC.user.name)}${P0.team ? ` · ${esc(P0.team)}` : ""}</b><div class="muted" style="font-size:13px">${t} título${t === 1 ? "" : "s"} · ${se} competiç${se === 1 ? "ão" : "ões"} jogada${se === 1 ? "" : "s"}${(P0.titles || []).length ? " · último: " + esc(P0.titles[P0.titles.length - 1].comp) + " com o " + esc(P0.titles[P0.titles.length - 1].team) : ""}</div><div class="muted" style="font-size:12px">Seu escudo e uniformes entram sozinhos nas salas novas. O que você mudar no vestiário fica salvo na conta.</div></div></div>`;
+}
 
-const NET = { mode: "none", code: null, db: null, rjoin: null, docRef: null, liveRef: null, unsub: [], busy: false, pending: false, lastWrite: 0, lbusy: false, lpending: false, llast: 0, seq: 0, queue: [], clockOff: 0, canWriteIn: true };
+const NET = { mode: "none", code: null, db: null, rjoin: null, docRef: null, liveRef: null, unsub: [], busy: false, pending: false, lastWrite: 0, lbusy: false, lpending: false, llast: 0, seq: Date.now(), queue: [], clockOff: 0, canWriteIn: true };
 let S = null;      // estado do jogo
 let LIVE = null;   // partida que este aparelho está assistindo
 let LIVES = {};    // todas as partidas ao vivo da rodada (fid -> partida)
@@ -2340,13 +2414,13 @@ function saveLocal() { try { const j = JSON.stringify(S); sessionStorage.setItem
 function savedLocal() { try { const raw = JSON.parse(localStorage.getItem("kl_save") || "null"); return raw && raw.mode === "local" && raw.v === 2 ? raw : null; } catch (e) { return null; } }
 function loadLocal(raw) { S = raw; setPov(S.pov); NET.mode = "local"; NET.code = "LOCL"; LIVES = {}; UI.watch = null; startLoop(); commit(); renderLive(true); }
 async function exportSave() {
-  const name = `kings-leilao-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`, data = JSON.stringify({ kl: 1, at: Date.now(), S });
+  const name = `the-kings-game-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`, data = JSON.stringify({ kl: 1, at: Date.now(), S });
   try { const dl = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null; if (dl) { await dl.save({ filename: name, data }); toast("Progresso salvo no arquivo."); return; } } catch (e) { toast("O arquivo não foi salvo."); return; }
-  try { const blob = new Blob([JSON.stringify({ kl: 1, at: Date.now(), S })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `kings-leilao-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); toast("Progresso salvo no arquivo."); } catch (e) { toast("Não consegui gerar o arquivo aqui."); }
+  try { const blob = new Blob([JSON.stringify({ kl: 1, at: Date.now(), S })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `the-kings-game-${(S.code || "jogo").toLowerCase()}-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 500); toast("Progresso salvo no arquivo."); } catch (e) { toast("Não consegui gerar o arquivo aqui."); }
 }
 function importSave(file) {
   const r = new FileReader();
-  r.onload = () => { try { const d = JSON.parse(r.result), raw = d && d.S ? d.S : d; if (!raw || raw.v !== 2 || !Array.isArray(raw.managers)) throw 0; raw.mode = "local"; raw.code = "LOCL"; raw.managers.forEach((m, i) => { if (!m.cpu && !/^local/.test(m.pid)) m.pid = "local" + i; }); delete raw.away; loadLocal(raw); toast("Jogo carregado!"); } catch (e) { UI.homeErr = "Esse arquivo não é um jogo salvo do Kings Leilão."; render(); } };
+  r.onload = () => { try { const d = JSON.parse(r.result), raw = d && d.S ? d.S : d; if (!raw || raw.v !== 2 || !Array.isArray(raw.managers)) throw 0; raw.mode = "local"; raw.code = "LOCL"; raw.managers.forEach((m, i) => { if (!m.cpu && !/^local/.test(m.pid)) m.pid = "local" + i; }); delete raw.away; loadLocal(raw); toast("Jogo carregado!"); } catch (e) { UI.homeErr = "Esse arquivo não é um jogo salvo do The Kings Game."; render(); } };
   r.readAsText(file);
 }
 function scheduleWrite() {
@@ -2459,7 +2533,7 @@ function startPoll() {
       } else if (NET.mode === "client") {
         const d = await NET.docRef.get(); if (d.exists) applyRemote(d.data());
         const l = await NET.liveRef.get(); applyRemoteLive(l.exists ? l.data() : null);
-        if (myMi() < 0 && S && NET.joinInfo && Date.now() - (NET.lastJoin || 0) > (S.phase === "lobby" ? 4000 : 8000)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team }); }
+        if (myMi() < 0 && S && NET.joinInfo && Date.now() - (NET.lastJoin || 0) > (S.phase === "lobby" ? 4000 : 8000)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team, prev: ANON_PID }); }
       }
     } catch (e) { NET.pollErr = (e && e.code) || "erro"; }
   }, window.KL_POLL_MS || (NET.mode === "host" ? 600 : 800));
@@ -2530,12 +2604,13 @@ async function joinOnline(c0, n0, t0) {
     const data = snap.data();
     if (first) {
       clearTimeout(timer); first = false;
+      if (MYPID !== ANON_PID && !data.managers.some(m => m.pid === MYPID) && data.managers.some(m => m.pid === ANON_PID) && (data.hostPid === ANON_PID)) { data.managers.forEach(m => { if (m.pid === ANON_PID) m.pid = MYPID; }); data.hostPid = MYPID; }
       if (data.hostPid === MYPID) { S = JSON.parse(JSON.stringify(data)); setPov(S.pov); NET.unsub.forEach(u => u()); NET.unsub = []; becomeHost(room); return; }
       NET.mode = "client"; store("kl_last", code); rememberRoom(code); UI.busy = false; UI.homeErr = "";
       NET.joinInfo = { name, team };
       (async () => {
         NET.lobby = room; NET.rjoin = await joinRoom(room, code);
-        if (!data.managers.some(m => m.pid === MYPID)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name, team }); }
+        if (!data.managers.some(m => m.pid === MYPID)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name, team, prev: ANON_PID }); }
         startLoop(); startPoll(); render();
       })();
       NET.unsub.push(NET.liveRef.onSnapshot(ls => applyRemoteLive(ls.exists ? ls.data() : null), () => { }));
@@ -2904,7 +2979,7 @@ function connStatus() {
 function header() {
   const me = S ? S.managers[myMi()] : null;
   return `<div class="top"><div class="wrap">
-    <div class="brand">${CROWN}<div>Kings Leilão<small>KINGS LEAGUE BRASIL · FUT 7</small></div></div>
+    <div class="brand">${CROWN}<div>The Kings Game<small>KINGS LEAGUE BRASIL · FUT 7</small></div></div>
     <div class="spacer"></div>
     ${S && NET.mode !== "local" ? `<span class="chip">Sala <b>${esc(S.code)}</b></span>` : ""}
     ${S && NET.mode === "local" ? `<span class="chip">Um aparelho só</span>` : ""}
@@ -2912,6 +2987,7 @@ function header() {
     ${NET.mode === "host" ? `<span class="chip">Anfitrião</span>` : ""}
     ${S && S.phase === "season" ? `<button class="btn sm gold" id="hdr-live" data-a="showlive" style="${anyLive() ? "" : "display:none"}">Ao vivo</button>` : ""}
     ${S && NET.mode === "local" ? `<button class="btn sm ghost" data-a="exportsave" title="Baixa um arquivo com o jogo inteiro">Salvar arquivo</button>` : ""}
+    ${accountChip()}
     ${S ? `<button class="btn sm ghost" data-a="leave">Sair</button>` : ""}
   </div></div>`;
 }
@@ -2926,9 +3002,10 @@ const RULES = [
 function viewHome() {
   const nm = esc(store("kl_name") || ""), tm = esc(store("kl_team") || "");
   return `<div class="hero">
-    <h1>Monte seu time.<br><em>Leilão</em> da Kings League.</h1>
-    <p>Jogadores da Kings League Brasil sorteados um a um no leilão, com overall calculado pelo Split 1, Split 2, Kings Cup, Nations e Mundial. Depois, cada jogo é disputado ao vivo no campo: você escolhe formação, estilo, ordem do escalonado e a hora de usar a carta secreta e o pênalti do presidente.</p>
+    <h1>The Kings Game<br><em>Monte, jogue e ganhe</em> a Kings League.</h1>
+    <p>Leilão ou draft com os jogadores da Kings League Brasil, campeonato com as regras oficiais jogado ao vivo com os amigos, mercado de trocas e modo carreira com evolução de cada jogador. Você escolhe formação, estilo, ordem do escalonado, cobrador e a hora de usar a carta secreta e o pênalti do presidente.</p>
   </div>
+  ${profileCard()}
   ${resumeBox()}
   <div class="rules">${RULES.map(r => `<div style="--c:${r[2]}"><b>${r[0]}</b>${r[1]}</div>`).join("")}</div>
   <div class="grid3">
@@ -3235,6 +3312,12 @@ function careerWindow(me) {
   </div>`;
 }
 /* ---------- Kings Cup: manter wild cards e jogadores ---------- */
+function evoView() {
+  const E = S.evoLast; if (!E || (!E.evo.length && !E.pot.length)) return "";
+  return `<div class="card" style="display:grid;gap:8px;margin:12px 0"><h3 style="margin:0;font-size:20px">Evolução depois ${E.comp === "Split" ? "do Split" : "da Kings Cup"}</h3>
+    ${E.evo.length ? `<div class="row" style="gap:6px">${E.evo.map(([id, a, b]) => `<span class="pill ${b > a ? "you" : ""}">${esc(shortName(P(id).n))} ${a}→<b>${b}</b></span>`).join("")}</div>` : ""}
+    ${E.pot.length ? `<div class="muted" style="font-size:12px">POTENCIAL SUBIU (competição muito boa)</div><div class="row" style="gap:6px">${E.pot.map(([id, a, b]) => `<span class="pill you">${esc(shortName(P(id).n))} pot ${a}→<b>${b}</b></span>`).join("")}</div>` : ""}</div>`;
+}
 function viewKeep() {
   const k = S.keep, mis = NET.mode === "local" ? humansIdx() : myMi() >= 0 ? [myMi()] : [];
   UI.kp = UI.kp || {};
@@ -3253,7 +3336,7 @@ function viewKeep() {
       <div class="row" style="justify-content:space-between"><span class="muted" style="font-size:13px">Quem não for escolhido volta para o draft da Kings Cup.</span><button class="btn gold" data-a="kpsend" data-mi="${mi}">Confirmar elenco</button></div>`}
     </div>`;
   }
-  return `<div class="sec-title"><h2>Kings Cup</h2><span class="phase">montagem dos elencos</span>${k.deadline ? `<span class="pill">fecha em <b class="num" data-dl="${k.deadline}">1:00</b> · quem não confirmar fica com os melhores</span>` : ""}</div>
+  return `${evoView()}<div class="sec-title"><h2>Kings Cup</h2><span class="phase">montagem dos elencos</span>${k.deadline ? `<span class="pill">fecha em <b class="num" data-dl="${k.deadline}">1:00</b> · quem não confirmar fica com os melhores</span>` : ""}</div>
   <p class="muted" style="max-width:75ch">Igual à vida real: cada presidente segura até ${k.maxWC} wild cards e até ${k.maxKeep} jogadores do draft. Os outros vão para o pote e o draft em cobra completa os elencos.</p>
   ${isHost() ? `<div class="row" style="margin-bottom:10px"><span class="muted" style="font-size:13px">Anfitrião:</span><button class="btn sm" data-a="keepclose">Fechar e ir para o sorteio</button></div>` : ""}
   ${box}
@@ -3401,7 +3484,7 @@ function viewSeason() {
   const stageName = { league: se.fmt === "cup" ? "Fase de grupos" : "Fase de liga", playin: "Play-in", quarters: "Quartas de final", semis: "Semifinais", final: "Final", done: "Encerrado" }[se.stage];
   const next = roundFixtures(S).filter(f => !f.res);
   const tabs = [["time", "Meu time"], ["tabela", "Classificação"], ["jogos", "Jogos"], ["elencos", "Elencos"], ["artilharia", "Estatísticas"]].concat(S.settings.career ? [["carreira", "Carreira"]] : []);
-  return `${gameOver(S) ? voteCard() + hallView() : ""}${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(champ.crest, 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
+  return `${gameOver(S) ? voteCard() + hallView() : ""}${champ ? evoView() : ""}${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(champ.crest, 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
   <div class="sec-title"><h2>${se.fmt === "cup" ? "Kings Cup" : "Split"}</h2>${S.career ? `<span class="pill you">Carreira · temporada ${S.career.year}</span>` : ""}<span class="phase">${stageName}</span>${se.koInfo ? `<span class="muted" style="font-size:13px">${esc(se.koInfo)}</span>` : ""}</div>
   ${se.fmt === "cup" ? `<div class="row" style="margin-bottom:10px;gap:8px"><span class="pill">Desafios: Grupo A <b class="num">${se.desafio[0]}</b> x <b class="num">${se.desafio[1]}</b> Grupo B</span>${Object.keys(se.dwin).length ? `<span class="muted" style="font-size:13px">Carta extra no mata-mata: ${Object.keys(se.dwin).map(i => esc(S.managers[+i].team)).join(", ")}</span>` : ""}</div>` : ""}
   ${!champ ? `<div class="card" style="display:grid;gap:10px">
@@ -3725,7 +3808,7 @@ function render(force) {
   if (S && NET.mode === "client" && myMi() < 0 && S.phase !== "lobby") body = `<div class="card unhbox" style="margin-bottom:12px">Você entrou assistindo. Se você é presidente de um time desta sala e voltou por outro aparelho, entre com o mesmo nome de presidente: assim que o aparelho antigo ficar uns 30 segundos fora, você reassume o seu time sozinho.</div>` + body;
   $("#app").innerHTML = header() + `<main class="wrap">${body}</main>`;
   if (aid) { const el = document.getElementById(aid); if (el) { if (keepVal != null) el.value = keepVal; el.focus(); try { if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, ss); } catch (e) { } } }
-  tickClocks(); renderChat();
+  tickClocks(); renderChat(); try { profSync(); } catch (e) { }
 }
 /* ---------- chat da sala ---------- */
 const QUICK = ["Boa!", "Que golaço!", "Roubado!", "Bora!", "Sem chance 😂", "GG"];
@@ -3756,6 +3839,8 @@ document.addEventListener("click", e => {
   const a = b.dataset.a;
   if (a === "create") return createOnline();
   if (a === "join") return joinOnline();
+  if (a === "login") { if (window.klAuth) window.klAuth.signIn().catch(e => toast(e && e.code === "auth/unauthorized-domain" ? "Este site ainda não está liberado para login." : "Não deu para entrar agora (" + ((e && e.code) || "erro") + ").")); return; }
+  if (a === "logout") { if (window.klAuth) window.klAuth.signOut(); return; }
   if (a === "rejoin") { const c = b.dataset.code; return joinOnline(c, ($("#j-name") && $("#j-name").value) || store("kl_name") || "Presidente", ($("#j-team") && $("#j-team").value) || store("kl_team") || "Meu Time FC"); }
   if (a === "resumelocal") { const sv = savedLocal(); if (sv) loadLocal(sv); return; }
   if (a === "dellocal") { try { localStorage.removeItem("kl_save"); localStorage.removeItem("kl_save_at"); } catch (e) { } return render(); }
@@ -3861,6 +3946,7 @@ document.addEventListener("change", e => {
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#viewer").classList.contains("on")) closeReplay(); });
 
 function boot(saved) {
+  accountInit();
   try {
     const raw = saved && saved.S ? saved.S : JSON.parse(sessionStorage.getItem("kl_local2") || "null");
     if (raw && raw.mode === "local" && raw.v === 2) { S = raw; setPov(S.pov); NET.mode = "local"; NET.code = "LOCL"; startLoop(); }
