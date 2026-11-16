@@ -1867,6 +1867,15 @@ function matchResult(M) {
 /* ================= AÇÕES ================= */
 function applyAction(S, act, actorMi, isHost, now) {
   const t = act.t;
+  // quem entrou no meio do campeonato assume um time de bot: herda elenco, dinheiro, pontos e posição na tabela
+  if (t === "takebot") {
+    if (S.phase === "lobby" || actorMi >= 0 || !act.pid || S.managers.some(m => m.pid === act.pid)) return false;
+    const m = S.managers[act.mi]; if (!m || !m.cpu) return false;
+    const was = m.team; m.cpu = false; m.pid = act.pid; m.name = String(act.name || "Presidente").slice(0, 18) || "Presidente";
+    if (S.away) delete S.away[act.mi];
+    addLog(S, `${m.name} entrou na sala e assumiu o ${was} no lugar do bot.`);
+    return true;
+  }
   if (t === "join") {
     if (S.phase !== "lobby" || S.managers.length >= 12) { // jogo em andamento: volta de outro aparelho com o mesmo nome de presidente
       if (S.managers.some(m => m.pid === act.pid)) return true;
@@ -1956,7 +1965,10 @@ function applyAction(S, act, actorMi, isHost, now) {
   if (t === "bid") return (S.phase === "auction" || S.phase === "wc") && actorMi >= 0 && placeBid(S, actorMi, act.amount, now);
   if (t === "pass") return (S.phase === "auction" || S.phase === "wc") && actorMi >= 0 && passLot(S, actorMi);
   if (t === "pause" && isHost) { if (S.phase !== "auction") return false; const a = S.auction; a.paused = !a.paused; if (!a.paused && a.lot) a.lot.deadline = Math.max(a.lot.deadline, now + S.settings.timer * 1000); if (a.paused && a.lot) a.pausedLeft = a.lot.deadline - now; if (!a.paused && a.pausedLeft && a.lot) { a.lot.deadline = now + a.pausedLeft; a.pausedLeft = 0; } return true; }
-  if (t === "autofill" && isHost) { if (S.phase === "auction") autoFillAll(S, now); else draftAutoAll(S, now); return true; }
+  if (t === "autofill" && isHost) {
+    if (S.phase === "staff") { const a = S.staffA; if (a.lot && a.lot.bidder >= 0) staffClose(S, now); a.lot = null; a.qi = a.queue.length; a.gapUntil = 0; staffTick(S, now); return true; } // quem ainda não tem técnico/presidente recebe um livre
+    if (S.phase === "auction") autoFillAll(S, now); else draftAutoAll(S, now); return true;
+  }
   if (t === "wcbids") return S.phase === "wc" && !S.auction && actorMi >= 0 && submitWC(S, actorMi, act.bids, now);
   if (t === "wcclose" && isHost) { if (S.phase === "wc" && !S.auction) { resolveWC(S, now); return true; } return false; }
   if (t === "dpick") return S.phase === "draft" && actorMi >= 0 && draftPick(S, actorMi, act.pid, now);

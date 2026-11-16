@@ -1,7 +1,7 @@
 // Ponte entre o jogo e o Firebase (Firestore). O jogo pede window.claude.use("db")
 // e recebe aqui um objeto com doc()/collection() que lê e grava no Firestore.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 let db = null;
@@ -41,6 +41,12 @@ try {
         return {
           get: async () => wrap(await getDoc(r)),
           set: d => setDoc(r, { j: JSON.stringify(d), t: Date.now() }),
+          // grava só se a sala ainda for deste anfitrião (ou, ao assumir, se ainda for do anterior), tudo numa transação
+          setIfHost: (d, pid, from) => runTransaction(fs, async tx => {
+            const s = await tx.get(r);
+            if (s.exists()) { let cur = null; try { cur = JSON.parse(s.data().j).hostPid || null; } catch (e) { } if (cur && cur !== pid && cur !== from) { const e = new Error("not-host"); e.code = "not-host"; throw e; } }
+            tx.set(r, { j: JSON.stringify(d), t: Date.now() });
+          }),
           onSnapshot: (next, err) => onSnapshot(r, s => next(wrap(s)), err || (() => { }))
         };
       },

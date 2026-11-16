@@ -2472,7 +2472,10 @@ function applyAction(S, act, actorMi, isHost, now) {
   if (t === "bid") return (S.phase === "auction" || S.phase === "wc") && actorMi >= 0 && placeBid(S, actorMi, act.amount, now);
   if (t === "pass") return (S.phase === "auction" || S.phase === "wc") && actorMi >= 0 && passLot(S, actorMi);
   if (t === "pause" && isHost) { if (S.phase !== "auction") return false; const a = S.auction; a.paused = !a.paused; if (!a.paused && a.lot) a.lot.deadline = Math.max(a.lot.deadline, now + S.settings.timer * 1000); if (a.paused && a.lot) a.pausedLeft = a.lot.deadline - now; if (!a.paused && a.pausedLeft && a.lot) { a.lot.deadline = now + a.pausedLeft; a.pausedLeft = 0; } return true; }
-  if (t === "autofill" && isHost) { if (S.phase === "auction") autoFillAll(S, now); else draftAutoAll(S, now); return true; }
+  if (t === "autofill" && isHost) {
+    if (S.phase === "staff") { const a = S.staffA; if (a.lot && a.lot.bidder >= 0) staffClose(S, now); a.lot = null; a.qi = a.queue.length; a.gapUntil = 0; staffTick(S, now); return true; } // quem ainda não tem técnico/presidente recebe um livre
+    if (S.phase === "auction") autoFillAll(S, now); else draftAutoAll(S, now); return true;
+  }
   if (t === "wcbids") return S.phase === "wc" && !S.auction && actorMi >= 0 && submitWC(S, actorMi, act.bids, now);
   if (t === "wcclose" && isHost) { if (S.phase === "wc" && !S.auction) { resolveWC(S, now); return true; } return false; }
   if (t === "dpick") return S.phase === "draft" && actorMi >= 0 && draftPick(S, actorMi, act.pid, now);
@@ -2663,27 +2666,61 @@ function importSave(file) {
   r.onload = () => { try { const d = JSON.parse(r.result), raw = d && d.S ? d.S : d; if (!raw || raw.v !== 2 || !Array.isArray(raw.managers)) throw 0; raw.mode = "local"; raw.code = "LOCL"; raw.managers.forEach((m, i) => { if (!m.cpu && !/^local/.test(m.pid)) m.pid = "local" + i; }); delete raw.away; loadLocal(raw); toast("Jogo carregado!"); } catch (e) { UI.homeErr = "Esse arquivo não é um jogo salvo do The Kings Game."; render(); } };
   r.readAsText(file);
 }
-function scheduleWrite() {
-  if (NET.busy) { NET.pending = true; return; }
-  const wait = Math.max(0, (window.KL_STATE_MS || 220) - (now() - NET.lastWrite));
-  NET.busy = true;
-  setTimeout(async () => {
-    try { S.hostNow = now(); await NET.docRef.set(JSON.parse(JSON.stringify(S))); } catch (e) { if (e && e.code === "quota_exceeded") toast("Limite de armazenamento atingido."); }
-    NET.lastWrite = now(); NET.busy = false;
-    if (NET.pending) { NET.pending = false; scheduleWrite(); }
-  }, wait);
+// ---- relógio que não para com a aba em segundo plano ----
+// O navegador desacelera (até 1x por minuto) os timers de abas escondidas. Um Worker continua batendo,
+// então o anfitrião segue rodando o jogo mesmo minimizado. Sem Worker, cai no setInterval normal.
+const WTICK = { list: [], started: false, lastW: 0 };
+function tickEvery(fn, ms) {
+  WTICK.list.push({ fn, ms, last: 0 });
+  if (!WTICK.started) {
+    WTICK.started = true;
+    const run = () => { const t = Date.now(); WTICK.list.forEach(x => { if (t - x.last >= x.ms) { x.last = t; try { x.fn(); } catch (e) { } } }); };
+    try { const b = new Blob(["setInterval(function(){postMessage(0)},50)"], { type: "text/javascript" }); const w = new Worker(URL.createObjectURL(b)); w.onmessage = () => { WTICK.lastW = Date.now(); run(); }; WTICK.w = w; } catch (e) { }
+    setInterval(() => { if (Date.now() - WTICK.lastW > 400) run(); }, 50);
+  }
 }
-function writeLive() {
-  if (NET.mode !== "host") return;
-  if (NET.lbusy) { NET.lpending = true; return; }
-  const wait = Math.max(0, (window.KL_LIVE_MS || 320) - (now() - NET.llast));
-  NET.lbusy = true;
-  setTimeout(async () => {
-    try { const d = { ms: JSON.parse(JSON.stringify(LIVES)), hostNow: now() }; await NET.liveRef.set(d); } catch (e) { }
-    NET.llast = now(); NET.lbusy = false;
-    if (NET.lpending) { NET.lpending = false; writeLive(); }
-  }, wait);
+// ---- só um anfitrião por vez ----
+// Antes de gravar, o anfitrião confere se a sala ainda é dele. Se outro aparelho assumiu enquanto este
+// estava parado (celular bloqueado, aba minimizada), este vira convidado e NÃO sobrescreve o jogo novo.
+async function hostStillMine() {
+  if (NET.mode !== "host" || !NET.docRef) return false;
+  if (Date.now() - (NET.hostOk || 0) < 2500 && !NET.wasHidden) return true;
+  if (Date.now() - (NET.hostChkAt || 0) < 1000) return false; NET.hostChkAt = Date.now();
+  try {
+    const d = await NET.docRef.get(); const x = d.exists ? d.data() : null;
+    if (NET.mode !== "host") return false;
+    if (x && x.hostPid && x.hostPid !== MYPID && (x.rev || 0) >= 0) { demoteToClient(); return false; }
+    NET.hostOk = Date.now(); NET.wasHidden = false; return true;
+  } catch (e) { return false; } // sem conseguir confirmar, não grava agora (tenta de novo no próximo tique)
 }
+document.addEventListener("visibilitychange", () => { if (document.hidden) { NET.hiddenAt = Date.now(); return; } if (NET.hiddenAt && Date.now() - NET.hiddenAt > 8000) NET.wasHidden = true; if (NET.mode === "host") hostStillMine(); });
+// grava conferindo, no próprio servidor e no mesmo instante, que a sala ainda é deste anfitrião
+// (uma gravação que ficou "na fila" enquanto o celular dormia é recusada se outro já assumiu)
+async function dbSetHost(ref, data) {
+  if (ref.setIfHost) { await ref.setIfHost(data, MYPID, NET.claimFrom || null); return; }
+  await ref.set(data);
+}
+function lostHost(e) { if (e && e.code === "not-host" && NET.mode === "host") { demoteToClient(); return true; } return false; }
+function scheduleWrite() { NET.dirty = true; }
+async function flushWrite() {
+  if (NET.mode !== "host" || !NET.dirty || NET.busy || !S) return;
+  if (Date.now() - (NET.lastWrite || 0) < (window.KL_STATE_MS || 220)) return;
+  NET.busy = true; NET.dirty = false;
+  try {
+    if (await hostStillMine()) { S.hostNow = now(); await dbSetHost(NET.docRef, JSON.parse(JSON.stringify(S))); } else if (NET.mode === "host") NET.dirty = true;
+  } catch (e) { if (lostHost(e)) { NET.busy = false; return; } NET.dirty = true; if (e && e.code === "quota_exceeded") toast("Limite de armazenamento atingido."); }
+  NET.lastWrite = Date.now(); NET.busy = false;
+}
+tickEvery(flushWrite, 50);
+function writeLive() { if (NET.mode === "host") NET.ldirty = true; }
+async function flushLive() {
+  if (NET.mode !== "host" || !NET.ldirty || NET.lbusy || !NET.liveRef) return;
+  if (Date.now() - (NET.llast || 0) < (window.KL_LIVE_MS || 320)) return;
+  NET.lbusy = true; NET.ldirty = false;
+  try { if (await hostStillMine()) { const d = { ms: JSON.parse(JSON.stringify(LIVES)), hostNow: now(), hostPid: MYPID }; await dbSetHost(NET.liveRef, d); } else if (NET.mode === "host") NET.ldirty = true; } catch (e) { if (!lostHost(e)) NET.ldirty = true; }
+  NET.llast = Date.now(); NET.lbusy = false;
+}
+tickEvery(flushLive, 50);
 
 /* ---------- intenções dos convidados ---------- */
 function sendIntent(a) {
@@ -2761,7 +2798,7 @@ function anyLive() { return Object.values(LIVES).some(M => M.status === "playing
 let pollT = null;
 function startPoll() {
   if (pollT) return;
-  pollT = setInterval(async () => {
+  pollT = true; tickEvery(async () => {
     if (!NET.db || !NET.code) return;
     try {
       if (NET.mode === "host") {
@@ -2770,13 +2807,14 @@ function startPoll() {
         // outro aparelho virou anfitrião enquanto este estava parado? então este vira convidado
         const md = await NET.docRef.get(); const mdd = md.exists ? md.data() : null;
         if (mdd && mdd.hostPid && mdd.hostPid !== MYPID) { demoteToClient(); return; }
+        if (mdd) NET.hostOk = Date.now();
       } else if (NET.mode === "client") {
         const d = await NET.docRef.get(); if (d.exists) applyRemote(d.data());
         const l = await NET.liveRef.get(); applyRemoteLive(l.exists ? l.data() : null);
         if (myMi() < 0 && S && NET.joinInfo && Date.now() - (NET.lastJoin || 0) > (S.phase === "lobby" ? 4000 : 8000)) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team, prev: ANON_PID }); }
       }
     } catch (e) { NET.pollErr = (e && e.code) || "erro"; }
-  }, window.KL_POLL_MS || (NET.mode === "host" ? 600 : 800));
+  }, window.KL_POLL_MS || 700);
 }
 
 /* ---------- conexão ---------- */
@@ -2806,7 +2844,7 @@ async function createOnline() {
   becomeHost(room);
 }
 async function becomeHost(room) {
-  NET.mode = "host"; store("kl_last", NET.code); rememberRoom(NET.code);
+  NET.mode = "host"; NET.hostOk = Date.now(); NET.wasHidden = false; store("kl_last", NET.code); rememberRoom(NET.code);
   if (S) { S.hostPid = MYPID; S.away = S.away || {}; const me = S.managers.findIndex(m => m.pid === MYPID); if (me >= 0) delete S.away[me]; }
   NET.seen = {}; NET.hbv = {}; NET.hostSince = Date.now();
   NET.liveRef = NET.db.doc("live/" + NET.code);
@@ -2822,7 +2860,7 @@ async function becomeHost(room) {
 function rememberRoom(code) { try { const l = JSON.parse(store("kl_rooms") || "[]").filter(x => x.c !== code); l.unshift({ c: code, at: Date.now(), t: store("kl_team") || "" }); store("kl_rooms", JSON.stringify(l.slice(0, 5))); } catch (e) { } }
 function demoteToClient() {
   const code = NET.code; NET.unsub.forEach(u => { try { u(); } catch (e) { } }); NET.unsub = [];
-  NET.mode = "none"; toast("Outro aparelho assumiu como anfitrião. Reconectando como convidado…");
+  NET.mode = "none"; NET.claimFrom = null; NET.dirty = false; NET.ldirty = false; toast("Outro aparelho assumiu como anfitrião. Reconectando como convidado…");
   joinOnline(code, store("kl_name") || "Presidente", store("kl_team") || "Meu Time FC");
 }
 async function joinOnline(c0, n0, t0) {
@@ -2903,6 +2941,7 @@ async function hostWatch() {
     if (!data || data.hostPid !== S.hostPid) return;
     const oldMi = data.managers.findIndex(m => m.pid === data.hostPid);
     S = JSON.parse(JSON.stringify(data)); setPov(S.pov);
+    NET.claimFrom = data.hostPid; // a primeira gravação pode trocar o anfitrião só se ainda for o antigo
     S.hostPid = MYPID; S.away = S.away || {}; if (oldMi >= 0) S.away[oldMi] = true;
     addLog(S, `O anfitrião caiu. ${(S.managers.find(m => m.pid === MYPID) || {}).name || "Outro jogador"} assumiu a sala.`);
     NET.unsub.forEach(u => { try { u(); } catch (e) { } }); NET.unsub = [];
@@ -2913,7 +2952,7 @@ async function hostWatch() {
 let loopT = null, lastAuc = 0, nextTick = 0;
 function startLoop() {
   if (loopT) return;
-  loopT = setInterval(() => {
+  loopT = true; tickEvery(() => {
     const t = now();
     if (S && isHost() && ["auction", "wc", "lottery", "draft", "staff", "trade", "keep"].includes(S.phase) && t - lastAuc > 450) { lastAuc = t; if (marketTick(S, t)) commit(); }
     if (S && isHost() && S.phase === "season") roundTick(t);
@@ -3514,6 +3553,7 @@ function viewLobby() {
       </div>
       <label class="f" for="s-hide">Overall dos jogadores<select id="s-hide" ${host ? "" : "disabled"}>${[["nao", "Visível"], ["leilao", "Escondido no leilão (revela no campeonato)"], ["sempre", "Escondido o jogo todo"]].map(([k, v]) => `<option value="${k}" ${st.hide === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
       ${st.mode === "draft" ? `<p class="muted" style="font-size:13.5px;margin:0">Elenco de <b style="color:var(--ink)">${st.wc + st.picks}</b> jogadores: <b style="color:var(--ink)">${st.wc}</b> wild cards + <b style="color:var(--ink)">${st.picks}</b> do draft. 1) Cada um manda propostas secretas pelos wild cards que quer. Se só você pediu, leva pelo valor da proposta. Se dois ou mais pediram o mesmo, vira leilão entre eles. 2) Sorteio da ordem. 3) Draft em cobra (1→${Math.max(2, st.total)}, depois ${Math.max(2, st.total)}→1) com todos os jogadores que sobraram. Wild card que não fechar vira escolha extra no draft.</p>` : `<p class="muted" style="font-size:13.5px;margin:0">Vão a leilão <b class="num" style="color:var(--ink)">${pool}</b> jogadores sorteados (1,5 por vaga de cada time), aparecendo um de cada vez em ordem aleatória. Quem não quiser toca em <b>Passar</b>. Se ninguém quiser, o jogador vai para a repescagem no fim. Cada elenco precisa de pelo menos 1 goleiro.</p>`}
+      ${host && NET.mode === "host" ? `<p class="muted" style="font-size:12.5px;margin:0">Você é o anfitrião: o jogo roda no seu aparelho. Pode minimizar a aba, mas se fechar o site ou bloquear o celular por mais de 1 minuto, outro jogador assume a sala automaticamente e você volta como jogador normal.</p>` : ""}
       ${host ? `<div class="row"><span class="spacer"></span><button class="btn gold big" data-a="start">${st.mode === "draft" ? "Começar wild cards" : "Começar leilão"}</button></div>` : `<p class="muted" style="margin:0">Só o anfitrião muda as regras e começa o leilão.</p>`}
     </div>
   </div>
@@ -3716,6 +3756,7 @@ function viewStaff() {
     </div></div>`;
   } else stage = `<div style="display:grid;place-items:center;min-height:200px;text-align:center">${a.last && a.last.mi >= 0 ? `<div class="sold-anim"><div class="muted">CONTRATADO</div><h2 style="font-size:40px">${esc(STAFF_BY_ID[a.last.sid].n)}</h2><div>${mgrName(a.last.mi)} · <b class="num" style="color:var(--gold)">${a.last.price} K$</b></div></div>` : `<h2 style="font-size:32px">Próximo nome saindo do pote…</h2>`}</div>`;
   return `<div class="sec-title"><h2>Mercado de staff</h2><span class="muted">técnicos e presidentes da Kings League Brasil</span></div><div class="card">${stage}</div>
+  ${isHost() ? `<div class="row" style="margin-top:10px"><span class="muted" style="font-size:13px">Anfitrião:</span><button class="btn sm" data-a="autofill">Completar o staff automaticamente</button></div>` : ""}
   <div class="sec-title"><h2>Presidentes</h2></div><div class="mgrs">${S.managers.map((m, i) => `<div class="mgr" style="--c:${m.color}"><div class="t"><span class="row" style="gap:6px;flex-wrap:nowrap">${crestSVG(tcrest(m), 22)}<span>${esc(m.team)}</span></span>${m.cpu ? '<span class="pill cpu">bot</span>' : ""}</div><div class="money num">${m.budget} K$</div><div class="muted" style="font-size:13px">Técnico: <b style="color:var(--ink)">${m.coach ? esc(STAFF_BY_ID[m.coach].n) : "—"}</b><br>Presidente: <b style="color:var(--ink)">${m.pres ? esc(STAFF_BY_ID[m.pres].n) : "—"}</b></div></div>`).join("")}</div>`;
 }
 /* ---------- mercado de trocas ---------- */
