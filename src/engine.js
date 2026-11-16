@@ -114,6 +114,8 @@ const CREST_TPOS = ["baixo", "cima", "faixa"];
 const CREST_BW = ["normal", "fina", "grossa", "dupla", "nenhuma"];
 const CREST_FONTS = ["display", "serif", "sans", "script"];
 const CREST_ISZ = ["m", "p", "g", "xg"];
+const CREST_GR = ["nenhum", "vertical", "horizontal", "diagonal", "radial"];
+const TOR_STYLES = ["mosaico", "listras", "xadrez", "bandeiras", "sinalizadores", "ondas"];
 const CREST_PRESETS = [
   { n: "Coroa Dourada", shape: "escudo", c1: "#111318", c2: "#f5c542", pat: "faixa", icon: "coroa" },
   { n: "Trovão", shape: "hexagono", c1: "#1d3fbf", c2: "#ffe14d", pat: "diagonal", icon: "raio" },
@@ -146,7 +148,10 @@ function validCrest(c) {
   const hex = v => /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
   const o = { shape: CREST_SHAPES.includes(c.shape) ? c.shape : "escudo", c1: hex(c.c1) || "#f5c542", c2: hex(c.c2) || "#111111", pat: CREST_PATS.includes(c.pat) ? c.pat : "liso", icon: CREST_ICONS.includes(c.icon) ? c.icon : "coroa", txt: String(c.txt || "").replace(/[^A-Za-z0-9À-ú]/g, "").slice(0, 3).toUpperCase(), c3: hex(c.c3) || "#ffffff", tc: hex(c.tc) || null, stars: Math.max(0, Math.min(7, c.stars | 0)), sc: hex(c.sc) || null, spos: c.spos === "dentro" ? "dentro" : "fora", ic: hex(c.ic) || null,
     c4: hex(c.c4) || null, pat2: CREST_PATS.includes(c.pat2) ? c.pat2 : "liso", med: CREST_MEDS.includes(c.med) ? c.med : "nenhum", mf: hex(c.mf) || null, hn: !!c.hn, isz: CREST_ISZ.includes(c.isz) ? c.isz : "m",
-    tpos: CREST_TPOS.includes(c.tpos) ? c.tpos : "baixo", fnt: CREST_FONTS.includes(c.fnt) ? c.fnt : "display", bw: CREST_BW.includes(c.bw) ? c.bw : "normal", ano: String(c.ano || "").replace(/[^0-9]/g, "").slice(0, 4) };
+    tpos: CREST_TPOS.includes(c.tpos) ? c.tpos : "baixo", fnt: CREST_FONTS.includes(c.fnt) ? c.fnt : "display", bw: CREST_BW.includes(c.bw) ? c.bw : "normal", ano: String(c.ano || "").replace(/[^0-9]/g, "").slice(0, 4),
+    sa: c.sa === "auto" ? "auto" : "manual", sac: ["todos", "split", "cup"].includes(c.sac) ? c.sac : "todos", scup: Math.max(0, Math.min(7, c.scup | 0)), nch: !!c.nch,
+    gr: CREST_GR.includes(c.gr) ? c.gr : "nenhum", g2: hex(c.g2) || null, masc: CREST_ICONS.includes(c.masc) && c.masc !== "letra" ? c.masc : "nenhum", mc: hex(c.mc) || null,
+    tor: TOR_STYLES.includes(c.tor) ? c.tor : "mosaico", t1: hex(c.t1) || null, t2: hex(c.t2) || null, fx: String(c.fx || "").replace(/[<>&"']/g, "").slice(0, 28) };
   return o;
 }
 function mkMgr(pid, name, team, i, cpu, pers) {
@@ -162,7 +167,8 @@ function validKit(k) {
   if (!k || typeof k !== "object") return null;
   const hex = v => /^#[0-9a-fA-F]{6}$/.test(v) ? v : null;
   return { c1: hex(k.c1) || "#f5c542", c2: hex(k.c2) || "#111111", pat: KIT_PATS.includes(k.pat) ? k.pat : "liso", num: hex(k.num) || "#ffffff", c3: hex(k.c3) || null,
-    pat2: KIT_PATS.includes(k.pat2) ? k.pat2 : "liso", gc: hex(k.gc) || null, pu: !!k.pu, pc: hex(k.pc) || null, gl: KIT_GOLAS.includes(k.gl) ? k.gl : "padrao", cm: hex(k.cm) || null, nc: hex(k.nc) || null, nf: KIT_FONTS.includes(k.nf) ? k.nf : "display", sp: String(k.sp || "").replace(/[<>&"']/g, "").slice(0, 12) };
+    pat2: KIT_PATS.includes(k.pat2) ? k.pat2 : "liso", gc: hex(k.gc) || null, pu: !!k.pu, pc: hex(k.pc) || null, gl: KIT_GOLAS.includes(k.gl) ? k.gl : "padrao", cm: hex(k.cm) || null, nc: hex(k.nc) || null, nf: KIT_FONTS.includes(k.nf) ? k.nf : "display", sp: String(k.sp || "").replace(/[<>&"']/g, "").slice(0, 12),
+    gr: CREST_GR.includes(k.gr) ? k.gr : "nenhum", g2: hex(k.g2) || null, bd: !!k.bd };
 }
 // quem está fora da sala (caiu ou saiu) é controlado por um bot até voltar
 function isBot(S, i) { const m = S.managers[i]; return !!(m && (m.cpu || (S.away && S.away[i]))); }
@@ -899,6 +905,14 @@ function hallMatch(S, f) {
   if (w === x) r.wa++; else r.wb++;
   r.na = S.managers.find(m => m.pid === x).name; r.nb = S.managers.find(m => m.pid === y).name;
 }
+// estrelas automáticas: títulos deste save (Split dourada, Cup prateada)
+function titlesOf(S, mi) { const m = S.managers[mi]; if (!m) return []; return ((S.hall && S.hall.titles) || []).filter(t => m.cpu ? (!t.pid && t.team === m.team) : t.pid === m.pid); }
+function autoStars(S, mi) {
+  const m = S.managers[mi]; if (!m || !m.crest || m.crest.sa !== "auto") return;
+  const T = titlesOf(S, mi), sp = T.filter(t => t.comp === "Split").length, cu = T.filter(t => t.comp !== "Split").length, w = m.crest.sac || "todos";
+  const st = Math.min(7, w === "split" ? sp : w === "cup" ? cu : sp + cu);
+  m.crest.stars = st; m.crest.scup = w === "split" ? 0 : Math.min(st, cu);
+}
 function hallTitle(S, mi, comp) {
   const m = S.managers[mi]; if (!m) return;
   const H = hall(S), R = H.rec = H.rec || {}, key = m.cpu ? "bot:" + m.team : m.pid;
@@ -907,6 +921,10 @@ function hallTitle(S, mi, comp) {
   hallSeasonRec(S);
   hall(S).titles.push({ comp, team: m.team, name: m.name, pid: m.cpu ? null : m.pid, season: S.settings && S.settings.career ? ((S.career && S.career.year) || 1) : null, at: Date.now() });
   if (hall(S).titles.length > 60) hall(S).titles.shift();
+  // selo de campeão: fica com quem ganhou até outro time vencer a mesma competição (só neste save)
+  S.managers.forEach(x => { if (x.champ && x.champ.comp === comp) delete x.champ; });
+  m.champ = { comp, n: hall(S).titles.filter(t => t.comp === comp).length };
+  S.managers.forEach((x, i) => autoStars(S, i));
 }
 
 /* ================= REVANCHE: VOLTAR AO LOBBY DA MESMA SALA ================= */
@@ -1161,7 +1179,7 @@ function advanceRound(S) {
   roundFixtures(S).filter(f => f.stage === "Desafio" && !f.counted).forEach(f => {
     f.counted = true; const w = f.res.w === 0 ? f.h : f.a; const g = se.groups[0].includes(w) ? 0 : 1;
     se.desafio[g]++; se.dwin[w] = (se.dwin[w] || 0) + 1;
-    addLog(S, `Desafio: ${S.managers[w].team} vence, ganha carta extra no mata-mata e ponto para o Grupo ${"AB"[g]}.`);
+    addLog(S, `Desafio: ${S.managers[w].team} vence, ganha uma carta extra para o primeiro jogo do mata-mata e ponto para o Grupo ${"AB"[g]}.`);
   });
   se.round++;
   if (se.stage === "league") {
@@ -1200,10 +1218,16 @@ function newMatch(S, f) {
     let tac = JSON.parse(JSON.stringify(m.tac));
     // lesionados não jogam: o jogo arruma a escalação com quem está disponível
     if ([tac.gk].concat(tac.slots).some(id => isInj(S, id))) { const full = m.roster; m.roster = full.filter(id => !isInj(S, id)); tac = autoTac(S, mi, tac.form, tac.style); m.roster = full; }
-    const nCards = 1 + (f.stage !== "Liga" && f.stage !== "Desafio" && S.season && S.season.dwin && S.season.dwin[mi] ? 1 : 0);
+    // carta extra do desafio: vale para UM jogo do mata-mata (o primeiro que o time fizer), uma por desafio vencido
+    let extra = 0; const se = S.season;
+    if (f.stage !== "Liga" && f.stage !== "Desafio" && se && se.dwin && se.dwin[mi]) {
+      const used = (se.dfix = se.dfix || {})[mi] = se.dfix[mi] || [];
+      if (used.includes(f.id)) extra = 1; else if (used.length < se.dwin[mi]) { used.push(f.id); extra = 1; }
+    }
+    const nCards = 1 + extra;
     const pres = m.pres && STAFF_BY_ID[m.pres] ? STAFF_BY_ID[m.pres] : null;
     const coach = m.coach && STAFF_BY_ID[m.coach] ? STAFF_BY_ID[m.coach] : null;
-    return { mi, side, name: m.team, pres: pres ? pres.n : m.name, presPen: pres ? pres.pen : 60, unh: unhappyMap(S, mi), coach: coach ? { n: coach.n, form: coach.form, style: coach.style, r: coach.r } : null, color: m.color, kit: m.kit || null, kit2: m.kit2 || awayKit(m.kit), crest: m.crest || null, cpu: isBot(S, mi), bot: !!m.cpu, strat: Object.assign({}, m.strat), tac,
+    return { mi, side, name: m.team, pres: pres ? pres.n : m.name, presPen: pres ? pres.pen : 60, unh: unhappyMap(S, mi), coach: coach ? { n: coach.n, form: coach.form, style: coach.style, r: coach.r } : null, color: m.color, kit: m.kit || null, kit2: m.kit2 || awayKit(m.kit), crest: m.crest || null, champ: m.champ || null, cpu: isBot(S, mi), bot: !!m.cpu, strat: Object.assign({}, m.strat), tac,
       cards: Array.from({ length: nCards }, () => ({ k: pick(CARD_DRAW), used: false })), ppUsed: false, dobLeft: 0, star: null, out: [], banned: [], yc: {}, cardsY: 0, cardsR: 0, goals: {}, shots: 0, saves: 0, field: [], gkOut: false,
       autoSub: isBot(S, mi) ? true : tac.autoSub !== false, gkMode: isBot(S, mi) ? "auto" : (tac.gkMode || "auto"), subs: 0 };
   };
@@ -1868,7 +1892,7 @@ function applyAction(S, act, actorMi, isHost, now) {
     const m = S.managers[actorMi];
     if (act.team && S.phase === "lobby") m.team = act.team.slice(0, 24);
     if (act.color && /^#[0-9a-fA-F]{6}$/.test(act.color)) m.color = act.color;
-    if (act.crest) { const c = validCrest(act.crest); if (c) m.crest = c; }
+    if (act.crest) { const c = validCrest(act.crest); if (c) { m.crest = c; autoStars(S, actorMi); } }
     if (act.kit) { const k = validKit(act.kit); if (k) m.kit = k; }
     if (act.kit2) { const k = validKit(act.kit2); if (k) m.kit2 = k; }
     return true;
@@ -1951,4 +1975,4 @@ function applyAction(S, act, actorMi, isHost, now) {
   return false;
 }
 
-if (typeof module !== "undefined") module.exports = { isBot, nextSeason, setPov, freeAgents, isInj, chemistry, gameOver, resetToLobby, STAFF, startMarket, buildBracket, closeTrade, newGame, applyAction, auctionTick, marketTick, draftPicker, standings, topScorers, simMatchInstant, matchResult, newMatch, stepMatch, attachRosters, matchAction, autoTac, roundFixtures, advanceRound, isHumanFixture, setPlayers: (arr) => { PLAYERS = arr; PLAYER_BY_ID = {}; arr.forEach(p => PLAYER_BY_ID[p.id] = p); } };
+if (typeof module !== "undefined") module.exports = { isBot, autoStars, titlesOf, hallTitle, nextSeason, setPov, freeAgents, isInj, chemistry, gameOver, resetToLobby, STAFF, startMarket, buildBracket, closeTrade, newGame, applyAction, auctionTick, marketTick, draftPicker, standings, topScorers, simMatchInstant, matchResult, newMatch, stepMatch, attachRosters, matchAction, autoTac, roundFixtures, advanceRound, isHumanFixture, setPlayers: (arr) => { PLAYERS = arr; PLAYER_BY_ID = {}; arr.forEach(p => PLAYER_BY_ID[p.id] = p); } };

@@ -536,7 +536,7 @@ function roundBoard() {
   const busy = new Set(); Object.values(LIVES).forEach(M => { if (M.status === "playing") M.t.forEach(T => busy.add(T.mi)); });
   return fx.map(f => {
     const M = LIVES[f.id];
-    const side = (mi, sc) => `<div class="rb-t">${crestSVG(S.managers[mi].crest, 22)}<span>${esc(S.managers[mi].team)}</span>${sc != null ? `<b class="num">${sc}</b>` : ""}</div>`;
+    const side = (mi, sc) => `<div class="rb-t">${crestSVG(tcrest(S.managers[mi]), 22)}<span>${esc(S.managers[mi].team)}</span>${sc != null ? `<b class="num">${sc}</b>` : ""}</div>`;
     let status, extra = "";
     if (M) {
       status = M.status === "done" ? `<span class="pill">FIM${M.so ? ` · SO ${M.so[0]}-${M.so[1]}` : ""}</span>` : `<span class="pill live">● ${minLabel(M)}</span>${M.pending ? ' <span class="pill">pênalti/escolha</span>' : ""}`;
@@ -741,6 +741,19 @@ function crestIcons(c1) {
   };
 }
 const CREST_ISZ_V = { p: 0.8, m: 1, g: 1.3, xg: 1.6 };
+function gradDef(id, type, a, b) {
+  if (!type || type === "nenhum" || !b) return "";
+  if (type === "radial") return `<radialGradient id="${id}" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></radialGradient>`;
+  const v = { vertical: 'x1="0" y1="0" x2="0" y2="1"', horizontal: 'x1="0" y1="0" x2="1" y2="0"', diagonal: 'x1="0" y1="0" x2="1" y2="1"' }[type];
+  return `<linearGradient id="${id}" ${v}><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+}
+function ribbonSVG(ry, w, fill, label, color, fam, fs) {
+  const x1 = 50 - w, x2 = 50 + w;
+  return `<g stroke="rgba(0,0,0,.4)" stroke-width="1" stroke-linejoin="round"><polygon points="${x1 - 9},${ry + 4} ${x1 + 2},${ry + 4} ${x1 + 2},${ry + 16} ${x1 - 9},${ry + 16} ${x1 - 5},${ry + 10}" fill="${fill}"/><polygon points="${x2 + 9},${ry + 4} ${x2 - 2},${ry + 4} ${x2 - 2},${ry + 16} ${x2 + 9},${ry + 16} ${x2 + 5},${ry + 10}" fill="${fill}"/><polygon points="${x1 + 2},${ry + 12} ${x1 + 6},${ry + 16} ${x1 + 2},${ry + 16}" fill="rgba(0,0,0,.45)"/><polygon points="${x2 - 2},${ry + 12} ${x2 - 6},${ry + 16} ${x2 - 2},${ry + 16}" fill="rgba(0,0,0,.45)"/><rect x="${x1 + 2}" y="${ry}" width="${2 * w - 4}" height="12" rx="1" fill="${fill}"/></g><text x="50" y="${ry + 9.6}" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="${fs || 10.5}" letter-spacing=".6" fill="${color}">${esc(label)}</text>`;
+}
+// escudo/uniforme de um time da sala com o selo de campeão (só neste save)
+function tcrest(m) { if (!m) return null; return m.champ && !(m.crest && m.crest.nch) ? Object.assign({}, m.crest || {}, { __ch: m.champ }) : m.crest; }
+function tkit(m, k) { k = k || (m && m.kit); return m && m.champ && !(m.crest && m.crest.nch) ? Object.assign({}, k || {}, { __ch: m.champ }) : k; }
 function crestSVG(c, size) {
   c = c || {}; const id = "cr" + (CREST_N++);
   const sh = CREST_SHAPE_D[c.shape] || CREST_SHAPE_D.escudo, c1 = c.c1 || "#f5c542", c2 = c.c2 || "#111";
@@ -753,13 +766,14 @@ function crestSVG(c, size) {
   const lowY = { diamante: 96, triangulo: 90, seta: 92, estrela: 98, coracao: 94, gota: 104 }[c.shape] || 101;
   let txt = "";
   if (c.txt && c.icon !== "letra") {
-    if (tp === "faixa") { const rc = c.c4 || c3; const ry = lowY - 15, w = c.txt.length > 2 ? 30 : 25, x1 = 50 - w, x2 = 50 + w;
-      txt = `<g stroke="rgba(0,0,0,.4)" stroke-width="1" stroke-linejoin="round"><polygon points="${x1 - 9},${ry + 4} ${x1 + 2},${ry + 4} ${x1 + 2},${ry + 16} ${x1 - 9},${ry + 16} ${x1 - 5},${ry + 10}" fill="${rc}"/><polygon points="${x2 + 9},${ry + 4} ${x2 - 2},${ry + 4} ${x2 - 2},${ry + 16} ${x2 + 9},${ry + 16} ${x2 + 5},${ry + 10}" fill="${rc}"/><polygon points="${x1 + 2},${ry + 12} ${x1 + 6},${ry + 16} ${x1 + 2},${ry + 16}" fill="rgba(0,0,0,.45)"/><polygon points="${x2 - 2},${ry + 12} ${x2 - 6},${ry + 16} ${x2 - 2},${ry + 16}" fill="rgba(0,0,0,.45)"/><rect x="${x1 + 2}" y="${ry}" width="${2 * w - 4}" height="12" rx="1" fill="${rc}"/></g><text x="50" y="${ry + 9.6}" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="10.5" letter-spacing=".6" fill="${tc}">${esc(c.txt)}</text>`; }
+    if (tp === "faixa") { const rc = c.c4 || c3; txt = ribbonSVG(lowY - 15, c.txt.length > 2 ? 30 : 25, rc, c.txt, tc, fam); }
     else { const y = tp === "cima" ? (c.shape === "diamante" || c.shape === "triangulo" ? 30 : 34) : lowY; txt = `<text x="50" y="${y}" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="17" fill="${tc}" stroke="${c1}" stroke-width="3" paint-order="stroke">${esc(c.txt)}</text>`; }
   }
-  const ano = c.ano && !small ? `<text x="50" y="${tp === "cima" ? 20 : 113}" text-anchor="middle" font-family="${fam}" font-weight="800" font-size="7.5" letter-spacing=".5" fill="${tc}" stroke="${c1}" stroke-width="2" paint-order="stroke">${esc(c.ano)}</text>` : "";
+  const CH = c.__ch;
+  if (CH) txt = ribbonSVG(lowY - 15, 34, `url(#${id}gold)`, "CAMPEÃO", "#2b1d00", "Arial Black, Arial, sans-serif", 8.5);
+  const ano = CH && !small ? `<text x="50" y="113" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="6.5" letter-spacing=".5" fill="#f5c542" stroke="#2b1d00" stroke-width="1.6" paint-order="stroke">${CH.comp === "Split" ? "SPLIT" : "KINGS CUP"}${CH.n > 1 ? " · " + CH.n + "x" : ""}</text>` : c.ano && !small ? `<text x="50" y="${tp === "cima" ? 20 : 113}" text-anchor="middle" font-family="${fam}" font-weight="800" font-size="7.5" letter-spacing=".5" fill="${tc}" stroke="${c1}" stroke-width="2" paint-order="stroke">${esc(c.ano)}</text>` : "";
   const sIn = tp === "cima" ? 100 : c.shape === "diamante" ? 30 : 24;
-  const stars = ns ? Array.from({ length: ns }, (_, k) => { const gap = out ? 13 : 11, cx = 50 + (k - (ns - 1) / 2) * gap, cy = out ? -10 - (Math.abs(k - (ns - 1) / 2) < 0.6 ? 2 : 0) : sIn; return `<polygon transform="translate(${cx} ${cy}) scale(${out ? 0.27 : 0.22})" points="0,-20 6,-6 21,-6 9,3 13,18 0,9 -13,18 -9,3 -21,-6 -6,-6" fill="${sc}" stroke="${out ? "rgba(0,0,0,.45)" : c1}" stroke-width="4"/>`; }).join("") : "";
+  const stars = ns ? Array.from({ length: ns }, (_, k) => { const gap = out ? 13 : 11, cx = 50 + (k - (ns - 1) / 2) * gap, cy = out ? -10 - (Math.abs(k - (ns - 1) / 2) < 0.6 ? 2 : 0) : sIn; const silver = c.sa === "auto" && k >= ns - (c.scup | 0); return `<polygon transform="translate(${cx} ${cy}) scale(${out ? 0.27 : 0.22})" points="0,-20 6,-6 21,-6 9,3 13,18 0,9 -13,18 -9,3 -21,-6 -6,-6" fill="${silver ? "#d9dde3" : sc}" stroke="${out ? "rgba(0,0,0,.45)" : c1}" stroke-width="4"/>`; }).join("") : "";
   const R = 22 * sz, mf = c.mf || c1;
   const meds = {
     nenhum: "", circulo: `<circle cx="50" cy="60" r="${R}" fill="${mf}" stroke="${c3}" stroke-width="3"/>`, anel: `<circle cx="50" cy="60" r="${R}" fill="none" stroke="${c3}" stroke-width="3"/>`,
@@ -769,10 +783,10 @@ function crestSVG(c, size) {
   };
   const med = meds[c.med] || "", halo = !c.hn && !small;
   const bw = { normal: 6, fina: 3, grossa: 10, dupla: 5, nenhuma: 0 }[c.bw] != null ? { normal: 6, fina: 3, grossa: 10, dupla: 5, nenhuma: 0 }[c.bw] : 6;
-  const border = (bw ? `<g fill="none" stroke="${c3}" stroke-width="${bw}">${sh}</g>` : "") + (c.bw === "dupla" ? `<g fill="none" stroke="${c3}" stroke-width="2.2" transform="translate(50 60) scale(.84) translate(-50 -60)">${sh}</g>` : "");
+  const border = (CH ? `<g fill="none" stroke="url(#${id}gold)" stroke-width="${Math.max(bw, 6) + 3}">${sh}</g>` : "") + (bw ? `<g fill="none" stroke="${c3}" stroke-width="${bw}">${sh}</g>` : "") + (c.bw === "dupla" ? `<g fill="none" stroke="${c3}" stroke-width="2.2" transform="translate(50 60) scale(.84) translate(-50 -60)">${sh}</g>` : "");
   const icg = ic ? `<g ${halo ? `filter="url(#${id}h)"` : ""}><g fill="${icc}" stroke="${icc}" ${sz !== 1 ? `transform="translate(50 60) scale(${sz}) translate(-50 -60)"` : ""}>${ic}</g></g>` : "";
-  return `<svg class="crest" viewBox="0 ${out ? -22 : 0} 100 ${out ? 142 : 120}" width="${size}" height="${size * (out ? 1.42 : 1.2)}" aria-hidden="true"><defs><clipPath id="${id}">${sh}</clipPath>${halo && ic ? `<filter id="${id}h" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/><feFlood flood-color="${c.med && c.med !== "nenhum" && c.med !== "anel" ? mf : c1}"/><feComposite in2="d" operator="in" result="h"/><feMerge><feMergeNode in="h"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : ""}</defs>
-    <g clip-path="url(#${id})"><rect width="100" height="120" fill="${c1}"/><g fill="${c2}" color="${c2}">${pat(c.pat)}</g>${c.c4 && c.pat2 && c.pat2 !== "liso" ? `<g fill="${c.c4}" color="${c.c4}">${pat(c.pat2)}</g>` : ""}</g>
+  return `<svg class="crest" viewBox="0 ${out ? -22 : 0} 100 ${out ? 142 : 120}" width="${size}" height="${size * (out ? 1.42 : 1.2)}" aria-hidden="true"><defs><clipPath id="${id}">${sh}</clipPath>${gradDef(id + "g", c.gr, c1, c.g2 || c2)}${CH ? `<linearGradient id="${id}gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".45" stop-color="#f5c542"/><stop offset="1" stop-color="#a8720c"/></linearGradient>` : ""}${halo && ic ? `<filter id="${id}h" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.2" result="d"/><feFlood flood-color="${c.med && c.med !== "nenhum" && c.med !== "anel" ? mf : c1}"/><feComposite in2="d" operator="in" result="h"/><feMerge><feMergeNode in="h"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` : ""}</defs>
+    <g clip-path="url(#${id})"><rect width="100" height="120" fill="${c.gr && c.gr !== "nenhum" ? `url(#${id}g)` : c1}"/><g fill="${c2}" color="${c2}">${pat(c.pat)}</g>${c.c4 && c.pat2 && c.pat2 !== "liso" ? `<g fill="${c.c4}" color="${c.c4}">${pat(c.pat2)}</g>` : ""}</g>
     ${border}${med}${icg}${stars}${txt}${ano}</svg>`;
 }
 const KIT_PAT_D = {
@@ -810,21 +824,41 @@ const KIT_PAT_D = {
   cruz: `<rect x="44" y="0" width="12" height="100"/><rect x="0" y="34" width="100" height="12"/>`,
   grade: [36, 50, 64].map(x => `<rect x="${x - 0.9}" y="0" width="1.8" height="100"/>`).join("") + [30, 50, 70].map(y => `<rect x="0" y="${y - 0.9}" width="100" height="1.8"/>`).join("")
 };
-function kitSVG(k, size, num) {
-  k = k || {}; const id = "kt" + (CREST_N++); const c1 = k.c1 || "#f5c542", c2 = k.c2 || "#111";
-  const body = `<path d="M30 8 L42 4 C45 10 55 10 58 4 L70 8 L92 24 L82 40 L72 34 V92 H28 V34 L18 40 L8 24 Z"/>`;
-  const c3 = k.c3 || null, gc = k.gc || c2;
+function kitLayers(k, id) {
+  const c1 = k.c1 || "#f5c542", c2 = k.c2 || "#111", c3 = k.c3 || null, gc = k.gc || c2;
   const p2 = c3 && k.pat2 && k.pat2 !== "liso" ? `<g fill="${c3}">${KIT_PAT_D[k.pat2] || ""}</g>` : "";
   const sleeves = k.cm ? `<g fill="${k.cm}"><polygon points="30,6 6,24 18,42 30,34"/><polygon points="70,6 94,24 82,42 70,34"/></g>` : "";
   const pc = k.pu ? (k.pc || c3 || c2) : null;
   const trim = (k.gc && (!k.gl || k.gl === "padrao") ? `<path d="M42 4 C45 10 55 10 58 4 L60 6 C56 14 44 14 40 6 Z" fill="${k.gc}"/>` : "") + (pc ? `<g fill="${pc}"><polygon points="8,24 18,40 21,38 11,22"/><polygon points="92,24 82,40 79,38 89,22"/><rect x="28" y="88" width="44" height="4"/></g>` : "");
   const gola = { padrao: "", redonda: `<path d="M41 3 C45 11 55 11 59 3 L62 6 C56 16 44 16 38 6 Z" fill="${gc}"/>`, v: `<polygon points="40,4 50,22 60,4 56.5,4 50,16 43.5,4" fill="${gc}"/>`, polo: `<g fill="${gc}"><polygon points="40,3 50,13 46,21 35,10"/><polygon points="60,3 50,13 54,21 65,10"/></g><rect x="49.2" y="13" width="1.6" height="14" fill="${gc}"/><circle cx="50" cy="18" r="1.1" fill="${c1}"/><circle cx="50" cy="23" r="1.1" fill="${c1}"/>` }[k.gl] || "";
-  const fam = FONT_FAM[k.nf] || FONT_FAM.display;
+  const grd = k.gr && k.gr !== "nenhum";
+  return { defs: grd ? gradDef(id + "g", k.gr, c1, k.g2 || c2) : "", layers: `<rect width="100" height="100" fill="${grd ? `url(#${id}g)` : c1}"/><g fill="${c2}">${KIT_PAT_D[k.pat] || ""}</g>${p2}${sleeves}${trim}${gola}` };
+}
+function kitSVG(k, size, num, crest) {
+  k = k || {}; const id = "kt" + (CREST_N++);
+  const body = `<path d="M30 8 L42 4 C45 10 55 10 58 4 L70 8 L92 24 L82 40 L72 34 V92 H28 V34 L18 40 L8 24 Z"/>`;
+  const L = kitLayers(k, id), fam = FONT_FAM[k.nf] || FONT_FAM.display;
   const sp = k.sp && size >= 50 ? `<text x="50" y="40" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="${k.sp.length > 8 ? 7 : 8.5}" fill="${k.num || "#fff"}" opacity=".92">${esc(k.sp)}</text>` : "";
-  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true"><defs><clipPath id="${id}">${body}</clipPath></defs>
-    <g clip-path="url(#${id})"><rect width="100" height="100" fill="${c1}"/><g fill="${c2}">${KIT_PAT_D[k.pat] || ""}</g>${p2}${sleeves}${trim}${gola}</g>
-    <g fill="none" stroke="rgba(0,0,0,.55)" stroke-width="2.5">${body}</g>${sp}
+  const bd = k.bd && crest && size >= 34 ? crestSVG(Object.assign({}, crest, { stars: 0, txt: "", ano: "" }), 12).replace("<svg ", '<svg x="56" y="15" ') : "";
+  const ch = k.__ch && size >= 34 ? `<g transform="translate(86 29) rotate(-28)"><circle r="5.2" fill="#f5c542" stroke="#7a5300" stroke-width="1"/><polygon points="${starPts(0, 0.3, 3.4, 1.4, 5)}" fill="#7a5300"/></g>` : "";
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true"><defs><clipPath id="${id}">${body}</clipPath>${L.defs}</defs>
+    <g clip-path="url(#${id})">${L.layers}</g>
+    <g fill="none" stroke="rgba(0,0,0,.55)" stroke-width="2.5">${body}</g>${bd}${ch}${sp}
     <text x="50" y="${sp ? 72 : 68}" text-anchor="middle" font-family="${fam}" font-weight="900" font-size="${sp ? 27 : 30}" fill="${k.num || "#fff"}" stroke="${k.nc || "rgba(0,0,0,.45)"}" stroke-width="${k.nc ? 2.6 : 2}" paint-order="stroke">${num || 10}</text></svg>`;
+}
+// textura da camisa para as bolinhas da simulação (mesmo desenho do editor)
+const KIT_TEX = {};
+function kitTex(k) {
+  const key = JSON.stringify(k); const ex = KIT_TEX[key]; if (ex) return ex.ok ? ex.img : null;
+  const o = KIT_TEX[key] = { ok: false, img: new Image() }; const L = kitLayers(k, "tx");
+  o.img.onload = () => { o.ok = true; }; o.img.onerror = () => { o.bad = true; };
+  o.img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 2 64 64" width="96" height="96"><defs>${L.defs}</defs>${L.layers}</svg>`);
+  return null;
+}
+function mascotSVG(c, size) {
+  c = c || {}; if (!c.masc || c.masc === "nenhum") return ""; const c1 = c.c1 || "#f5c542", mc = c.mc || c.c2 || "#111";
+  const ic = crestIcons(c1)[c.masc]; if (!ic || ic === "LETRA") return "";
+  return `<svg viewBox="22 32 56 56" width="${size}" height="${size}" aria-hidden="true"><circle cx="50" cy="60" r="27" fill="${c1}" stroke="${c.c3 || mc}" stroke-width="2.5"/><g fill="${mc}" stroke="${mc}" transform="translate(50 60) scale(1.15) translate(-50 -60)">${ic}</g></svg>`;
 }
 function pcard(p) {
   const owner = S ? ownerOf(S, p.id) : -1;
@@ -833,14 +867,19 @@ function pcard(p) {
     <div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="ovr">${O(p)}</div><div class="pos">${p.p}</div></div>
     <div class="num muted" style="text-align:right;font-size:13px">VALOR REF.<br><b style="font-size:24px;color:var(--ink)">${hid() ? "?" : p.v}</b></div></div>
     <div class="nm">${esc(p.n)}</div>
+    <div class="pmeta">${ageOf(p) != null ? `<span>${ageOf(p)} anos</span>` : ""}${bdTxt(p) ? `<span>nasc. ${bdTxt(p)}</span>` : ""}${p.p !== "GOL" ? `<span>${p.g} G · ${p.a} A</span><span>${p.pm ? ((p.g + p.a) / p.pm).toFixed(1) : "0"} G+A/jogo</span>` : ""}</div>
     <div class="club">${esc(p.t)}${owner >= 0 ? ` · <b style="color:${S.managers[owner].color}">${esc(S.managers[owner].team)}</b>` : ""}</div>
     ${p.tags.length ? `<div class="tags">${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
-    <div class="st"><div><b>${p.pm}</b>jogos</div><div><b>${hid() ? "?" : p.at}</b>ATQ</div><div><b>${hid() ? "?" : p.df}</b>DEF</div><div><b>${hid() ? "?" : (p.pot || p.o)}</b>POT</div></div>
+    <div class="st"><div><b>${ageTxt(p)}</b>idade</div><div><b>${hid() ? "?" : p.at}</b>ATQ</div><div><b>${hid() ? "?" : p.df}</b>DEF</div>${S && S.settings && S.settings.career ? `<div><b>${hid() ? "?" : (p.pot || p.o)}</b>POT</div>` : `<div><b>${p.pm}</b>jogos</div>`}</div>
     ${hid() ? `<div class="muted" style="font-size:11px">Modo overall escondido: use as conquistas e o clube como pista.</div>` : ""}
   </div>`;
 }
+// idade: data de nascimento do site oficial (nov/2026); no modo carreira envelhece a cada temporada
+function ageOf(p) { if (!p || p.age == null) return null; return p.age + (S && S.career && S.career.year ? S.career.year - 1 : 0); }
+function ageTxt(p) { const a = ageOf(p); return a == null ? "–" : a; }
+function bdTxt(p) { return p && p.bd ? p.bd.split("-").reverse().join("/") : null; }
 function posb(p, p2) { return `<span class="posb ${p}">${p}${p2 ? `<small>/${p2}</small>` : ""}</span>`; }
-function mgrName(i) { const m = S.managers[i]; return `<span class="mcrest">${crestSVG(m.crest, 16)}</span> ${esc(m.team)}${S.away && S.away[i] ? ' <span class="pill away" title="Saiu da sala: um bot está jogando por ele até ele voltar">🔌 bot no comando</span>' : ""}`; }
+function mgrName(i) { const m = S.managers[i]; return `<span class="mcrest">${crestSVG(tcrest(m), 16)}</span> ${esc(m.team)}${S.away && S.away[i] ? ' <span class="pill away" title="Saiu da sala: um bot está jogando por ele até ele voltar">🔌 bot no comando</span>' : ""}`; }
 function connStatus() {
   const w = NET.writeOk === true ? "envio por banco OK" : NET.writeOk === false ? `envio por banco bloqueado (${NET.writeErr})` : "envio por banco testando";
   const r = NET.rjoin || NET.lobby ? "canal ao vivo OK" : "canal ao vivo indisponível";
@@ -872,9 +911,12 @@ const RULES = [
 ];
 function viewHome() {
   const nm = esc(store("kl_name") || ""), tm = esc(store("kl_team") || "");
-  return `<div class="hero">
+  const nTeams = new Set(PLAYERS.map(p => p.t)).size;
+  return `<div class="hero"><div class="hero-txt">
+    <span class="eyebrow">Kings League Brasil · Fut 7</span>
     <h1>The Kings Game<br><em>Monte, jogue e ganhe</em> a Kings League.</h1>
-    <p>Leilão ou draft com os jogadores da Kings League Brasil, campeonato com as regras oficiais jogado ao vivo com os amigos, mercado de trocas e modo carreira com evolução de cada jogador. Você escolhe formação, estilo, ordem do escalonado, cobrador e a hora de usar a carta secreta e o pênalti do presidente.</p>
+    <p>Leilão ou draft com os jogadores da Kings League Brasil, campeonato com as regras oficiais jogado ao vivo com os amigos, mercado de trocas e modo carreira com evolução de cada jogador. Você escolhe formação, estilo, ordem do escalonado, cobrador e a hora de usar a carta secreta e o pênalti do presidente.</p></div>
+    <div class="hero-stats"><div><b class="num">${PLAYERS.length}</b><span>jogadores reais</span></div><div><b class="num">${nTeams}</b><span>clubes</span></div><div><b class="num">12</b><span>presidentes por sala</span></div><div><b class="num">10</b><span>cartas secretas</span></div></div>
   </div>
   ${profileCard()}
   ${resumeBox()}
@@ -897,7 +939,7 @@ function viewHome() {
     </div>
     <div class="card" style="display:grid;gap:10px;align-content:start">
       <h2 style="font-size:24px">Um aparelho só</h2>
-      <p class="muted" style="margin:0;font-size:14px">Todo mundo no mesmo computador ou TV. Bom para testar sozinho também.</p>
+      <p class="muted" style="margin:0;font-size:14px">Todo mundo no mesmo computador ou celular. Bom para testar sozinho também.</p>
       <div id="lp" style="display:grid;gap:6px">${[0, 1, 2].map(i => `<input class="lp-name" id="lp${i}" type="text" maxlength="18" placeholder="Jogador ${i + 1}" value="${i === 0 ? nm : ""}">`).join("")}</div>
       <div class="row"><button class="btn sm" data-a="lpadd">+ jogador</button></div>
       <button class="btn" data-a="local">Jogar aqui</button>
@@ -926,10 +968,10 @@ function howOvr() {
   <p>Resultado espalhado de 62 a 96 (linha) e 64 a 90 (goleiros). Fora do Split 2, os gols dos 3 artilheiros são oficiais; os demais são estimados pelas finalizações no alvo.</p></div></details>`;
 }
 function poolTable(list) {
-  return `<table class="tbl"><thead><tr><th>OVR</th><th>Pos</th><th>Jogador</th><th>Clube 25/26</th><th>ATQ</th><th>DEF</th><th>Valor</th><th>Dono</th></tr></thead><tbody>
+  return `<table class="tbl"><thead><tr><th>OVR</th><th>Pos</th><th>Jogador</th><th>Idade</th><th>Clube 25/26</th><th>ATQ</th><th>DEF</th><th>Valor</th><th>Dono</th></tr></thead><tbody>
   ${list.map(p => { const ow = S ? ownerOf(S, p.id) : -1; return `<tr class="${ow >= 0 ? "gone" : ""}"><td class="o ${p.p === "GOL" ? "g" : ""}">${p.o}</td><td>${posb(p.p, p.p2)}</td>
       <td><b>${esc(p.n)}</b>${p.tags.length ? `<div class="muted" style="font-size:11.5px">${esc(p.tags.slice(0, 3).join(" · "))}</div>` : ""}</td>
-      <td class="muted">${esc(p.t)}</td><td class="num">${p.at}</td><td class="num">${p.df}</td><td class="num">${p.v}</td><td>${ow >= 0 ? mgrName(ow) : ""}</td></tr>`; }).join("")}</tbody></table>`;
+      <td class="num">${ageTxt(p)}</td><td class="muted">${esc(p.t)}</td><td class="num">${p.at}</td><td class="num">${p.df}</td><td class="num">${p.v}</td><td>${ow >= 0 ? mgrName(ow) : ""}</td></tr>`; }).join("")}</tbody></table>`;
 }
 
 function viewLobby() {
@@ -944,7 +986,7 @@ function viewLobby() {
       ${window.KL_SITE ? `<div class="row" style="margin-top:6px"><button class="btn sm gold" data-a="copyinvite">Copiar link de convite</button></div><p class="muted" style="margin:6px 0 0;font-size:14px">Mande o link pros seus amigos: o código ${esc(S.code)} já vem preenchido, é só pôr o nome e entrar.</p>` : `<p class="muted" style="margin:6px 0 0;font-size:14px">Compartilhe esta página com seus amigos pelo botão Compartilhar do Claude e mande o código. Cada um abre o link, toca em "Entrar numa sala" e digita ${esc(S.code)}.</p>`}</div>` : ""}
       <div style="display:grid;gap:8px">
         ${S.managers.map((m, i) => `<div class="row" style="justify-content:space-between;border:1px solid var(--line);border-left:4px solid ${m.color};border-radius:10px;padding:8px 10px">
-          <div class="row" style="gap:8px">${crestSVG(m.crest, 26)}<b>${esc(m.team)}</b> <span class="muted">· ${esc(m.name)}</span> ${m.pid === MYPID ? '<span class="pill you">você</span>' : ""}</div>
+          <div class="row" style="gap:8px">${crestSVG(tcrest(m), 26)}<b>${esc(m.team)}</b> <span class="muted">· ${esc(m.name)}</span> ${m.pid === MYPID ? '<span class="pill you">você</span>' : ""}</div>
           ${host && m.pid !== MYPID && NET.mode !== "local" ? `<button class="btn sm ghost" data-a="kick" data-mi="${i}">Remover</button>` : ""}</div>`).join("")}
         ${NET.mode === "host" ? `<div class="muted" style="font-size:12px">Conexão: ${NET.rjoin || NET.lobby ? "canal ao vivo OK" : "canal ao vivo indisponível"} · pedidos recebidos: ${Object.keys(S.seqs || {}).length}</div>` : ""}
         ${cpus ? `<div class="muted" style="font-size:14px">+ ${cpus} time${cpus > 1 ? "s" : ""} do computador (bots) para completar ${total} times.</div>` : ""}
@@ -993,7 +1035,9 @@ const CREST_LBL = {
   isz: ["Médio", "Pequeno", "Grande", "Gigante"],
   tpos: ["Embaixo", "Em cima", "Numa faixa"],
   fnt: ["Condensada", "Clássica (serifa)", "Pesada", "Manuscrita"],
-  bw: ["Normal", "Fina", "Grossa", "Dupla", "Sem borda"]
+  bw: ["Normal", "Fina", "Grossa", "Dupla", "Sem borda"],
+  gr: ["Sem gradiente", "De cima para baixo", "De lado", "Diagonal", "Do centro para fora"],
+  tor: ["Mosaico com o escudo", "Listras", "Xadrez", "Ola (onda)", "Bandeiras", "Sinalizadores"]
 };
 const KIT_NAMES = ["Lisa", "Listras verticais", "Listras horizontais", "Faixa diagonal", "Metade", "Xadrez", "Gola e punhos", "Faixa central", "Ombros", "V no peito", "Listras finas", "Degradê", "Faixas laterais", "Faixa no peito", "Bicolor diagonal", "Chevron duplo", "Quadros grandes", "Mangas", "Bolinhas", "Zigue-zague", "Ondas", "Faixa diagonal dupla", "Xis", "Barra inferior", "Colete", "Listras grossas", "Listras horizontais finas", "Estrela no peito", "Faixa diagonal invertida", "Metade horizontal", "Quadriculado fino", "Camuflado", "Traços finos", "Cruz", "Grade"];
 const KIT_GOLA_LBL = ["Padrão", "Redonda", "Gola V", "Polo"], KIT_FONT_LBL = ["Condensada", "Clássica (serifa)", "Pesada"];
@@ -1019,6 +1063,8 @@ function crestEditor(force) {
           ${col("c1", "Cor principal", c.c1 || "#f5c542")}${col("c2", "Cor secundária (desenho)", c.c2 || "#111111")}${col("c3", "Cor da borda", c.c3 || c.c2 || "#ffffff")}
           ${tog("c4", "Cor terciária (opcional)", "#ffffff", !!c.c4)}
           <label class="f" for="c-pat2">Desenho da cor terciária${sel("pat2", CREST_PATS, c.pat2 || "liso", ["Nenhum"].concat(CREST_LBL.pat.slice(1)))}</label>
+          <label class="f" for="c-gr">Gradiente no fundo${sel("gr", CREST_GR, c.gr || "nenhum", CREST_LBL.gr)}</label>
+          ${col("g2", "Cor final do gradiente", c.g2 || c.c2 || "#111111")}
         </div></div>
         <div class="edsec"><b>Símbolo</b><div class="grid3">
           <label class="f" for="c-icon">Símbolo${sel("icon", CREST_ICONS, c.icon, CREST_LBL.icon)}</label>
@@ -1034,9 +1080,21 @@ function crestEditor(force) {
           <label class="f" for="c-fnt">Fonte${sel("fnt", CREST_FONTS, c.fnt || "display", CREST_LBL.fnt)}</label>
           ${col("tc", "Cor da sigla", c.tc || c.c2 || "#111111")}
           <label class="f" for="c-ano">Ano de fundação<input id="c-ano" type="text" inputmode="numeric" maxlength="4" placeholder="ex.: 2026" data-mi="${mi}" value="${esc(c.ano || "")}"></label>
-          <label class="f" for="c-stars">Estrelas (títulos)<select id="c-stars" data-mi="${mi}">${[0, 1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(c.stars | 0) === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+          <label class="f" for="c-sa">Estrelas<select id="c-sa" data-mi="${mi}"><option value="manual" ${c.sa !== "auto" ? "selected" : ""}>Manuais (eu escolho)</option><option value="auto" ${c.sa === "auto" ? "selected" : ""}>Automáticas: títulos deste save</option></select></label>
+          ${c.sa === "auto" ? `<label class="f" for="c-sac">Contam como estrela<select id="c-sac" data-mi="${mi}"><option value="todos" ${(c.sac || "todos") === "todos" ? "selected" : ""}>Split (dourada) e Cup (prateada)</option><option value="split" ${c.sac === "split" ? "selected" : ""}>Só Split</option><option value="cup" ${c.sac === "cup" ? "selected" : ""}>Só Kings Cup</option></select></label>` : ""}
+          <label class="f" for="c-stars">${c.sa === "auto" ? "Estrelas agora" : "Quantas estrelas"}<select id="c-stars" data-mi="${mi}" ${c.sa === "auto" ? "disabled" : ""}>${[0, 1, 2, 3, 4, 5, 6, 7].map(n => `<option value="${n}" ${(c.stars | 0) === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>
           <label class="f" for="c-spos">Posição das estrelas<select id="c-spos" data-mi="${mi}"><option value="fora" ${c.spos !== "dentro" ? "selected" : ""}>Em cima, fora do escudo</option><option value="dentro" ${c.spos === "dentro" ? "selected" : ""}>Dentro do escudo</option></select></label>
           ${col("sc", "Cor das estrelas", c.sc || "#f5c542")}
+          <label class="f" for="c-nch">Selo de campeão<select id="c-nch" data-mi="${mi}"><option value="0" ${!c.nch ? "selected" : ""}>Mostrar quando for campeão</option><option value="1" ${c.nch ? "selected" : ""}>Não mostrar</option></select></label>
+        </div><p class="muted" style="font-size:12px;margin:0">Campeão ganha borda dourada e a fita "CAMPEÃO" no escudo e um selo na manga, só neste save, até outro time vencer a mesma competição.</p></div>
+        <div class="edsec"><b>Mascote e torcida</b><div class="grid3">
+          <label class="f" for="c-masc">Mascote (aparece no gol)${sel("masc", ["nenhum"].concat(CREST_ICONS.filter(x => x !== "letra" && x !== "nenhum")), c.masc || "nenhum", ["Nenhum"].concat(CREST_LBL.icon.filter((x, i) => CREST_ICONS[i] !== "letra" && CREST_ICONS[i] !== "nenhum")))}</label>
+          ${col("mc", "Cor do mascote", c.mc || c.c2 || "#111111")}
+          <div class="crestprev" style="min-height:0">${mascotSVG(c, 56) || '<span class="muted" style="font-size:12px">sem mascote</span>'}</div>
+          <label class="f" for="c-tor">Estilo da torcida${sel("tor", TOR_STYLES, c.tor || "mosaico", CREST_LBL.tor)}</label>
+          ${tog("t1", "Cor 1 da torcida (opcional)", c.c1 || "#f5c542", !!c.t1)}
+          ${tog("t2", "Cor 2 da torcida (opcional)", c.c2 || "#111111", !!c.t2)}
+          <label class="f" for="c-fx" style="grid-column:span 2">Faixa da torcida<input id="c-fx" type="text" maxlength="28" placeholder="${esc((m.team || "").toUpperCase())}" data-mi="${mi}" value="${esc(c.fx || "")}"></label>
         </div></div>
       </div>
     </div>
@@ -1049,7 +1107,7 @@ function crestEditor(force) {
 function looksBox(mi, m) {
   const L = getProf().looks || [];
   return `<div class="sec-title"><h2>Meus visuais</h2><span class="muted">guarde vários escudos e uniformes e troque quando quiser, por exemplo antes de uma temporada nova</span></div>
-  <div class="card crested"><div class="looks">${L.map((x, k) => `<div class="look"><div class="row" style="gap:4px;justify-content:center">${crestSVG(x.crest, 34)}${kitSVG(x.kit, 38, 10)}${x.kit2 ? kitSVG(x.kit2, 30, 10) : ""}</div><b>${esc(x.n)}</b><div class="row" style="gap:4px;justify-content:center"><button class="btn sm gold" data-a="lookuse" data-k="${k}" data-mi="${mi}">Usar</button><button class="btn sm ghost" data-a="lookdel" data-k="${k}" title="Apagar">✕</button></div></div>`).join("") || `<p class="muted" style="margin:0;font-size:13px">Nenhum visual salvo ainda. Monte o escudo e os uniformes abaixo e salve aqui.</p>`}</div>
+  <div class="card crested"><div class="looks">${L.map((x, k) => `<div class="look"><div class="row" style="gap:4px;justify-content:center">${crestSVG(x.crest, 34)}${kitSVG(x.kit, 38, 10, x.crest)}${x.kit2 ? kitSVG(x.kit2, 30, 10, x.crest) : ""}</div><b>${esc(x.n)}</b><div class="row" style="gap:4px;justify-content:center"><button class="btn sm gold" data-a="lookuse" data-k="${k}" data-mi="${mi}">Usar</button><button class="btn sm ghost" data-a="lookdel" data-k="${k}" title="Apagar">✕</button></div></div>`).join("") || `<p class="muted" style="margin:0;font-size:13px">Nenhum visual salvo ainda. Monte o escudo e os uniformes abaixo e salve aqui.</p>`}</div>
   <div class="row" style="gap:6px;margin-top:10px"><input id="look-n" type="text" maxlength="20" placeholder="Nome do visual (ex.: Temporada 2)" style="flex:1;min-width:160px"><button class="btn sm" data-a="looksave" data-mi="${mi}" ${L.length >= 12 ? "disabled" : ""}>Salvar o visual atual</button></div>
   ${L.length >= 12 ? `<p class="muted" style="font-size:12px;margin:6px 0 0">Limite de 12 visuais. Apague um para salvar outro.</p>` : ""}</div>`;
 }
@@ -1067,11 +1125,13 @@ function kitEditor(mi, m) {
   const tog = (f, label, def, flag) => { const on = !!k[flag || f]; return `<label class="f" for="k-${f}">${label}<span class="row" style="gap:6px;flex-wrap:nowrap"><input id="k-${f}" type="color" data-mi="${mi}" value="${k[f] || def}" ${on ? "" : 'style="opacity:.45"'}><button class="btn sm ${on ? "gold" : "ghost"}" data-a="ktog" data-f="${f}" data-flag="${flag || ""}" data-def="${def}" data-mi="${mi}">${on ? "Ligada" : "Desligada"}</button></span></label>`; };
   return `<div class="card crested"><div class="row" style="margin-bottom:10px;gap:6px"><button class="btn sm ${which === 1 ? "gold" : ""}" data-a="kittab" data-v="1">Principal</button><button class="btn sm ${which === 2 ? "gold" : ""}" data-a="kittab" data-v="2">Reserva</button></div>
   <div class="crestgrid">
-    <div class="crestprev"><div class="row" style="gap:6px;justify-content:center">${kitSVG(m.kit, which === 1 ? 120 : 70, 10)}${kitSVG(m.kit2 || awayKit(m.kit), which === 2 ? 120 : 70, 10)}</div><b>${esc(m.team)}</b><span class="muted" style="font-size:12px">${which === 1 ? "Principal (casa)" : "Reserva (fora, se as cores baterem)"}</span><button class="btn sm" style="margin-top:8px" data-a="kitrand" data-mi="${mi}">🎲 Camisa aleatória</button></div>
+    <div class="crestprev"><div class="row" style="gap:6px;justify-content:center">${kitSVG(tkit(m, m.kit), which === 1 ? 120 : 70, 10, m.crest)}${kitSVG(tkit(m, m.kit2 || awayKit(m.kit)), which === 2 ? 120 : 70, 10, m.crest)}</div><b>${esc(m.team)}</b><span class="muted" style="font-size:12px">${which === 1 ? "Principal (casa)" : "Reserva (fora, se as cores baterem)"}</span><button class="btn sm" style="margin-top:8px" data-a="kitrand" data-mi="${mi}">🎲 Camisa aleatória</button></div>
     <div style="display:grid;gap:12px;align-content:start">
       <div class="edsec"><b>Modelo e cores</b><div class="grid3">
         <label class="f" for="k-pat">Modelo${sel("pat", KIT_PATS, k.pat, KIT_NAMES)}</label>
         <label class="f" for="k-c1">Cor da camisa<input id="k-c1" type="color" data-mi="${mi}" value="${k.c1 || "#f5c542"}"></label>
+        <label class="f" for="k-gr">Degradê da camisa${sel("gr", CREST_GR, k.gr || "nenhum", CREST_LBL.gr)}</label>
+        <label class="f" for="k-g2">Cor final do degradê<input id="k-g2" type="color" data-mi="${mi}" value="${k.g2 || k.c2 || "#111111"}"></label>
         <label class="f" for="k-c2">Cor do detalhe<input id="k-c2" type="color" data-mi="${mi}" value="${k.c2 || "#111111"}"></label>
         ${tog("c3", "Cor terciária (opcional)", "#ffffff")}
         <label class="f" for="k-pat2">Desenho da cor terciária${sel("pat2", KIT_PATS, k.pat2 || "liso", ["Nenhum"].concat(KIT_NAMES.slice(1)))}</label>
@@ -1084,6 +1144,7 @@ function kitEditor(mi, m) {
         <label class="f" for="k-num">Cor do número<input id="k-num" type="color" data-mi="${mi}" value="${k.num || "#ffffff"}"></label>
         ${tog("nc", "Contorno do número (opcional)", "#000000")}
         <label class="f" for="k-nf">Fonte do número${sel("nf", KIT_FONTS, k.nf || "display", KIT_FONT_LBL)}</label>
+        <label class="f" for="k-bd">Escudo no peito<select id="k-bd" data-mi="${mi}"><option value="0" ${!k.bd ? "selected" : ""}>Não</option><option value="1" ${k.bd ? "selected" : ""}>Sim</option></select></label>
         <label class="f" for="k-sp">Patrocínio (até 12)<input id="k-sp" type="text" maxlength="12" placeholder="ex.: KINGS BET" data-mi="${mi}" value="${esc(k.sp || "")}"></label>
       </div></div>
       <div class="row" style="gap:6px"><button class="btn sm" data-a="kitfromcrest" data-mi="${mi}">Usar cores do escudo</button>${which === 2 ? `<button class="btn sm ghost" data-a="kitinvert" data-mi="${mi}">Inverter o principal</button>` : ""}</div>
@@ -1161,7 +1222,7 @@ function viewStaff() {
     </div></div>`;
   } else stage = `<div style="display:grid;place-items:center;min-height:200px;text-align:center">${a.last && a.last.mi >= 0 ? `<div class="sold-anim"><div class="muted">CONTRATADO</div><h2 style="font-size:40px">${esc(STAFF_BY_ID[a.last.sid].n)}</h2><div>${mgrName(a.last.mi)} · <b class="num" style="color:var(--gold)">${a.last.price} K$</b></div></div>` : `<h2 style="font-size:32px">Próximo nome saindo do pote…</h2>`}</div>`;
   return `<div class="sec-title"><h2>Mercado de staff</h2><span class="muted">técnicos e presidentes da Kings League Brasil</span></div><div class="card">${stage}</div>
-  <div class="sec-title"><h2>Presidentes</h2></div><div class="mgrs">${S.managers.map((m, i) => `<div class="mgr" style="--c:${m.color}"><div class="t"><span class="row" style="gap:6px;flex-wrap:nowrap">${crestSVG(m.crest, 22)}<span>${esc(m.team)}</span></span>${m.cpu ? '<span class="pill cpu">bot</span>' : ""}</div><div class="money num">${m.budget} K$</div><div class="muted" style="font-size:13px">Técnico: <b style="color:var(--ink)">${m.coach ? esc(STAFF_BY_ID[m.coach].n) : "—"}</b><br>Presidente: <b style="color:var(--ink)">${m.pres ? esc(STAFF_BY_ID[m.pres].n) : "—"}</b></div></div>`).join("")}</div>`;
+  <div class="sec-title"><h2>Presidentes</h2></div><div class="mgrs">${S.managers.map((m, i) => `<div class="mgr" style="--c:${m.color}"><div class="t"><span class="row" style="gap:6px;flex-wrap:nowrap">${crestSVG(tcrest(m), 22)}<span>${esc(m.team)}</span></span>${m.cpu ? '<span class="pill cpu">bot</span>' : ""}</div><div class="money num">${m.budget} K$</div><div class="muted" style="font-size:13px">Técnico: <b style="color:var(--ink)">${m.coach ? esc(STAFF_BY_ID[m.coach].n) : "—"}</b><br>Presidente: <b style="color:var(--ink)">${m.pres ? esc(STAFF_BY_ID[m.pres].n) : "—"}</b></div></div>`).join("")}</div>`;
 }
 /* ---------- mercado de trocas ---------- */
 function viewTrade() {
@@ -1224,7 +1285,7 @@ function fichaView(mi) {
   const rows = ids.map(P).filter(Boolean).sort((a, b) => b.o - a.o).map(p => {
     const l = (C.log || {})[p.id] || [], T = l.reduce((t, x) => ({ j: t.j + x.j, g: t.g + x.g, a: t.a + x.a, ch: t.ch + (x.ch ? 1 : 0) }), { j: 0, g: 0, a: 0, ch: 0 });
     const open = UI.ficha === p.id;
-    return `<div class="ficha ${open ? "on" : ""}"><button class="trow fbtn" data-a="ficha" data-id="${p.id}">${posb(p.p, p.p2)} <span style="flex:1;text-align:left">${esc(p.n)} <span class="muted">${esc(p.t)} · pot ${p.pot || p.o}</span></span><span class="muted num" style="font-size:12.5px">${T.j} J · ${T.g} G · ${T.a} A${T.ch ? ` · ${T.ch}🏆` : ""}</span><b class="num">${O(p)}</b></button>
+    return `<div class="ficha ${open ? "on" : ""}"><button class="trow fbtn" data-a="ficha" data-id="${p.id}">${posb(p.p, p.p2)} <span style="flex:1;text-align:left">${esc(p.n)} <span class="muted">${esc(p.t)} · ${ageTxt(p)} anos · pot ${p.pot || p.o}</span></span><span class="muted num" style="font-size:12.5px">${T.j} J · ${T.g} G · ${T.a} A${T.ch ? ` · ${T.ch}🏆` : ""}</span><b class="num">${O(p)}</b></button>
       ${open ? (l.length ? `<table class="ftab"><thead><tr><th>Temp.</th><th>Comp.</th><th>Time</th><th>OVR</th><th>J</th><th>G</th><th>A</th><th>Nota</th></tr></thead><tbody>${l.map(x => `<tr><td class="num">${x.y}</td><td>${x.c}${x.ch ? " 🏆" : ""}</td><td>${esc(x.t)}</td><td class="num">${x.o}</td><td class="num">${x.j}</td><td class="num">${x.g}</td><td class="num">${x.a}</td><td class="num">${x.n != null ? x.n.toFixed(1) : "–"}</td></tr>`).join("")}</tbody></table>` : `<p class="muted" style="margin:6px 0 0;font-size:13px">Ainda sem jogos na carreira. A ficha enche no fim de cada temporada.</p>`) : ""}</div>`;
   }).join("");
   return `<div class="card" style="display:grid;gap:8px"><div class="row" style="justify-content:space-between"><h3 style="margin:0;font-size:20px">Ficha de carreira</h3><button class="btn sm ghost" data-a="fichaall">${UI.fichaAll ? "Só o meu elenco" : "Todos com histórico"}</button></div><p class="muted" style="margin:0;font-size:13px">Toque num jogador para ver jogos, gols, assistências e nota de cada temporada.</p><div class="tlist">${rows || '<p class="muted">Ninguém por aqui ainda.</p>'}</div></div>`;
@@ -1288,8 +1349,8 @@ function marketPool(clickA, selId, mi) {
     <input id="mq" type="text" placeholder="Buscar jogador ou clube" value="${esc(UI.mq || "")}" style="max-width:280px">
     <select id="mpos" style="max-width:150px">${["ALL", "GOL", "DEF", "MEI", "ATA"].map(p => `<option value="${p}" ${pos === p ? "selected" : ""}>${p === "ALL" ? "Todas posições" : p}</option>`).join("")}</select>
     <span class="muted" style="font-size:13px">${list.length} disponíveis</span></div>
-  <div class="scroll"><table class="tbl"><thead><tr><th>OVR</th><th>Pos</th><th>Jogador</th><th>Clube 25/26</th>${h ? "" : "<th>ATQ</th><th>DEF</th><th>Valor</th>"}<th></th></tr></thead><tbody>
-  ${list.map(p => `<tr class="${selId === p.id ? "sel" : ""}"><td class="o ${p.p === "GOL" ? "g" : ""}">${O(p)}</td><td>${posb(p.p, p.p2)}</td><td><b>${esc(p.n)}</b>${p.tags.length ? `<div class="muted" style="font-size:11.5px">${esc(p.tags.slice(0, 3).join(" · "))}</div>` : ""}</td><td class="muted">${esc(p.t)}</td>${h ? "" : `<td class="num">${p.at}</td><td class="num">${p.df}</td><td class="num">${p.v}</td>`}
+  <div class="scroll"><table class="tbl"><thead><tr><th>OVR</th><th>Pos</th><th>Jogador</th><th>Idade</th><th>Clube 25/26</th>${h ? "" : "<th>ATQ</th><th>DEF</th><th>Valor</th>"}<th></th></tr></thead><tbody>
+  ${list.map(p => `<tr class="${selId === p.id ? "sel" : ""}"><td class="o ${p.p === "GOL" ? "g" : ""}">${O(p)}</td><td>${posb(p.p, p.p2)}</td><td><b>${esc(p.n)}</b>${p.tags.length ? `<div class="muted" style="font-size:11.5px">${esc(p.tags.slice(0, 3).join(" · "))}</div>` : ""}</td><td class="num">${ageTxt(p)}</td><td class="muted">${esc(p.t)}</td>${h ? "" : `<td class="num">${p.at}</td><td class="num">${p.df}</td><td class="num">${p.v}</td>`}
     <td>${clickA ? `<button class="btn sm" data-a="${clickA}" data-id="${p.id}" data-mi="${mi}">${clickA === "wcadd" ? "Quero" : "Escolher"}</button>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
 }
 function viewWC() {
@@ -1330,7 +1391,7 @@ function viewLottery() {
   const d = S.draft;
   return `<div class="sec-title"><h2>${d.byTable ? "Ordem do draft" : "Sorteio do draft"}</h2><span class="muted">${d.byTable ? "o pior da última temporada escolhe primeiro" : "a ordem das escolhas"}</span></div>
   <div class="card lottery">
-    <div class="balls">${d.order.map((mi, k) => k < d.revealed ? `<div class="ball on" style="--c:${S.managers[mi].color}"><span class="num">${k + 1}º</span>${crestSVG(S.managers[mi].crest, 44)}<b>${esc(S.managers[mi].team)}</b></div>` : `<div class="ball ${k === d.revealed ? "spin" : ""}"><span class="num">${k + 1}º</span><b>?</b></div>`).join("")}</div>
+    <div class="balls">${d.order.map((mi, k) => k < d.revealed ? `<div class="ball on" style="--c:${S.managers[mi].color}"><span class="num">${k + 1}º</span>${crestSVG(tcrest(S.managers[mi]), 44)}<b>${esc(S.managers[mi].team)}</b></div>` : `<div class="ball ${k === d.revealed ? "spin" : ""}"><span class="num">${k + 1}º</span><b>?</b></div>`).join("")}</div>
     ${d.byTable ? `<p style="margin:10px 0 0"><b>Regra da Kings:</b> a ordem segue a classificação final da competição anterior (${S.cupDraft ? "o Split" : "a última temporada nesta sala"}), do último colocado para o campeão.${S.cupDraft ? "" : " Quem ficou fora da última temporada entra no fim da fila."}</p>` : ""}
     <p class="muted" style="margin:10px 0 0">Ordem em cobra: na rodada 1 vai do 1º ao último, na rodada 2 volta do último ao 1º, e assim por diante.</p>
   </div>
@@ -1348,7 +1409,7 @@ function viewDraft() {
   </tbody></table></div>`;
   return `<div class="sec-title"><h2>Draft</h2><span class="phase">Pick ${pickNo} · rodada ${d.round + 1}</span></div>
   <div class="card stage" style="grid-template-columns:auto 1fr">
-    ${sel && myTurn ? pcard(sel) : `<div class="pcard" style="align-items:center;justify-content:center;text-align:center">${crestSVG(pm.crest, 90)}<div class="nm" style="margin-top:10px">${esc(pm.team)}</div></div>`}
+    ${sel && myTurn ? pcard(sel) : `<div class="pcard" style="align-items:center;justify-content:center;text-align:center">${crestSVG(tcrest(pm), 90)}<div class="nm" style="margin-top:10px">${esc(pm.team)}</div></div>`}
     <div class="bidbox">
       <div class="row" style="justify-content:space-between"><span class="muted">NO RELÓGIO</span><div class="clock num" id="dclock">–</div></div>
       <h2 style="font-size:38px;color:${pm.color}">${esc(pm.team)}</h2>
@@ -1406,7 +1467,7 @@ function mgrBox(m, i) {
   const ros = m.roster.map(P).sort((a, b) => POS_ORDER[a.p] - POS_ORDER[b.p] || b.o - a.o);
   const avg = hid() ? "?" : ros.length ? Math.round(ros.reduce((s, p) => s + p.o, 0) / ros.length) : 0;
   return `<div class="mgr ${m.pid === MYPID ? "me" : ""}" style="--c:${m.color}">
-    <div class="t"><span class="row" style="gap:6px;flex-wrap:nowrap">${crestSVG(m.crest, 22)}<span style="overflow:hidden;text-overflow:ellipsis">${esc(m.team)}</span></span>${m.cpu ? '<span class="pill cpu">bot</span>' : m.pid === MYPID ? '<span class="pill you">você</span>' : ""}</div>
+    <div class="t"><span class="row" style="gap:6px;flex-wrap:nowrap">${crestSVG(tcrest(m), 22)}<span style="overflow:hidden;text-overflow:ellipsis">${esc(m.team)}</span></span>${m.cpu ? '<span class="pill cpu">bot</span>' : m.pid === MYPID ? '<span class="pill you">você</span>' : ""}</div>
     <div class="row" style="justify-content:space-between"><span class="money num">${m.budget} K$</span><span class="muted" style="font-size:13px">${m.roster.length}/${sq} · média ${avg || "–"}</span></div>
     <div class="mini">${ros.map(p => `<span title="${esc(p.n)}">${p.p} ${O(p)} ${esc(p.n.split(" ")[0].replace(/'/g, ""))}</span>`).join("")}${Array.from({ length: Math.max(0, sq - ros.length) }, () => `<span class="e">vaga</span>`).join("")}</div>
   </div>`;
@@ -1420,9 +1481,9 @@ function viewSeason() {
   const stageName = { league: se.fmt === "cup" ? "Fase de grupos" : "Fase de liga", playin: "Play-in", quarters: "Quartas de final", semis: "Semifinais", final: "Final", done: "Encerrado" }[se.stage];
   const next = roundFixtures(S).filter(f => !f.res);
   const tabs = [["time", "Meu time"], ["tabela", "Classificação"], ["jogos", "Jogos"], ["elencos", "Elencos"], ["artilharia", "Estatísticas"]].concat(S.settings.career ? [["carreira", "Carreira"]] : []);
-  return `${gameOver(S) ? voteCard() + hallView() : ""}${champ ? evoView() : ""}${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(champ.crest, 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
+  return `${gameOver(S) ? voteCard() + hallView() : ""}${champ ? evoView() : ""}${S.history && S.history.length ? yearView() : ""}${champ ? `<div class="champ" style="margin-top:20px">${crestSVG(tcrest(champ), 90)}<div><div class="muted">CAMPEÃO ${se.fmt === "cup" ? "DA KINGS CUP" : "DO SPLIT"}</div><h2>${esc(champ.team)}</h2><div>Presidente ${esc(champ.name)}</div></div>${CROWN.replace("<svg", '<svg style="width:70px;height:70px;margin-left:auto"')}</div>${awardsView()}` : ""}
   <div class="sec-title"><h2>${se.fmt === "cup" ? "Kings Cup" : "Split"}</h2>${S.career ? `<span class="pill you">Carreira · temporada ${S.career.year}</span>` : ""}<span class="phase">${stageName}</span>${se.koInfo ? `<span class="muted" style="font-size:13px">${esc(se.koInfo)}</span>` : ""}</div>
-  ${se.fmt === "cup" ? `<div class="row" style="margin-bottom:10px;gap:8px"><span class="pill">Desafios: Grupo A <b class="num">${se.desafio[0]}</b> x <b class="num">${se.desafio[1]}</b> Grupo B</span>${Object.keys(se.dwin).length ? `<span class="muted" style="font-size:13px">Carta extra no mata-mata: ${Object.keys(se.dwin).map(i => esc(S.managers[+i].team)).join(", ")}</span>` : ""}</div>` : ""}
+  ${se.fmt === "cup" ? `<div class="row" style="margin-bottom:10px;gap:8px"><span class="pill">Desafios: Grupo A <b class="num">${se.desafio[0]}</b> x <b class="num">${se.desafio[1]}</b> Grupo B</span>${Object.keys(se.dwin).length ? `<span class="muted" style="font-size:13px">Carta extra (vale para 1 jogo do mata-mata): ${Object.keys(se.dwin).map(i => { const left = se.dwin[i] - ((se.dfix && se.dfix[i]) || []).length; return esc(S.managers[+i].team) + (left > 0 ? "" : " (já usou)"); }).join(", ")}</span>` : ""}</div>` : ""}
   ${!champ ? `<div class="card" style="display:grid;gap:10px">
     <div class="row" style="justify-content:space-between"><div class="muted" style="font-size:13px">${se.stage === "league" ? `RODADA ${se.round + 1} DE ${se.leagueRounds}` : stageName.toUpperCase()} · JOGOS SIMULTÂNEOS</div>
     ${host ? `<div class="row" style="gap:6px"><span class="muted" style="font-size:12.5px">Anfitrião:</span><button class="btn sm" data-a="quickround">Simular rodada sem ver</button><button class="btn sm ghost" data-a="simstage">Simular a fase toda</button></div>` : ""}</div>
@@ -1743,7 +1804,7 @@ function render(force) {
   else if (S.phase === "keep") body = viewKeep();
   else body = viewSeason();
   if (S && NET.mode === "client" && myMi() < 0 && S.phase !== "lobby") body = `<div class="card unhbox" style="margin-bottom:12px">Você entrou assistindo. Se você é presidente de um time desta sala e voltou por outro aparelho, entre com o mesmo nome de presidente: assim que o aparelho antigo ficar uns 30 segundos fora, você reassume o seu time sozinho.</div>` + body;
-  $("#app").innerHTML = header() + `<main class="wrap">${body}</main>` + loginModal();
+  $("#app").innerHTML = header() + `<main class="wrap">${body}</main><footer class="foot"><div class="wrap">${CROWN}<span><b>The Kings Game</b></span><span class="spacer"></span><span>Dados: kingsleague.pro</span></div></footer>` + loginModal();
   if (aid) { const el = document.getElementById(aid); if (el) { if (keepVal != null) el.value = keepVal; el.focus(); try { if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, ss); } catch (e) { } } }
   tickClocks(); renderChat(); try { profSync(); } catch (e) { }
 }
@@ -1881,8 +1942,8 @@ document.addEventListener("change", e => {
   if (id === "mpos") { UI.mpos = el.value; return render(); }
   if (id && id.startsWith("st-")) { const mi = +el.dataset.mi; if (NET.mode === "client" && S.managers[mi]) { const st = Object.assign({}, S.managers[mi].strat, { [el.dataset.k]: el.value }); S.managers[mi].strat = st; setLocal(mi, "strat", st); } return act({ t: "strat", [el.dataset.k]: el.value, mi }); }
   if (["s-fmt", "s-year", "s-staff", "s-trades", "s-hide", "s-career"].includes(id) && isHost()) return act(readSettings());
-  if (id && /^c-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = f === "stars" ? +v : f === "hn" ? v === "1" : f === "txt" ? v.toUpperCase().replace(/[^A-Z0-9À-Ú]/g, "").slice(0, 3) : f === "ano" ? v.replace(/[^0-9]/g, "").slice(0, 4) : v; const patch = { [f]: val }; if (f === "pat2" && v !== "liso" && !(mgrOf(+el.dataset.mi).crest || {}).c4) patch.c4 = ($("#c-c4") && $("#c-c4").value) || "#ffffff"; return setCrest(+el.dataset.mi, patch); }
-  if (id && /^k-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = f === "tr" ? v === "1" : f === "sp" ? v.replace(/[<>&"']/g, "").slice(0, 12) : v; const patch = { [f]: val }; if (f === "pc") patch.pu = true; if (f === "pat2" && v !== "liso") { const m = mgrOf(+el.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; if (!k.c3) patch.c3 = ($("#k-c3") && $("#k-c3").value) || "#ffffff"; } return setKit(+el.dataset.mi, patch); }
+  if (id && /^c-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = f === "stars" ? +v : (f === "hn" || f === "nch") ? v === "1" : f === "fx" ? v.replace(/[<>&"']/g, "").slice(0, 28) : f === "txt" ? v.toUpperCase().replace(/[^A-Z0-9À-Ú]/g, "").slice(0, 3) : f === "ano" ? v.replace(/[^0-9]/g, "").slice(0, 4) : v; const patch = { [f]: val }; if (f === "g2" && (mgrOf(+el.dataset.mi).crest || {}).gr in { undefined: 1, nenhum: 1 }) patch.gr = "vertical"; if (f === "pat2" && v !== "liso" && !(mgrOf(+el.dataset.mi).crest || {}).c4) patch.c4 = ($("#c-c4") && $("#c-c4").value) || "#ffffff"; return setCrest(+el.dataset.mi, patch); }
+  if (id && /^k-/.test(id) && el.dataset.mi != null) { const f = id.slice(2), v = el.value; const val = (f === "tr" || f === "bd") ? v === "1" : f === "sp" ? v.replace(/[<>&"']/g, "").slice(0, 12) : v; const patch = { [f]: val }; if (f === "pc") patch.pu = true; if (f === "g2") { const mm = mgrOf(+el.dataset.mi), kk = (UI.kitTab === 2 ? mm.kit2 : mm.kit) || {}; if (!kk.gr || kk.gr === "nenhum") patch.gr = "vertical"; } if (f === "pat2" && v !== "liso") { const m = mgrOf(+el.dataset.mi), k = (UI.kitTab === 2 ? m.kit2 : m.kit) || {}; if (!k.c3) patch.c3 = ($("#k-c3") && $("#k-c3").value) || "#ffffff"; } return setKit(+el.dataset.mi, patch); }
   if (id === "t-auto") return tacChange(+el.dataset.mi, tac => { tac.autoSub = el.checked; });
   if (id === "t-gkm") return tacChange(+el.dataset.mi, tac => { tac.gkMode = el.value; });
   if (id === "t-pk") return tacChange(+el.dataset.mi, tac => { tac.pk = el.value ? +el.value : null; });

@@ -116,7 +116,7 @@ def rate(team, name, P, med, fis, due, chu, dfe, pas, hab, g, a, j, h, fz, xtags
     tags = list(xtags) + [t for t in tags if t not in xtags]
     v = max(1, round(1.25 * math.exp((o - 64) * 0.13)))
     out.append(dict(n=name, t=team, p=P, p2=p2, o=o, at=int(clamp(at, 30, 95)), df=int(clamp(df, 30, 95)), v=v,
-                    pot=pot, pm=tot.get("pg", j), g=tot.get("g", g) if P != "GOL" else tot.get("g", 0), a=tot.get("a", a), tags=tags[:4]))
+                    pot=pot, age=age, pm=tot.get("pg", j), g=tot.get("g", g) if P != "GOL" else tot.get("g", 0), a=tot.get("a", a), tags=tags[:4]))
 for (team, name, pos, med, fis, due, chu, dfe, pas, hab, mvp, g, a, j, gc) in cur:
     rate(TEAM[team], name, POS[pos], med, fis, due, chu, dfe, pas, hab, g, a, j, hist.get(norm(name)), fantasy_for(TEAM[team], name, g or 0, j or 0))
 
