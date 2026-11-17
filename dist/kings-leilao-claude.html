@@ -3474,14 +3474,18 @@ function playerPortrait(p) { const ow = S ? ownerOf(S, p.id) : -1, m = ow >= 0 ?
 function staffPortrait(x) { const ow = S && S.managers ? S.managers.findIndex(m => m.coach === x.id || m.pres === x.id) : -1, m = ow >= 0 ? S.managers[ow] : null, k = m && m.kit ? m.kit : clubKit(x.club || x.n); return portraitBox("s" + x.id, { seed: x.n, kind: x.k === "tec" ? "tecnico" : "presidente", c1: k.c1, c2: k.c2 }); }
 function viewAdmin() {
   if (!isAdmin()) return `<div class="card"><p>Só a conta do administrador pode colocar fotos.</p><button class="btn sm" data-a="profileclose">Voltar</button></div>`;
-  const q = (UI.adq || "").toLowerCase(), tab = UI.adtab || "j";
-  const items = tab === "j" ? PLAYERS.filter(p => !q || (p.n + " " + p.t).toLowerCase().includes(q)).map(p => ({ key: "p" + p.id, n: p.n, sub: p.p + " · " + p.t, html: playerPortrait(p) }))
-    : STAFF.filter(x => !q || x.n.toLowerCase().includes(q)).map(x => ({ key: "s" + x.id, n: x.n, sub: (x.k === "tec" ? "Técnico" : "Presidente") + (x.club ? " · " + x.club : ""), html: staffPortrait(x) }));
+  const q = (UI.adq || "").toLowerCase(), tab = UI.adtab || "j", tm = UI.adteam || "", sf = UI.adsem === "1";
+  const clubs = [...new Set((tab === "j" ? PLAYERS.map(p => p.t) : STAFF.map(x => x.club)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const items = tab === "j" ? PLAYERS.filter(p => (!q || (p.n + " " + p.t).toLowerCase().includes(q)) && (!tm || p.t === tm) && (!sf || !PHOTOS["p" + p.id])).sort((a, b) => a.t.localeCompare(b.t) || POS_ORDER[a.p] - POS_ORDER[b.p] || a.n.localeCompare(b.n)).map(p => ({ key: "p" + p.id, n: p.n, sub: p.p + " · " + p.t, html: playerPortrait(p) }))
+    : STAFF.filter(x => (!q || x.n.toLowerCase().includes(q)) && (!tm || x.club === tm) && (!sf || !PHOTOS["s" + x.id])).map(x => ({ key: "s" + x.id, n: x.n, sub: (x.k === "tec" ? "Técnico" : "Presidente") + (x.club ? " · " + x.club : ""), html: staffPortrait(x) }));
   const have = Object.keys(PHOTOS).length;
   return `<div class="sec-title"><h2>Fotos (administrador)</h2><button class="btn sm ghost" data-a="profileclose">← Voltar</button></div>
   <div class="card" style="display:grid;gap:10px">
     <p class="muted" style="margin:0;font-size:13px">A foto que você colocar aparece na carta para todo mundo, em todas as salas. O jogo recorta no centro e reduz sozinho. ${have} com foto até agora.</p>
-    <div class="row"><button class="btn sm ${tab === "j" ? "gold" : ""}" data-a="adtab" data-v="j">Jogadores</button><button class="btn sm ${tab === "s" ? "gold" : ""}" data-a="adtab" data-v="s">Presidentes e técnicos</button><input id="ad-q" type="text" placeholder="Buscar" value="${esc(UI.adq || "")}" style="max-width:240px"></div>
+    <div class="row"><button class="btn sm ${tab === "j" ? "gold" : ""}" data-a="adtab" data-v="j">Jogadores</button><button class="btn sm ${tab === "s" ? "gold" : ""}" data-a="adtab" data-v="s">Presidentes e técnicos</button><input id="ad-q" type="text" placeholder="Buscar" value="${esc(UI.adq || "")}" style="max-width:220px">
+      <select id="ad-team" style="max-width:220px"><option value="">Todos os times</option>${clubs.map(c => `<option value="${esc(c)}" ${c === tm ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
+      <select id="ad-sem" style="max-width:190px"><option value="0" ${!sf ? "selected" : ""}>Com e sem foto</option><option value="1" ${sf ? "selected" : ""}>Só quem não tem foto</option></select>
+      <span class="muted" style="font-size:13px">${items.length} na lista</span></div>
     <div class="adgrid">${items.slice(0, 120).map(it => `<div class="aditem">${it.html}<b>${esc(it.n)}</b><span class="muted">${esc(it.sub)}</span><div class="row" style="gap:4px;justify-content:center"><label class="btn sm ${PHOTOS[it.key] ? "" : "gold"}">${PHOTOS[it.key] ? "Trocar" : "Enviar foto"}<input type="file" accept="image/*" class="ad-file" data-key="${it.key}" hidden></label>${PHOTOS[it.key] ? `<button class="btn sm ghost" data-a="addel" data-key="${it.key}">Remover</button>` : ""}</div></div>`).join("")}</div>
     ${items.length > 120 ? `<p class="muted" style="font-size:12.5px;margin:0">Mostrando 120 de ${items.length}. Use a busca.</p>` : ""}
   </div>`;
@@ -4474,7 +4478,7 @@ document.addEventListener("click", e => {
   if (a === "profile") { UI.page = "perfil"; UI.kitTab = 1; window.scrollTo(0, 0); return render(true); }
   if (a === "profileclose") { UI.page = null; return render(true); }
   if (a === "adminpage") { UI.page = "admin"; window.scrollTo(0, 0); return render(true); }
-  if (a === "adtab") { UI.adtab = b.dataset.v; return render(true); }
+  if (a === "adtab") { UI.adtab = b.dataset.v; UI.adteam = ""; return render(true); }
   if (a === "addel") { savePhoto(b.dataset.key, null).then(() => { toast("Foto removida."); render(true); }).catch(() => toast("Não consegui remover (sem permissão ou sem internet).")); return; }
   if (a === "copyuid") { try { navigator.clipboard.writeText(ACC.user.uid); toast("ID copiado!"); } catch (e) { } return; }
   if (a === "profapply") { const mi = myMi(), P0 = getProf(); if (mi < 0) return; const patch = { t: "editme", mi, crest: mgrOf(PROF_MI).crest, kit: mgrOf(PROF_MI).kit }; if (P0.kit2) patch.kit2 = P0.kit2; if (S.phase === "lobby" && P0.team) patch.team = P0.team; UI.profHold = 0; act(patch); toast("Pronto: seu time desta sala está com o visual do perfil."); return; }
@@ -4574,6 +4578,8 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   const el = e.target, id = el.id;
   if (id === "loadsave" && el.files && el.files[0]) return importSave(el.files[0]);
+  if (id === "ad-team") { UI.adteam = el.value; return render(true); }
+  if (id === "ad-sem") { UI.adsem = el.value; return render(true); }
   if (el.classList && el.classList.contains("ad-file") && el.files && el.files[0]) { const key = el.dataset.key; toast("Enviando foto…"); shrinkImage(el.files[0]).then(u => savePhoto(key, u)).then(() => { toast("Foto salva! Já aparece para todo mundo."); render(true); }).catch(() => toast("Não consegui salvar a foto (sem permissão ou sem internet).")); return; }
   if (id === "mpos") { UI.mpos = el.value; return render(); }
   if (id && id.startsWith("st-")) { const mi = +el.dataset.mi; if (NET.mode === "client" && S.managers[mi]) { const st = Object.assign({}, S.managers[mi].strat, { [el.dataset.k]: el.value }); S.managers[mi].strat = st; setLocal(mi, "strat", st); } return act({ t: "strat", [el.dataset.k]: el.value, mi }); }
