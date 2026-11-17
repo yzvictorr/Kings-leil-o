@@ -8,3 +8,6 @@ window.FIREBASE_CONFIG = {
   messagingSenderId: "292327302924",
   appId: "1:292327302924:web:b0c19ebc085b8245adcb29"
 };
+
+// conta(s) que podem colocar fotos nas cartas (ID da conta, aparece em Perfil quando você entra)
+window.KL_ADMINS = ["ADMIN_UID"];
