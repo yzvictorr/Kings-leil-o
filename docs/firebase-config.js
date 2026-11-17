@@ -10,4 +10,4 @@ window.FIREBASE_CONFIG = {
 };
 
 // conta(s) que podem colocar fotos nas cartas (ID da conta, aparece em Perfil quando você entra)
-window.KL_ADMINS = ["ADMIN_UID"];
+window.KL_ADMINS = ["hzzHUn4k6FcFaAImc98zBN7pbvV2"];
