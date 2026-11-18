@@ -1154,7 +1154,7 @@ function viewAdminOver() {
       <select id="ad-team" style="max-width:220px"><option value="">Todos os times</option>${clubs.map(c => `<option value="${esc(c)}" ${c === tm ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
       <select id="ad-ch" style="max-width:200px"><option value="0" ${UI.adch !== "1" ? "selected" : ""}>Todos</option><option value="1" ${UI.adch === "1" ? "selected" : ""}>Só os ajustados</option></select>
       <span class="spacer"></span><button class="btn sm gold" data-a="ovrsave" ${nEd ? "" : "disabled"}>Salvar ${nEd ? nEd + " alteraç" + (nEd === 1 ? "ão" : "ões") : "alterações"}</button></div>
-    <div class="scroll" style="max-height:560px"><table class="tbl"><thead><tr><th>Jogador</th><th>Pos</th><th>Time</th><th>OVR</th><th>ATQ</th><th>DEF</th><th>POT</th><th></th></tr></thead><tbody>
+    <div class="scroll" id="ad-ovlist" style="max-height:560px"><table class="tbl"><thead><tr><th>Jogador</th><th>Pos</th><th>Time</th><th>OVR</th><th>ATQ</th><th>DEF</th><th>POT</th><th></th></tr></thead><tbody>
     ${list.slice(0, 250).map(p => `<tr><td><b>${esc(p.n)}</b></td><td>${posb(p.p, p.p2)}</td><td class="muted">${esc(p.t)}</td>${cell(p, "o")}${cell(p, "at")}${cell(p, "df")}${cell(p, "pot")}<td>${ov[p.id] ? `<button class="btn sm ghost" data-a="ovrreset" data-id="${p.id}" title="Voltar ao original">↺</button>` : ""}</td></tr>`).join("")}</tbody></table></div>
   </div>`;
 }
@@ -2169,7 +2169,9 @@ function render(force) {
   else body = viewSeason();
   if (S && NET.mode === "client" && myMi() < 0 && S.phase !== "lobby") { const bots = S.managers.map((m, i) => [m, i]).filter(([m]) => m.cpu); body = `<div class="card unhbox" style="margin-bottom:12px;display:grid;gap:10px"><div><b>Você entrou com o campeonato em andamento.</b> ${bots.length ? "Escolha um time de bot para assumir: você fica com o elenco, o dinheiro e a posição dele na tabela." : "Não há times de bot para assumir agora; você pode assistir."}</div>${bots.length ? `<div class="row" style="gap:8px">${bots.map(([m, i]) => `<button class="btn sm" data-a="takebot" data-mi="${i}">${crestSVG(tcrest(m), 16)} Assumir o ${esc(m.team)}</button>`).join("")}</div>` : ""}<div class="muted" style="font-size:12.5px">Já é presidente de um time desta sala e voltou por outro aparelho? Entre com o mesmo nome de presidente: assim que o aparelho antigo ficar uns 30 segundos fora, você reassume o seu time sozinho.</div></div>` + body; }
   if (!UI.page) body = adminNotice() + body;
+  const keepScroll = {}; document.querySelectorAll("#app .scroll[id]").forEach(x => { keepScroll[x.id] = x.scrollTop; }); const winY = window.scrollY;
   $("#app").innerHTML = header() + `<main class="wrap">${body}</main><footer class="foot"><div class="wrap">${CROWN}<span><b>The Kings Game</b></span><span class="spacer"></span><span>Dados: kingsleague.pro e <a href="https://klscout.netlify.app/" target="_blank" rel="noopener">Kings League Scout</a></span></div></footer>` + loginModal();
+  Object.entries(keepScroll).forEach(([id, top]) => { const x = document.getElementById(id); if (x) x.scrollTop = top; }); if (UI.page === "admin" && Math.abs(window.scrollY - winY) > 2) window.scrollTo(0, winY);
   if (aid) { const el = document.getElementById(aid); if (el) { if (keepVal != null) el.value = keepVal; el.focus(); try { if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, ss); } catch (e) { } } }
   tickClocks(); renderChat(); try { profSync(); } catch (e) { }
 }
@@ -2316,7 +2318,13 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   const el = e.target, id = el.id;
   if (id === "loadsave" && el.files && el.files[0]) return importSave(el.files[0]);
-  if (el.classList && el.classList.contains("ovin")) { const pid = el.dataset.id, k = el.dataset.k, v = Math.max(k === "at" || k === "df" ? 30 : 50, Math.min(99, Math.round(+el.value || 0))); UI.ovrEd = UI.ovrEd || {}; (UI.ovrEd[pid] = UI.ovrEd[pid] || {})[k] = v; return render(true); }
+  if (el.classList && el.classList.contains("ovin")) { // ajuste de over: atualiza só a célula, sem redesenhar a tela (não perde o lugar da lista)
+    const pid = el.dataset.id, k = el.dataset.k, v = Math.max(k === "at" || k === "df" ? 30 : 50, Math.min(99, Math.round(+el.value || 0)));
+    UI.ovrEd = UI.ovrEd || {}; (UI.ovrEd[pid] = UI.ovrEd[pid] || {})[k] = v; if (+el.value !== v) el.value = v;
+    const orig = PLAYERS_ORIG ? PLAYERS_ORIG[pid][k] : null; el.classList.toggle("chg", orig != null && v !== orig);
+    const n = Object.keys(UI.ovrEd).length, b = document.querySelector('[data-a="ovrsave"]'); if (b) { b.disabled = !n; b.textContent = "Salvar " + (n ? n + " alteraç" + (n === 1 ? "ão" : "ões") : "alterações"); }
+    return;
+  }
   if (id === "ad-ch") { UI.adch = el.value; return render(true); }
   if (id === "ad-team") { UI.adteam = el.value; return render(true); }
   if (id === "ad-sem") { UI.adsem = el.value; return render(true); }
