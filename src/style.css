@@ -441,6 +441,9 @@ label.f{font-weight:500;letter-spacing:.01em}
 .pmeta{display:flex;flex-wrap:wrap;gap:4px;font-size:11px;color:#d9cfa6}
 .pmeta span{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.07);padding:1px 6px;border-radius:999px}
 .pcard.gk .pmeta{color:#a9cbe3}
+.pmeta.kb span{background:rgba(245,197,66,.08);border-color:rgba(245,197,66,.25)}
+.pmeta.kb b{color:var(--ink)}
+.foot a{color:inherit;text-decoration:underline}
 /* rodapé */
 .foot{border-top:1px solid var(--line);margin-top:30px;background:rgba(0,0,0,.25)}
 .foot .wrap{display:flex;align-items:center;gap:10px;padding:16px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}

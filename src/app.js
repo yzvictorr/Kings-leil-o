@@ -1213,12 +1213,24 @@ function pcard(p) {
     <div class="num muted" style="text-align:right;font-size:13px">VALOR REF.<br><b style="font-size:24px;color:var(--ink)">${hid() ? "?" : p.v}</b></div></div>
     ${playerPortrait(p)}
     <div class="nm">${esc(p.n)}</div>
-    <div class="pmeta">${ageOf(p) != null ? `<span>${ageOf(p)} anos</span>` : ""}${bdTxt(p) ? `<span>nasc. ${bdTxt(p)}</span>` : ""}${p.p !== "GOL" ? `<span>${p.g} G · ${p.a} A</span><span>${p.pm ? ((p.g + p.a) / p.pm).toFixed(1) : "0"} G+A/jogo</span>` : ""}</div>
+    <div class="pmeta">${ageOf(p) != null ? `<span>${ageOf(p)} anos</span>` : ""}${bdTxt(p) ? `<span>nasc. ${bdTxt(p)}</span>` : ""}${p.p !== "GOL" ? `<span>carreira: ${p.g} G · ${p.a} A</span><span>${p.pm ? ((p.g + p.a) / p.pm).toFixed(1) : "0"} G+A/jogo</span>` : ""}</div>
+    ${pinfo(p)}
     <div class="club">${esc(p.t)}${owner >= 0 ? ` · <b style="color:${S.managers[owner].color}">${esc(S.managers[owner].team)}</b>` : ""}</div>
     ${p.tags.length ? `<div class="tags">${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
     <div class="st"><div><b>${ageTxt(p)}</b>idade</div><div><b>${hid() ? "?" : p.at}</b>ATQ</div><div><b>${hid() ? "?" : p.df}</b>DEF</div>${S && S.settings && S.settings.career ? `<div><b>${hid() ? "?" : (p.pot || p.o)}</b>POT</div>` : `<div><b>${p.pm}</b>jogos</div>`}</div>
     ${hid() ? `<div class="muted" style="font-size:11px">Modo overall escondido: use as conquistas e o clube como pista.</div>` : ""}
   </div>`;
+}
+// ficha do jogador: altura, pé, nacionalidade e números na Kings League Brasil (dados do Kings League Scout)
+const FLAG = { "Brasil": "🇧🇷", "Espanha": "🇪🇸", "Itália": "🇮🇹", "Portugal": "🇵🇹", "Estados Unidos": "🇺🇸", "Catar": "🇶🇦" };
+function pinfo(p) {
+  const a = [];
+  if (p.nat && p.nat.length) a.push(p.nat.map(n => `${FLAG[n] || ""} ${esc(n)}`).join(" / "));
+  if (p.h) a.push((p.h / 100).toFixed(2).replace(".", ",") + " m");
+  if (p.ft) a.push(esc(p.ft));
+  const k = p.kb;
+  const kb = k && k[0] ? `<div class="pmeta kb"><span title="Números na Kings League Brasil">Kings Brasil: <b>${k[0]}</b> jogos · <b>${k[1]}</b> gols · <b>${k[2]}</b> assist. · <b>${k[3]}</b> MVP${k[3] === 1 ? "" : "s"}</span></div>` : "";
+  return (a.length ? `<div class="pmeta">${a.map(x => `<span>${x}</span>`).join("")}</div>` : "") + kb;
 }
 // idade: data de nascimento do site oficial (nov/2026); no modo carreira envelhece a cada temporada
 function ageOf(p) { if (!p || p.age == null) return null; return p.age + (S && S.career && S.career.year ? S.career.year - 1 : 0); }
@@ -2157,7 +2169,7 @@ function render(force) {
   else body = viewSeason();
   if (S && NET.mode === "client" && myMi() < 0 && S.phase !== "lobby") { const bots = S.managers.map((m, i) => [m, i]).filter(([m]) => m.cpu); body = `<div class="card unhbox" style="margin-bottom:12px;display:grid;gap:10px"><div><b>Você entrou com o campeonato em andamento.</b> ${bots.length ? "Escolha um time de bot para assumir: você fica com o elenco, o dinheiro e a posição dele na tabela." : "Não há times de bot para assumir agora; você pode assistir."}</div>${bots.length ? `<div class="row" style="gap:8px">${bots.map(([m, i]) => `<button class="btn sm" data-a="takebot" data-mi="${i}">${crestSVG(tcrest(m), 16)} Assumir o ${esc(m.team)}</button>`).join("")}</div>` : ""}<div class="muted" style="font-size:12.5px">Já é presidente de um time desta sala e voltou por outro aparelho? Entre com o mesmo nome de presidente: assim que o aparelho antigo ficar uns 30 segundos fora, você reassume o seu time sozinho.</div></div>` + body; }
   if (!UI.page) body = adminNotice() + body;
-  $("#app").innerHTML = header() + `<main class="wrap">${body}</main><footer class="foot"><div class="wrap">${CROWN}<span><b>The Kings Game</b></span><span class="spacer"></span><span>Dados: kingsleague.pro</span></div></footer>` + loginModal();
+  $("#app").innerHTML = header() + `<main class="wrap">${body}</main><footer class="foot"><div class="wrap">${CROWN}<span><b>The Kings Game</b></span><span class="spacer"></span><span>Dados: kingsleague.pro e <a href="https://klscout.netlify.app/" target="_blank" rel="noopener">Kings League Scout</a></span></div></footer>` + loginModal();
   if (aid) { const el = document.getElementById(aid); if (el) { if (keepVal != null) el.value = keepVal; el.focus(); try { if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, ss); } catch (e) { } } }
   tickClocks(); renderChat(); try { profSync(); } catch (e) { }
 }

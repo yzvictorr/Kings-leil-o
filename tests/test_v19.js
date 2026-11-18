@@ -24,3 +24,18 @@ console.log("ok v19");
   for (let i = 0; i < 40 && !(S3.auction && S3.auction.lot); i++) { t3 += 500; E.marketTick(S3, t3); }
   if (S3.auction && S3.auction.lot) { const b0 = S3.auction.lot.bid; E.applyAction(S3, { t: "bid", amt: 5 }, 0, true, t3); E.applyAction(S3, { t: "bid", amount: "abc" }, 1, true, t3); ok(S3.auction.lot.bid === b0 && Number.isFinite(S3.auction.lot.bid), "lance inválido recusado"); }
   console.log("ok lance inválido"); }
+// coringa rouba a carta que o rival acabou de ativar
+{ const S4 = E.newGame("T4", "h", "Host", "Host FC", "online"); let t4 = Date.now();
+  for (let i = 1; i < 4; i++) E.applyAction(S4, { t: "join", pid: "p" + i, name: "N" + i, team: "T" + i }, -1, false, t4);
+  E.applyAction(S4, { t: "settings", v: { total: 4 } }, 0, true, t4); E.applyAction(S4, { t: "start" }, 0, true, t4);
+  let g = 0; while (S4.phase !== "season" && g++ < 20000) { t4 += 500; E.applyAction(S4, { t: "autofill" }, 0, true, t4); E.marketTick(S4, t4); }
+  const run = yes => { const M = E.newMatch(S4, { id: "z", h: 0, a: 1, stage: "Liga", round: 0 }); E.attachRosters(S4, M);
+    M.t.forEach(T => { T.cpu = false; }); M.min = 8; M.phase = "full"; M.nOut = 6;
+    M.t[0].cards = [{ k: "PEN", used: false }]; M.t[1].cards = [{ k: "CUR", used: false }];
+    ok(E.matchAction(M, 0, { t: "mcard" }, t4), "ativou a carta");
+    ok(M.pending && M.pending.k === "steal" && M.pending.team === 1, "rival com coringa recebe a opção de roubar");
+    ok(E.matchAction(M, 1, { t: "mchoice", f: "yes", v: yes ? 1 : 0 }, t4), "escolha aceita");
+    return M; };
+  const A = run(true); ok(A.pending && A.pending.k === "pen" && A.pending.team === 1 && A.t[1].cards[0].used, "roubou: pênalti vai para quem tinha o coringa");
+  const B = run(false); ok(B.pending && B.pending.k === "pen" && B.pending.team === 0 && !B.t[1].cards[0].used, "não roubou: carta segue com quem ativou e o coringa fica guardado");
+  console.log("ok coringa rouba depois"); }

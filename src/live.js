@@ -83,6 +83,7 @@ function renderPrompt(force) {
   const pickT = { star: `Star Player: ${esc(T.name)} escolhe o jogador`, sus: `Suspensão: ${esc(T.name)} escolhe quem do ${esc(O.name)} sai`, rev: `Pênalti reverso: ${esc(T.name)} escolhe quem do ${esc(O.name)} vai bater`, cur: `Coringa do ${esc(T.name)}: escolha a carta` };
   const title = p.k === "pen" ? (p.pres ? `Pênalti do presidente: ${esc(T.pres)} (${esc(T.name)})` : p.rev != null ? `Pênalti reverso: ${esc(P(p.shooter).n)} (${esc(T.name)}) bate. Se errar, é gol do ${esc(O.name)}!` : `Pênalti: ${esc(P(p.shooter).n)} (${esc(T.name)})`)
     : p.k === "so" ? `Shootout: ${esc(P(p.shooter).n)} (${esc(T.name)}) contra ${esc(P(O.tac.gk) ? P(O.tac.gk).n : "goleiro")}`
+      : p.k === "steal" ? `${esc(O.name)} ativou ${esc(CARDS[p.card].name)}! ${esc(T.name)} tem o Coringa e pode roubar a carta`
       : pickT[p.f] || "Escolha";
   let body = "";
   if (!mineNeed.length) body = `<p class="muted" style="margin:0">Aguardando ${need.map(n => esc(M.t[n.team].name)).join(" e ")} escolher… <span id="pcount" class="num"></span></p>`;
@@ -111,7 +112,7 @@ function choiceUI(p, n) {
     const hint = { star: "O próximo gol dele vale 2.", sus: "Ele fica 2 minutos fora.", rev: "Escolha quem tem mais chance de errar!" }[p.f];
     return `<p class="muted" style="margin:0 0 8px">${hint}</p><div class="row">${p.opts.map(id => `<button class="btn" data-a="lchoice" data-f="val" data-v="${id}" data-ti="${ti}">${posb(P(id).p)} ${esc(P(id).n)} <span class="muted num">${O(P(id))}</span></button>`).join("")}</div>`;
   }
-  if (n.f === "yes") return `<p class="muted" style="margin:0 0 8px">Você tem o CORINGA. Roubar a carta "${esc(CARDS[p.card].name)}" e usar a favor do seu time?</p>
+  if (n.f === "yes") return `<p class="muted" style="margin:0 0 8px">O rival ativou <b>${esc(CARDS[p.card].name)}</b>: ${esc(CARDS[p.card].desc)} Você tem o CORINGA: quer roubar essa carta e usar a favor do seu time? Se roubar, o seu Coringa é gasto.</p>
     <div class="row"><button class="btn gold big" data-a="lchoice" data-f="yes" data-v="1" data-ti="${ti}">Roubar!</button><button class="btn big" data-a="lchoice" data-f="yes" data-v="0" data-ti="${ti}">Guardar</button></div>`;
   return "";
 }

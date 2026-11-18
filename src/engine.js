@@ -1295,10 +1295,17 @@ function goalValue(M, ti, scorer, kind) {
   if (scorer && T.star && T.star.id === scorer.id && inWindow(m) && M.phase === "full") return 2;
   return 1;
 }
+// faro de gol médio por posição (gols de bola rolando por jogo na Kings real)
+let GR_AVG = null;
+function grAvg(pos) { if (!GR_AVG) { GR_AVG = {}; const s = {}; PLAYERS.forEach(p => { if (p.gr != null) { s[p.p] = s[p.p] || [0, 0]; s[p.p][0] += p.gr; s[p.p][1]++; } }); Object.keys(s).forEach(k => GR_AVG[k] = s[k][0] / s[k][1]); } return GR_AVG[pos] || 0.5; }
 function pickScorer(M, ti) {
-  const T = M.t[ti], pl = T.field.concat(T.gkOut ? [T.tac.gk] : []).map(id => eff(T, id));
+  const T = M.t[ti];
+  // o goleiro também faz gol na Kings (chute de longe, e no dado quando joga na linha)
+  const gk = P(T.tac.gk), gkOk = gk && !T.field.includes(T.tac.gk) && !(T.out || []).some(o => o.id === T.tac.gk && o.until > M.min);
+  if (gkOk && !T.gkOut && Math.random() < (M.phase === "dice" && M.dice > 1 ? 0.15 : 0.05)) return gk;
+  const pl = T.field.concat(T.gkOut ? [T.tac.gk] : []).map(id => eff(T, id));
   if (!pl.length) return null;
-  const w = pl.map(x => Math.pow(Math.max(30, x.at), 3) * (x.p.p === "ATA" ? 1.5 : x.p.p === "MEI" ? 1.0 : x.p.p === "DEF" ? 0.45 : 0.2));
+  const w = pl.map(x => Math.pow(Math.max(30, x.at), 3) * (x.p.p === "ATA" ? 0.98 : x.p.p === "MEI" ? 1.0 : x.p.p === "DEF" ? 0.62 : 0.45) * (x.p.gr != null ? 0.55 + 0.45 * Math.min(2.2, x.p.gr / grAvg(x.p.p)) : 1));
   let r = Math.random() * w.reduce((a, b) => a + b, 0);
   for (let i = 0; i < pl.length; i++) { r -= w[i]; if (r <= 0) return pl[i].p; }
   return pl[pl.length - 1].p;
@@ -1350,6 +1357,12 @@ function activateCard(M, ti, now, idx) {
   T.cards[idx].used = true; syncCard(T);
   ev(M, "card", ti, `${T.name} ativa a carta secreta: ${CARDS[key].name}!`, { card: key });
   M.hold = 2200;
+  // o rival tem um Coringa guardado? ele pode roubar esta carta agora
+  const O = M.t[1 - ti], ci = key !== "CUR" ? O.cards.findIndex(c => !c.used && c.k === "CUR") : -1;
+  if (ci >= 0) {
+    M.pending = { k: "steal", team: 1 - ti, from: ti, card: key, ci, yes: null, until: now + 10000 };
+    return true;
+  }
   startCard(M, ti, key, now);
   return true;
 }
@@ -1408,6 +1421,18 @@ function resolvePick(M, now) {
     }
   }
 }
+function resolveSteal(M, now) {
+  const p = M.pending, ti = p.team, T = M.t[ti], O = M.t[p.from];
+  M.pending = null;
+  if (p.yes && T.cards[p.ci] && !T.cards[p.ci].used) {
+    T.cards[p.ci].used = true; syncCard(T);
+    ev(M, "card", ti, `CORINGA! ${T.name} rouba a carta "${CARDS[p.card].name}" que o ${O.name} acabou de ativar!`, { card: "CUR", stolen: p.card });
+    M.hold = 2400;
+    startCard(M, ti, p.card, now);
+  } else {
+    startCard(M, p.from, p.card, now);
+  }
+}
 function bestShooter(M, ti) { const T = M.t[ti]; if (T.tac.pk != null && T.field.includes(T.tac.pk)) return T.tac.pk; const c = (T.field.length ? T.field : T.tac.slots.filter(x => x != null)).slice().sort((a, b) => P(b).at - P(a).at); return c[0] || T.tac.gk; }
 function activatePP(M, ti, now) {
   if (!canActPP(M, ti)) return false;
@@ -1422,8 +1447,8 @@ function resolvePen(M) {
   const p = M.pending; const ti = p.team, T = M.t[ti], O = M.t[1 - ti];
   const col = p.shot % 3, top = p.shot < 3;
   const sh = p.shooter ? P(p.shooter) : null;
-  const skill = sh ? sh.at : 55;
-  const gk = gkRating(O);
+  const skill = sh ? (sh.pk != null ? sh.pk : sh.at) : 55;
+  const g0 = P(O.tac.gk), gk = g0 && g0.gpk != null ? gkRating(O) * 0.4 + g0.gpk * 0.6 : gkRating(O);
   let res;
   const missP = (top ? 0.16 : 0.05) + (p.pres ? 0.18 - (T.presPen - 40) * 0.0045 : 0) - (p.pres ? 0 : (skill - 75) * 0.005);
   if (Math.random() < Math.max(0.02, missP)) res = "fora";
@@ -1450,7 +1475,9 @@ const SO_TAB = [[0.78, 0.3, 0.5], [0.5, 0.78, 0.3], [0.3, 0.5, 0.78]];
 function resolveSO(M) {
   const p = M.pending, ti = p.team, T = M.t[ti], O = M.t[1 - ti];
   const sh = P(p.shooter);
-  const pr = Math.max(0.1, Math.min(0.93, SO_TAB[p.att][p.gk] + ((sh ? sh.at : 60) - gkRating(O)) * 0.006));
+  const g0 = P(O.tac.gk), gkR = g0 && g0.gso != null ? gkRating(O) * 0.4 + g0.gso * 0.6 : gkRating(O);
+  const shR = sh ? (sh.dec != null ? sh.at * 0.75 + sh.dec * 0.25 : sh.at) : 60;
+  const pr = Math.max(0.1, Math.min(0.93, SO_TAB[p.att][p.gk] + (shR - gkR) * 0.006));
   const ok = Math.random() < pr;
   M.pending = null;
   const gkN = P(O.tac.gk) ? P(O.tac.gk).n : "goleiro";
@@ -1493,12 +1520,14 @@ function chooser(M) { // quem precisa escolher agora: [{team, field}]
   if (p.k === "pick") return p.val == null ? [{ team: p.team, f: "val" }] : [];
   if (p.k === "pen") return [{ team: p.team, f: "shot" }, { team: 1 - p.team, f: "dive" }].filter(x => p[x.f] == null);
   if (p.k === "so") return [{ team: p.team, f: "att" }, { team: 1 - p.team, f: "gk" }].filter(x => p[x.f] == null);
+  if (p.k === "steal") return p.yes == null ? [{ team: p.team, f: "yes" }] : [];
   return [];
 }
 function botChoice(f, M) {
   if (f === "shot") return pick([3, 5, 3, 5, 0, 2, 4, 1]);
   if (f === "dive") return pick([0, 2, 0, 2, 1]);
   if (f === "att" || f === "gk") return rnd(3);
+  if (f === "yes") { const p = M.pending; return Math.random() < ({ PEN: 0.75, SO: 0.7, DOB: 0.7, STAR: 0.6, SUS: 0.6, REV: 0.5 }[p.card] || 0.5) ? 1 : 0; }
   if (f === "val") {
     const p = M.pending;
     if (p.f === "star") return p.opts.slice().sort((a, b) => P(b).at - P(a).at)[0];
@@ -1512,6 +1541,7 @@ function setChoice(M, ti, f, val) {
   const need = chooser(M).find(x => x.team === ti && x.f === f); if (!need) return false;
   if (f === "shot" && !(val >= 0 && val <= 5)) return false;
   if ((f === "dive" || f === "att" || f === "gk") && !(val >= 0 && val <= 2)) return false;
+  if (f === "yes") { p.yes = +val ? 1 : 0; return true; }
   if (f === "val") { const v = p.f === "cur" ? String(val) : +val; if (!p.opts.includes(v)) return false; p.val = v; return true; }
   p[f] = val | 0;
   return true;
@@ -1520,7 +1550,8 @@ function tryResolve(M, now, auto) {
   const p = M.pending; if (!p) return;
   chooser(M).forEach(c => { if (M.t[c.team].cpu || auto || now > p.until) p[c.f] = botChoice(c.f, M); });
   if (chooser(M).length) return;
-  if (p.k === "pick") resolvePick(M, now);
+  if (p.k === "steal") resolveSteal(M, now);
+  else if (p.k === "pick") resolvePick(M, now);
   else if (p.k === "pen") resolvePen(M);
   else if (p.k === "so") resolveSO(M);
 }
@@ -1540,6 +1571,20 @@ function botDecide(M, ti, now, autoHuman) {
   }
 }
 
+// ritmo de gols por momento, calibrado com as partidas reais da Kings (Kings League Scout, 2025/26 em diante):
+// o 7x7 do 1º tempo é travado, o escalonado e o dado são abertos e o 2º tempo esquenta, com quem perde indo pra cima
+const PACE = { esc: 1.19, full1: 0.48, dob: 0.58, dice: 1.5, full2: 0.95, mb: 1.25 };
+function paceMul(M, ti) {
+  const m = M.min;
+  if (M.phase === "esc") return PACE.esc;
+  if (M.phase === "dice") return PACE.dice;
+  if (M.phase === "dob") return PACE.dob;
+  if (M.phase === "mb") return PACE.mb;
+  if (m < 17) return PACE.full1;
+  let k = PACE.full2;
+  if (m >= 28) { const d = M.score[1 - ti] - M.score[ti]; if (d > 0) k *= 1 + 0.09 * Math.min(d, 3); else if (d < 0) k *= 0.94; }
+  return k;
+}
 /* ---- passo do jogo: 1 tick = 15 segundos de jogo ---- */
 const TICK = 0.25;
 function stepMatch(M, now, auto) {
@@ -1570,10 +1615,10 @@ function stepMatch(M, now, auto) {
     const edge = 1 + styleEdge(T.tac.style, O.tac.style);
     // escalonado e dado têm campo aberto: é onde mais sai gol na Kings
     const base = M.phase === "mb" ? 0.11 : 0.06, boost = M.phase === "esc" ? 1.85 : M.phase === "dice" ? 2.15 : 1;
-    let pr = base * TICK * open * boost * Math.pow(me.att / op.df, 2.3) * edge * Math.pow(poss * 2, 0.5);
+    let pr = base * TICK * open * boost * Math.pow(me.att / op.df, 2.3) * edge * Math.pow(poss * 2, 0.5) * paceMul(M, ti);
     if (T.gkOut) pr *= 1.45;
     if (O.gkOut) pr *= 1.35;
-    pr = Math.max(0.006, Math.min(boost > 1 ? 0.22 : 0.14, pr));
+    pr = Math.max(0.004, Math.min(boost > 1 ? 0.3 : 0.14, pr));
     if (Math.random() < pr) {
       const sc = pickScorer(M, ti); if (!sc) continue;
       T.shots++;
