@@ -6,13 +6,19 @@ function initLive() {
   root.innerHTML = `<div class="lbox">
     <div class="row" style="justify-content:space-between;gap:8px"><span class="phase" id="l-stage"></span><div class="row" id="l-host" style="gap:6px"></div></div>
     <div class="sbstrip" id="l-sb"></div>
-    <div class="board" id="l-board"></div>
-    <div class="reacts" id="l-reacts">${REACTS.map(e => `<button class="rbtn" data-a="react" data-e="${e}" aria-label="Reagir ${e}">${e}</button>`).join("")}</div>
-    <div class="pitchwrap"><canvas id="pitch" width="900" height="520" aria-label="Campo da partida"></canvas><div id="ovl" class="ovl"></div></div>
-    <div class="timeline" id="l-tl" aria-hidden="true"></div>
-    <div id="l-prompt"></div>
-    <div id="l-ctrl" class="lctrl"></div>
-    <div id="l-feed" class="feed"></div>
+    <div class="lgrid">
+      <div class="lmain">
+        <div class="board" id="l-board"></div>
+        <div class="pitchwrap"><canvas id="pitch" width="900" height="520" aria-label="Campo da partida"></canvas><div id="ovl" class="ovl"></div></div>
+        <div class="timeline" id="l-tl" aria-hidden="true"></div>
+        <div class="reacts" id="l-reacts">${REACTS.map(e => `<button class="rbtn" data-a="react" data-e="${e}" aria-label="Reagir ${e}">${e}</button>`).join("")}</div>
+      </div>
+      <div class="lside">
+        <div id="l-prompt"></div>
+        <div id="l-ctrl" class="lctrl"></div>
+        <div id="l-feed" class="feed"></div>
+      </div>
+    </div>
   </div>`;
   LV.canvas = $("#pitch"); LV.ctx = LV.canvas.getContext("2d");
   requestAnimationFrame(frame);
@@ -258,9 +264,12 @@ function frame(ts) {
   requestAnimationFrame(frame);
   if (!liveVisible() || !LV.ctx) return;
   const cv = LV.canvas, wrap = cv.parentElement;
-  const cw = Math.min(wrap.clientWidth, 920), ch = Math.round(cw * (cw < 600 ? 0.86 : 0.68));
+  // o campo cabe no espaço livre da tela, sempre na mesma proporção (sem precisar minimizar)
+  const narrow = window.innerWidth <= 1000, r = wrap.clientWidth < 600 ? 0.86 : 0.68;
+  const availH = narrow ? window.innerHeight * 0.46 : Math.max(200, wrap.clientHeight);
+  const cw = Math.max(240, Math.floor(Math.min(wrap.clientWidth, availH / r))), ch = Math.round(cw * r);
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  if (cv.width !== Math.round(cw * dpr)) { cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); cv.style.width = cw + "px"; cv.style.height = ch + "px"; }
+  if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(ch * dpr)) { cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); cv.style.width = cw + "px"; cv.style.height = ch + "px"; }
   const c = LV.ctx; c.setTransform(dpr, 0, 0, dpr, 0, 0);
   const W = cw, HT = ch, SH = Math.round(ch * 0.15), pad = 22;
   const H = HT - 2 * SH; // altura do gramado

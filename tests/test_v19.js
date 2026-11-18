@@ -18,3 +18,9 @@ console.log("ok v19");
   ok(!S2.managers[1].cpu && S2.managers[1].pid === "novo" && S2.managers[1].team === "Robôs", "time herdado");
   ok(!E.applyAction(S2, { t: "takebot", mi: 0, pid: "outro", name: "X" }, -1, false, Date.now()), "não assume humano");
   console.log("ok takebot"); }
+// lance inválido (NaN) não pode entrar no leilão
+{ const S3 = E.newGame("T3", "h", "Host", "Host FC", "online"); S3.managers.push(Object.assign({}, S3.managers[0], { pid: "x2", name: "X", team: "X FC" })); let t3 = Date.now();
+  E.applyAction(S3, { t: "settings", v: { total: 2, squad: 7 } }, 0, true, t3); E.applyAction(S3, { t: "start" }, 0, true, t3);
+  for (let i = 0; i < 40 && !(S3.auction && S3.auction.lot); i++) { t3 += 500; E.marketTick(S3, t3); }
+  if (S3.auction && S3.auction.lot) { const b0 = S3.auction.lot.bid; E.applyAction(S3, { t: "bid", amt: 5 }, 0, true, t3); E.applyAction(S3, { t: "bid", amount: "abc" }, 1, true, t3); ok(S3.auction.lot.bid === b0 && Number.isFinite(S3.auction.lot.bid), "lance inválido recusado"); }
+  console.log("ok lance inválido"); }

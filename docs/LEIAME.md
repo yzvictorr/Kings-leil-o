@@ -35,6 +35,27 @@ O modo "um aparelho só" funciona sem Firebase. O Firebase só é necessário pa
 
 > Não abra o `index.html` com dois cliques no computador para testar o online: o navegador bloqueia os scripts nesse modo. Use o endereço publicado.
 
+---
+
+## Servidor das salas na Cloudflare (recomendado para 8 a 12 pessoas)
+
+Com o servidor ligado, a sala roda na nuvem (Cloudflare Durable Objects) e não no aparelho do anfitrião:
+ninguém precisa ficar com o site aberto, ninguém "trava" a sala ao trocar de tela, e quem sai vira bot até voltar.
+O Firebase continua sendo usado só para login, perfil, fotos e tela de administrador.
+
+1. Crie uma conta grátis em https://dash.cloudflare.com/sign-up (não precisa de cartão).
+2. No painel, abra **Workers & Pages > Create > Import a repository**, conecte o GitHub e escolha o repositório do jogo.
+3. Deixe os campos como vierem (o Cloudflare lê o `wrangler.jsonc` da raiz) e clique em **Deploy**.
+4. No fim, ele mostra um endereço tipo `https://kings-game-salas.SEU-NOME.workers.dev`. Abra: deve aparecer "servidor das salas no ar".
+5. Cole esse endereço em `docs/firebase-config.js`, na linha `window.KL_SERVER = "";`, e mande para o GitHub.
+
+A cada `git push`, o Cloudflare publica o servidor de novo sozinho. Se publicar no meio de um jogo, a sala volta em poucos segundos do ponto em que estava.
+
+O arquivo `server/worker.js` é gerado pelo `python3 build.py` (não edite à mão: mexa em `src/server.js`).
+
+**Plano grátis da Cloudflare:** cerca de 28 horas de sala aberta por dia somando todas as salas (13.000 GB-s), 100 mil mensagens por dia e 100 mil gravações por dia. Uma noite de jogo com 12 pessoas usa uma parte pequena disso.
+Para voltar ao modo antigo, deixe `window.KL_SERVER = "";` de novo.
+
 ## 3. Jogar
 
 - O anfitrião abre o site, cria a sala e toca em **Copiar link de convite**.

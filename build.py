@@ -29,4 +29,11 @@ window.claude = { use: async n => { const db = await window.__klFb; return n ===
 os.makedirs(os.path.join(D, 'dist'), exist_ok=True)
 open(os.path.join(D, 'dist', 'kings-leilao-claude.html'), 'w', encoding='utf-8').write(head + body)
 open(os.path.join(D, 'docs', 'index.html'), 'w', encoding='utf-8').write(head + site_boot + body)
-print('ok: dist/kings-leilao-claude.html e docs/index.html')
+# servidor das salas (Cloudflare Workers + Durable Objects): mesmo engine do jogo, rodando na nuvem
+os.makedirs(os.path.join(D, 'server'), exist_ok=True)
+open(os.path.join(D, 'server', 'worker.js'), 'w', encoding='utf-8').write(
+    '// GERADO pelo build.py a partir de src/ (players.json + engine.js + server.js). Não edite aqui.\n'
+    f'let PLAYERS = {json.dumps(players, ensure_ascii=False)};\n'
+    'let PLAYER_BY_ID = {}; PLAYERS.forEach(p => PLAYER_BY_ID[p.id] = p);\n'
+    + eng + '\n' + src('server.js'))
+print('ok: dist/kings-leilao-claude.html, docs/index.html e server/worker.js')

@@ -1,0 +1,12 @@
+// Servidor das salas do The Kings Game (Cloudflare Workers + Durable Objects).
+// O Cloudflare lê este arquivo quando o repositório está ligado em Workers & Pages.
+{
+  "name": "kings-game-salas",
+  "main": "server/worker.js",
+  "compatibility_date": "2025-09-01",
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "Room" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "observability": { "enabled": true }
+}

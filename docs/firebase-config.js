@@ -11,3 +11,7 @@ window.FIREBASE_CONFIG = {
 
 // conta(s) que podem colocar fotos nas cartas (ID da conta, aparece em Perfil quando você entra)
 window.KL_ADMINS = ["hzzHUn4k6FcFaAImc98zBN7pbvV2"];
+
+// servidor das salas na Cloudflare: com o endereço aqui, a sala roda na nuvem e não depende de ninguém ficar com o site aberto.
+// Deixe "" para usar o modo antigo (a sala roda no aparelho do anfitrião, pelo Firebase).
+window.KL_SERVER = "";

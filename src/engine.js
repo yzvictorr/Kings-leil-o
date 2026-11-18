@@ -242,7 +242,7 @@ function staffTick(S, now) {
 function staffBid(S, mi, amount, now) {
   const a = S.staffA; if (!a || !a.lot) return false;
   const lot = a.lot, m = S.managers[mi], x = STAFF_BY_ID[lot.sid];
-  amount = Math.floor(amount);
+  amount = Math.floor(amount); if (!Number.isFinite(amount) || !m) return false;
   if (!staffNeed(S, m, x) || lot.passed.includes(mi) || lot.bidder === mi || amount <= lot.bid || amount < 1 || amount > staffMax(S, m)) return false;
   lot.bid = amount; lot.bidder = mi; lot.last = now;
   lot.deadline = Math.max(lot.deadline, now + S.settings.timer * 1000);
@@ -328,7 +328,7 @@ function fillRest(S) {
 function placeBid(S, mi, amount, now) {
   const a = S.auction; if (!a || !a.lot || a.paused) return false;
   const lot = a.lot, m = S.managers[mi], pl = P(lot.pid);
-  amount = Math.floor(amount);
+  amount = Math.floor(amount); if (!Number.isFinite(amount) || !m) return false; // lance inválido não entra
   if (lot.only && !lot.only.includes(mi)) return false;
   if (lot.passed.includes(mi)) return false; // passou: está fora deste jogador
   if (lot.bidder === mi || amount <= lot.bid || amount < 1 || amount > maxBid(S, m) || !canBidOn(S, m, pl)) return false;
@@ -1231,7 +1231,7 @@ function newMatch(S, f) {
       cards: Array.from({ length: nCards }, () => ({ k: pick(CARD_DRAW), used: false })), ppUsed: false, dobLeft: 0, star: null, out: [], banned: [], yc: {}, cardsY: 0, cardsR: 0, goals: {}, shots: 0, saves: 0, field: [], gkOut: false,
       autoSub: isBot(S, mi) ? true : tac.autoSub !== false, gkMode: isBot(S, mi) ? "auto" : (tac.gkMode || "auto"), subs: 0 };
   };
-  const M = { fid: f.id, stage: f.stage, round: f.round, t: [mk(f.h, 0), mk(f.a, 1)], min: 0, score: [0, 0], phase: "esc", nOut: 1, dice: null,
+  const M = { injMul: { normal: 1, poucas: 0.4, nao: 0 }[(S.settings && S.settings.inj) || "normal"], fid: f.id, stage: f.stage, round: f.round, t: [mk(f.h, 0), mk(f.a, 1)], min: 0, score: [0, 0], phase: "esc", nOut: 1, dice: null,
     ev: [], pending: null, status: "playing", ball: { t: 0, x: 0.5, y: 0.5 }, so: null, soRound: 0, soTurn: 0, target: null, w: null, hold: 0, seq: 0, sta: {}, mbStep: -1 };
   M.t.forEach(T => { T.card = T.cards[0].k; T.cardUsed = false; });
   updateField(M);
@@ -1818,8 +1818,8 @@ function chemistry(T) {
 function injuries(M) {
   if (M.phase === "so" || M.status !== "playing" || M.pending) return;
   for (const ti of [0, 1]) {
-    const T = M.t[ti]; if (!T.field.length || Math.random() >= 0.0017) continue;
-    const id = pick(T.field), p = P(id), r = Math.random(), rounds = r < 0.6 ? 1 : r < 0.9 ? 2 : 3;
+    const T = M.t[ti]; if (!T.field.length || Math.random() >= 0.0008 * (M.injMul == null ? 1 : M.injMul)) continue; // ~1 lesão a cada 10 jogos
+    const id = pick(T.field), p = P(id), r = Math.random(), rounds = r < 0.78 ? 1 : r < 0.97 ? 2 : 3;
     (T.injR = T.injR || []).push([id, rounds]); T.banned.push(id);
     ev(M, "inj", ti, `${p.n} sente uma lesão e sai de campo! Desfalque por ${rounds} rodada${rounds > 1 ? "s" : ""}.`, { pid: id });
     const sub = (T.bench || []).filter(b => P(b).p !== "GOL" && !T.banned.includes(b)).sort((a, b) => (M.sta[b] || 100) - (M.sta[a] || 100) || P(b).o - P(a).o)[0];
@@ -1915,6 +1915,7 @@ function applyAction(S, act, actorMi, isHost, now) {
     if (v.timer) s.timer = Math.max(5, Math.min(30, v.timer | 0));
     if (v.total) s.total = Math.max(2, Math.min(12, v.total | 0));
     if (["nao", "leilao", "sempre"].includes(v.hide)) s.hide = v.hide;
+    if (["normal", "poucas", "nao"].includes(v.inj)) s.inj = v.inj;
     if (["leilao", "draft"].includes(v.mode)) s.mode = v.mode;
     if (v.wc != null && !isNaN(v.wc)) s.wc = Math.max(0, Math.min(6, v.wc | 0));
     s.wc = Math.max(0, Math.min(6, s.wc | 0)); s.picks = 12 - s.wc; // draft: elenco sempre de 12

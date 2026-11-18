@@ -498,3 +498,8 @@ html{scroll-behavior:smooth}
 .aditem .portrait img{height:100%;width:auto;object-fit:cover}
 .aditem .muted{font-size:11.5px}
 .aditem label.btn{cursor:pointer}
+#hostgone{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:80;background:#2a2412;border:1px solid var(--gold);color:var(--ink);padding:10px 16px;border-radius:12px;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:92vw;text-align:center}
+.notice{border-color:var(--gold);background:linear-gradient(90deg,rgba(245,197,66,.12),var(--surface));font-size:14.5px;margin:14px 0 4px}
+.tbl .ovin{width:64px;background:#0b0e14;border:1px solid var(--line2);border-radius:8px;padding:5px 6px;color:var(--ink);font-family:var(--display);font-size:16px}
+.tbl .ovin.chg{border-color:var(--gold);color:var(--gold)}
+textarea{background:#0b0e14;border:1px solid var(--line2);border-radius:10px;padding:10px;color:var(--ink);font:inherit;width:100%;resize:vertical}
