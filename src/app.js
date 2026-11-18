@@ -1268,6 +1268,23 @@ const RULES = [
   ["Dado", "Do 20' ao 23': 3x3, 2x2 ou 1x1 com goleiro. Cartões ficam pausados.", "#2fd47e"],
   ["Match ball", "Após o 36', quem chegar ao placar do líder +1 vence: 5x5, 4x4, 3x3, 1x1 e 2x2. Empate: shootouts (5 + alternadas).", "#ff4d61"]
 ];
+// ---- novidades da última atualização (aparece na tela inicial até a pessoa fechar; volta quando sair outra) ----
+const NEWS_V = "2026-11-18";
+const NEWS = [
+  ["☁️", "Salas na nuvem", "A sala roda no servidor: ninguém precisa ficar com o site aberto. Quem criou a sala pode sair, trocar de tela ou bloquear o celular que o jogo continua, e quem sai vira bot até voltar."],
+  ["📊", "Overs com dados reais", "Ataque e defesa de cada jogador seguem o perfil dele no Kings League Scout, e 55 jogadores subiram um pouco de over."],
+  ["⏱️", "Gols na hora certa", "Os gols saem nos momentos em que saem na Kings de verdade: mais no escalonado e no dado, 1º tempo do 7x7 mais travado e quem está perdendo pressiona no fim."],
+  ["🧤", "Goleiro também faz gol", "Principalmente no dado e de longe. E os artilheiros da vida real têm mais chance de marcar."],
+  ["🎯", "Pênalti com o aproveitamento de cada um", "Batedores e goleiros usam os números reais de pênalti e shootout."],
+  ["🃏", "Coringa rouba depois", "Quando o rival ativa uma carta e você tem o Coringa guardado, aparece um aviso para roubar a carta dele ou guardar o seu Coringa."],
+  ["🪪", "Ficha completa nas cartas", "Nacionalidade, altura, pé e os jogos, gols, assistências e MVPs de cada um na Kings League Brasil."],
+  ["🔗", "Endereço novo", "O site agora é thekingsgame.vercel.app."],
+];
+function newsBox() {
+  if (store("kl_news") === NEWS_V) return "";
+  return `<div class="card news"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">🆕 Novidades da última atualização</h3><button class="btn sm ghost" data-a="newsok">Entendi</button></div>
+    <div class="newsl">${NEWS.map(n => `<div><span class="ni">${n[0]}</span><div><b>${esc(n[1])}</b><span class="muted">${esc(n[2])}</span></div></div>`).join("")}</div></div>`;
+}
 function viewHome() {
   const nm = esc(store("kl_name") || ""), tm = esc(store("kl_team") || "");
   return `<div class="hero"><div class="hero-txt">
@@ -1276,6 +1293,7 @@ function viewHome() {
     <p>Leilão ou draft com os jogadores da Kings League Brasil, campeonato com as regras oficiais jogado ao vivo com os amigos, mercado de trocas e modo carreira com evolução de cada jogador. Você escolhe formação, estilo, ordem do escalonado, cobrador e a hora de usar a carta secreta e o pênalti do presidente.</p></div>
     <div class="hero-stats"><div><b class="num">${PLAYERS.length}</b><span>jogadores reais</span></div><div><b class="num">12</b><span>presidentes por sala</span></div><div><b class="num">10</b><span>cartas secretas</span></div></div>
   </div>
+  ${newsBox()}
   ${profileCard()}
   ${resumeBox()}
   <div class="rules">${RULES.map(r => `<div style="--c:${r[2]}"><b>${r[0]}</b>${r[1]}</div>`).join("")}</div>
@@ -2229,6 +2247,7 @@ document.addEventListener("click", e => {
   if (a === "exportsave") return exportSave();
   if (a === "local") return startLocal();
   if (a === "lpadd") { const lp = $("#lp"); if (lp.children.length < 12) { const i = document.createElement("input"); i.className = "lp-name"; i.type = "text"; i.maxLength = 18; i.id = "lp" + lp.children.length; i.placeholder = "Jogador " + (lp.children.length + 1); lp.appendChild(i); i.focus(); } return; }
+  if (a === "newsok") { store("kl_news", NEWS_V); return render(true); }
   if (a === "leave") return leave();
   if (a === "copyinvite") { const url = location.origin + location.pathname + "?sala=" + S.code; try { navigator.clipboard.writeText(url).then(() => toast("Link copiado!"), () => prompt("Copie o link:", url)); } catch (e) { prompt("Copie o link:", url); } return; }
   if (a === "rejoin") { if (NET.joinInfo) { NET.lastJoin = Date.now(); sendIntent({ t: "join", name: NET.joinInfo.name, team: NET.joinInfo.team }); toast("Pedido reenviado."); render(); } return; }

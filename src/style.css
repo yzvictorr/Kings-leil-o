@@ -506,3 +506,11 @@ html{scroll-behavior:smooth}
 .tbl .ovin{width:64px;background:#0b0e14;border:1px solid var(--line2);border-radius:8px;padding:5px 6px;color:var(--ink);font-family:var(--display);font-size:16px}
 .tbl .ovin.chg{border-color:var(--gold);color:var(--gold)}
 textarea{background:#0b0e14;border:1px solid var(--line2);border-radius:10px;padding:10px;color:var(--ink);font:inherit;width:100%;resize:vertical}
+
+/* novidades */
+.card.news{border-color:rgba(245,197,66,.35);background:linear-gradient(180deg,rgba(245,197,66,.07),rgba(245,197,66,.02));margin:14px 0}
+.newsl{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.newsl>div{display:flex;gap:10px;align-items:flex-start;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px 12px}
+.newsl .ni{font-size:20px;line-height:1}
+.newsl b{display:block;margin-bottom:2px}
+.newsl .muted{font-size:13px;line-height:1.35}
